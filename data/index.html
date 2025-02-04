@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1g2.display</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+</head>
+<body>
+    <script src="index.js"></script>
+    <nav class="main-navbar">
+        <a href="#">Home</a>
+        <a href="settings.html">Configuration</a>
+        <a href="update.html">Update</a>
+    </nav>
+    <div class="side-navbar" id="sideNavbar">
+        <button class="user-settings-btn" onclick="toggleNavbar()">☰</button>
+        <h2>User Settings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id="config-table-body">
+            </tbody>
+        </table>
+    </div>
+    <div class="hardware-bar">
+        <span id="manufacturer"></span> |
+        <span id="model"></span> |
+        <span id="serial"></span> |
+        <span id="hardware-version"></span> |
+        <span id="firmware-version"></span> |
+        <span id="software-version"></span> |
+        <span id="battery-percentage"></span>
+        <span id="isBatteryCharging"></span>
+    </div>
+    <div class="container">
+        <h2>Location Data</h2>
+        <div id="map" style="height: 400px; width: 100%;"></div>
+    </div>
+</body>
+</html>

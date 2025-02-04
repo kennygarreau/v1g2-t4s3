@@ -1,0 +1,264 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+form {
+    position: absolute; /* Position the form relative to the body */
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the form by moving it back by half its width and height */
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 30%; /* set a fixed width */
+}
+
+#upload_form {
+    top: 15%;
+    width: 30%;
+}
+
+#upload_filesystem_form {
+    top: 35%;
+    width: 30%;
+}
+
+#settingsForm {
+    top: 50%;
+    width: 90%;
+}
+
+nav {
+    background-color: #1e477a; /* Dark blue */
+    color: white;
+    padding: 5px 0;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 20px;
+    display: inline-block;
+}
+
+nav a:hover {
+    background-color: #12365f; /* Darker blue on hover */
+}
+
+.container h2 {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 40px;
+}
+
+.user-settings-btn {
+    background-color: #1e477a;
+    position: absolute;
+    top: 10px;
+    right: -10px; /* Keeps the button visible outside the panel */
+    width: 50px;
+    height: 50px;
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0; /* Rounded edge on the left */
+    cursor: pointer;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); */
+}
+
+.user-settings-btn:hover {
+    background-color: #555;
+}
+
+.toggle-btn {
+    font-size: 24px;
+    cursor: pointer;
+    /* background-color: #333; */
+    color: #fff;
+    border: none;
+    /* padding: 10px 20px; */ 
+    margin: 10px;
+    position: fixed;
+    z-index: 1000;
+}
+
+.main-navbar {
+    padding: 0;
+}
+
+.side-navbar {
+    position: fixed;
+    top: 0;
+    left: -310px; /* Hidden off-screen */
+    width: 300px;
+    height: 100%;
+    background-color: #1e477a; /* Dark blue */
+    color: white;
+    overflow-y: auto; /* Scrollable content if needed */
+    transition: 0.3s; /* Smooth slide-in and slide-out */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.side-navbar h2 {
+    color: white;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.side-navbar table {
+    width: 90%;
+    border-collapse: collapse;
+    /* color: white; */
+}
+
+.side-navbar th, .side-navbar td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.side-navbar th {
+    background-color: #f2f2f2; /* Light gray */
+    color: black;
+}
+
+/* Navbar visible state */
+.side-navbar.active {
+    left: 0;
+}
+
+.hardware-bar {
+    background-color: #f0f4f8; /* Light gray-blue */
+    color: #1e477a; /* Dark blue */
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc; /* Light border */
+}
+.hardware-bar span {
+    margin: 0 10px;
+}
+
+h2, h3 {
+    color: #1e477a; /* Dark blue */
+}
+
+table {
+    border-collapse: collapse;
+    width: 50%;
+    margin-bottom: 20px;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* don't think this works */
+.leaflet-popup-content {
+    margin: 5px 12px 5px 10px;
+}
+
+#battery-percentage {
+    margin-left: auto; /* Align to the right */
+}
+
+@media screen and (max-width: 768px) {
+    table {
+        width: 100%;
+        margin: 5px;
+        padding: 2px;
+    }
+    #upload_form {
+        top: 25%;
+        width: 90%;
+    }
+    #upload_filesystem_form {
+        top: 50%;
+        width: 90%;
+    }
+    #settingsForm {
+        position: fixed;
+        top: 50%;
+        width: 95%;
+    }
+    th, td {
+        padding: 2px;
+        font-size: 14px;
+        text-align: left;
+        border: 1px solid #ddd;
+    }
+    h2 {
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    .hardware-bar {
+        margin-left: 25px;
+    }
+    .hardware-bar span {
+        margin: 0 5px;
+    }
+    input[type="submit"] {
+        margin-left: 20px;
+    }
+}
+
+/*
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+} */
+
+th {
+    background-color: #f2f2f2; /* Light gray */
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input[type="text"], input[type="password"], select {
+    margin: auto;
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #1e477a;
+    width: 80px;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: auto;
+}
+
+input[type="submit"]:hover {
+    background-color: #12365f;
+}
+
+input[type="color"] {
+    border: none;
+    width: 50px;
+    height: 30px;
+    cursor: pointer;
+  }

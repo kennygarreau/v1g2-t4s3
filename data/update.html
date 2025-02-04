@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1g2.display</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <script src="update.js"></script>
+</head>
+
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="settings.html">Configuration</a>
+        <a href="#">Update</a>
+    </nav>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    
+    <!-- Firmware Update Form -->
+    <form enctype='multipart/form-data' id='upload_form'>
+        <h3>Firmware Update</h3>
+        <input type='file' name='update'>
+        <input type='submit' value='Update'>
+        <div id='prg'>progress: 0%</div>
+    </form>
+
+    <!-- Filesystem Update Form -->
+    <form enctype="multipart/form-data" id="upload_filesystem_form">
+        <h3>Filesystem Update</h3>
+        <input type="file" name="filesystem" required>
+        <input type="submit" value="Update">
+        <div id="fs_prg">Progress: 0%</div>
+    </form>
+</body>
+
+</html>
