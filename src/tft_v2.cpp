@@ -11,7 +11,7 @@ const char* frequency_ptrs[MAX_ALERTS];
 const char* direction_ptrs[MAX_ALERTS]; 
 int alertCount = 0;
 int prio_bars = 0;
-bool bt_connected, alertPresent, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
+bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
 extern "C" bool get_var_bt_connected() {
     return bt_connected;
@@ -121,12 +121,12 @@ extern "C" void set_var_muted(bool value) {
     muted = value;
 }
 
-extern "C" bool get_alertPresent() {
-    return alertPresent;
+extern "C" bool get_showAlertTable() {
+    return showAlertTable;
 }
 
-extern "C" void set_var_alertPresent(bool value) {
-    alertPresent = value;
+extern "C" void set_var_showAlertTable(bool value) {
+    showAlertTable = value;
 }
 
 extern "C" void set_var_kAlert(bool value) {

@@ -24,6 +24,7 @@ Config globalConfig;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];
 static int num_current_alerts = 0;
+bool alertPresent = false;
 
 extern void requestMute();
 bool muted = false;
@@ -76,12 +77,12 @@ std::string hexToAscii(const std::string& hexStr) {
 }
 
 void PacketDecoder::clearTableAlerts() {
-    set_var_prio_alert_freq("");
-    set_var_prioBars(0);
-    set_var_alertPresent(false);
+    set_var_showAlertTable(false);
 }
 
 void PacketDecoder::clearInfAlerts() {
+    set_var_prio_alert_freq("");
+    set_var_prioBars(0);
     set_var_kaAlert(false);
     set_var_kAlert(false);
     set_var_xAlert(false);
@@ -287,6 +288,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         enable_blinking(BLINK_LASER);
         set_var_prio_alert_freq("LASER");
         set_var_prioBars(6);
+        Serial.print("== blink laser ");
     } else {
         set_var_laserAlert(arrow1.laser);
     }
@@ -334,19 +336,12 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     } else if (!blink_enabled[BLINK_REAR]) {
         set_var_arrowPrioRear(arrow1.rear);
     }
-
-    // blink_enabled[BLINK_REAR] = (arrow1.rear != arrow2.rear);
-    // if (blink_enabled[BLINK_REAR]) {
-    //     Serial.println("blink rear");
-    // } else {
-    //     set_var_arrowPrioRear(arrow1.rear);
-    // }
 }
 
 /* 
 Execute if we successfully write reqStartAlertData to clientWriteUUID
 */
-void PacketDecoder::decodeAlertData(const alertsVector& alerts) {
+void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int currentSpeed) {
     
     frontStrengthVal = 0;
     rearStrengthVal = 0;
@@ -447,6 +442,13 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts) {
         }
         // paint the priority alert
         if (priority && bandValue != "LASER") {
+            if (!muted) {
+                if (currentSpeed <= lowSpeedThreshold) {
+                    Serial.println("SilentRide requesting mute");
+                    requestMute();
+                }
+            }
+            
             // paint the main signal bar
             if (rearStrengthVal > frontStrengthVal) {
                 set_var_prioBars(rearStrengthVal);
@@ -507,10 +509,11 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
            this will allow the incorporation of blinking arrow for prio alert on multiple alerts
         */
        std::string payload = packet.substr(12, 10);
-       if (settings.displayTest || payload != lastinfPayload) {
 
+       if (settings.displayTest || payload != lastinfPayload) {
         std::string bandArrow1 = packet.substr(16, 2);
         std::string bandArrow2 = packet.substr(18, 2);
+        
         if (!bandArrow1.empty() && !bandArrow2.empty()) {
             BandArrowData arrow1Data = processBandArrow(bandArrow1);
             BandArrowData arrow2Data = processBandArrow(bandArrow2);
@@ -546,7 +549,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                     globalConfig.mode = "ADV LOGIC";
                     break;
             }
-        }
+        //}
 
         // unsigned long elapsedTimeMillis = millis() - startTimeMillis;
         // Serial.print("infDisplayData loop time: ");
@@ -554,6 +557,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         }
         
         lastinfPayload = payload;
+    }
     }
     else if (packetID == "43") {
         /* respAlertData - should only be responsible for the alert table and priority alert frequency */
@@ -564,18 +568,20 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // this shouldn't be necessary if inf is clearing the table anyway?
             if (alertPresent) {
                 Serial.println("duplicate empty payload with alertPresent TRUE; setting to false");
-                clearTableAlerts();
+                alertPresent = false;
+                clearInfAlerts();
             }
             return "";
         } 
         else {
+            /*
             if (!muted) {
                 if (currentSpeed <= lowSpeedThreshold) {
                     Serial.println("SilentRide requesting mute");
                     requestMute();
-
                 }
             }
+            */
             lastPayload = payload;
             std::string alertIndexStr = packet.substr(10, 2);
 
@@ -604,7 +610,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
             if (alertTable.size() >= alertCountValue) {
                 alertPresent = true;
-                decodeAlertData(alertTable);
+                decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 alertTable.clear();
             } else {
                 if (alertCountValue == 0) {

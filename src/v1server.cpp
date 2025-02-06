@@ -488,11 +488,11 @@ void loop() {
       } else {
         Serial.println("User settings obtained!");
         configHasRun = true;
+        set_var_prio_alert_freq("");
       }
     }
     uint32_t cpuIdle = lv_timer_get_idle();  
     gpsData.cpuBusy = 100 - cpuIdle;  
-
     //Serial.printf("CPU Busy: %u%%\n", gpsData.cpuBusy);
 
     lastMillis = currentMillis;

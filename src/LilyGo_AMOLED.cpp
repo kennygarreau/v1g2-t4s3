@@ -9,6 +9,7 @@
 
 #include "LilyGo_AMOLED.h"
 #include <driver/gpio.h>
+#include <vector>
 
 #if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3,0,0)
 #include <esp_adc_cal.h>
@@ -823,6 +824,7 @@ void LilyGo_AMOLED::writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length)
         spiDev->beginTransaction(SPISettings(boards->display.freq, MSBFIRST, TFT_SPI_MODE));
         digitalWrite(boards->display.d1, LOW);
         spiDev->write(cmd);
+        spiDev->write((uint8_t)cmd);
         digitalWrite(boards->display.d1, HIGH);
         spiDev->endTransaction();
         clrCS();
@@ -939,32 +941,54 @@ void LilyGo_AMOLED::pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16
 
     size_t remainingBytes = totalBytes;
     spi_transaction_t trans = {0};
+    std::vector<spi_transaction_t> queuedTrans;
 
     while (remainingBytes > 0) {
         size_t chunkSize = (remainingBytes > maxTransferSize) ? maxTransferSize : remainingBytes;
+        if (chunkSize % 2 != 0) chunkSize -= 1;
+
+        // Serial.printf("First 5 pixels: %04X %04X %04X %04X %04X\n",
+        //     data[0], data[1], data[2], data[3], data[4]);
         memcpy(dmaBuffer, p, chunkSize);
+        // Serial.printf("DMA Buffer First 5 Pixels: %04X %04X %04X %04X %04X\n",
+        //       dmaBuffer[0], dmaBuffer[1], dmaBuffer[2], dmaBuffer[3], dmaBuffer[4]);
+
 
         memset(&trans, 0, sizeof(spi_transaction_t));
         trans.flags = SPI_TRANS_MODE_QIO;
         trans.tx_buffer = dmaBuffer;
         trans.length = chunkSize * 8;
 
+        digitalWrite(boards->display.d1, HIGH);
         esp_err_t ret = spi_device_queue_trans(spi, &trans, portMAX_DELAY);
         if (ret != ESP_OK) {
             Serial.printf("Failed to queue SPI transaction: %d\n", ret);
             break;
         }
+        Serial.printf("Queued transaction: %d bytes\n", chunkSize);
 
+        // spi_transaction_t *done_trans;
+        // ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
+        // if (ret != ESP_OK) {
+        //     Serial.printf("Error in getting transaction result: %d\n", ret);
+        //     break;
+        // }
+
+        //Serial.printf("Transaction completed, %zu bytes transferred.\n", chunkSize);
+        queuedTrans.push_back(trans);
+        remainingBytes -= chunkSize;
+        p += chunkSize / sizeof(uint16_t);
+    }
+
+    // Wait for all transactions to finish
+    Serial.println("Waiting for queued transactions...");
+    for (auto &t : queuedTrans) {
         spi_transaction_t *done_trans;
-        ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
+        esp_err_t ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
         if (ret != ESP_OK) {
             Serial.printf("Error in getting transaction result: %d\n", ret);
             break;
         }
-
-        Serial.printf("Transaction completed, %zu bytes transferred.\n", chunkSize);
-        remainingBytes -= chunkSize;
-        p += chunkSize / sizeof(uint16_t);
     }
 
     heap_caps_free(dmaBuffer);

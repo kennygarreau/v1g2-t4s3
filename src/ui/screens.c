@@ -527,7 +527,7 @@ void tick_screen_main() {
     }
     // Alert Table, Frequencies & Arrows
     {
-        bool new_val = get_alertPresent(); // true if alert present
+        bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
         bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
             LV_LOG_INFO("show alert table");
@@ -578,7 +578,8 @@ void tick_screen_main() {
         if (new_val == cur_val) {
             LV_LOG_INFO("paint laser");
             tick_value_change_obj = objects.band_laser;
-            if (new_val) { lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
+            if (new_val) { 
+                lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
             }
             else lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;

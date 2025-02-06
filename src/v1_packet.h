@@ -46,7 +46,7 @@ public:
     std::string decode(int lowSpeedThreshold, int currentSpeed);
     //std::string decodeDisplayData();
     //std::string decodeAlertData(const std::vector<alertTable>& alerts);
-    void decodeAlertData(const alertsVector& alerts);
+    void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int curentSpeed);
     void clearInfAlerts();
     void clearTableAlerts();
 };
