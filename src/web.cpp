@@ -98,13 +98,14 @@ void setupWebServer()
         jsonDoc["time"] = gpsData.time;
         jsonDoc["date"] = gpsData.date;
         jsonDoc["hdop"] = gpsData.hdop;
+        jsonDoc["satelliteCount"] = gpsData.satelliteCount;
         jsonDoc["signalQuality"] = gpsData.signalQuality;
         jsonDoc["timezone"] = settings.timezone;
 
-        // Battery & Charge data
-        jsonDoc["satelliteCount"] = gpsData.satelliteCount;
+        // Hardware data
         jsonDoc["batteryPercent"] = batteryPercentage;
         jsonDoc["batteryVoltage"] = voltageInMv;
+        jsonDoc["cpu"] = gpsData.cpuBusy;
         if (isVBusIn) {
             jsonDoc["vBusVoltage"] = vBusVoltage;
         }

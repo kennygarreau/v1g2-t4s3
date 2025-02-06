@@ -65,6 +65,8 @@ void tick_screen_settings();
 void create_screens();
 void tick_screen(int screen_index);
 
+void tick_status_bar();
+
 void update_alert_rows(int num_visible, const char* frequencies[]);
 void register_blinking_image(int index, lv_obj_t *obj);
 void init_blinking_system(void);

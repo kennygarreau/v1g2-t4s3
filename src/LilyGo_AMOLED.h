@@ -213,7 +213,7 @@ static const DisplayConfigure_t RM690B0_AMOLED  = {
     18, //BOARD_DISP_TE,
     8, //command bit
     24,//address bit
-    40000000,
+    80000000,
     (lcd_cmd_t *)rm690b0_cmd,
     RM690B0_INIT_SEQUENCE_LENGTH,
     RM690B0_WIDTH,//width
@@ -308,6 +308,9 @@ class LilyGo_AMOLED:
     public SensorPCF85063
 {
 public:
+    // KG
+    void pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *data);
+    bool checkDisplayReady();
     // LILYGO_AMOLED_191_SPI USE BQ25896
     PowersSY6970 SY;
     // LILYGO_AMOLED_241 USE SY6970

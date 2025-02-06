@@ -79,30 +79,6 @@ extern "C" const char** get_var_directions() {
     return direction_ptrs;
 }
 
-// extern "C" const char *get_var_alert1freq() {
-//     return alert1freq.c_str();
-// }
-
-// extern "C" void set_var_alert1freq(const char *value) {
-//     alert1freq = value;
-// }
-
-// extern "C" const char *get_var_alert2freq() {
-//     return alert2freq.c_str();
-// }
-
-// extern "C" void set_var_alert2freq(const char *value) {
-//     alert2freq = value;
-// }
-
-// extern "C" const char *get_var_alert3freq() {
-//     return alert3freq.c_str();
-// }
-
-// extern "C" void set_var_alert3freq(const char *value) {
-//     alert3freq = value;
-// }
-
 // do I need this if I use an extern? just implement a getter?
 extern "C" void set_var_alertTableFreqs(const char* values[], int count) {
     if (count > MAX_ALERTS) { count = MAX_ALERTS; }

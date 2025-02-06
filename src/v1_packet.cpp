@@ -293,6 +293,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.ka != arrow2.ka) {
         enable_blinking(BLINK_KA);
+        Serial.print("== blink ka ");
     }
     else if (!blink_enabled[BLINK_KA]) {
         set_var_kaAlert(arrow1.ka);
@@ -300,6 +301,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.k != arrow2.k) {
         enable_blinking(BLINK_K);
+        Serial.print("== blink k ");
     }
     else if (!blink_enabled[BLINK_K]) {
         set_var_kAlert(arrow1.k);
@@ -307,13 +309,14 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.x != arrow2.x) {
         enable_blinking(BLINK_X);
+        Serial.print("== blink x ");
     } else if (!blink_enabled[BLINK_X]) {
         set_var_xAlert(arrow1.x);
     }
 
     if (arrow1.front != arrow2.front) {
         enable_blinking(BLINK_FRONT);
-        Serial.println("Blink front arrow");
+        Serial.println("== blink front ==");
     } else if (!blink_enabled[BLINK_FRONT]) {
         set_var_arrowPrioFront(arrow1.front);
     }
@@ -566,15 +569,11 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             return "";
         } 
         else {
-            // if (alertC == "00") {
-            //     //Serial.println("empty ID43, clearing alerts");
-            //     clearTableAlerts();
-            //     return "";
-            // }
             if (!muted) {
                 if (currentSpeed <= lowSpeedThreshold) {
                     Serial.println("SilentRide requesting mute");
                     requestMute();
+
                 }
             }
             lastPayload = payload;

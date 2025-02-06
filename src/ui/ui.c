@@ -60,4 +60,8 @@ void ui_tick() {
     tick_screen(currentScreen);
 }
 
+void ui_tick_statusBar() {
+    tick_status_bar();
+}
+
 #endif

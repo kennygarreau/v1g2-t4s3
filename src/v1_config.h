@@ -3,7 +3,7 @@
 #include <Preferences.h>
 #include "LilyGo_AMOLED.h"
 
-#define FIRMWARE_VERSION "0.9.3.1a"
+#define FIRMWARE_VERSION "0.9.5.1a"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -76,6 +76,7 @@ struct GPSData {
   String time;
   String date;
   String localtime;
+  uint32_t cpuBusy;
 };
 
 extern GPSData gpsData;

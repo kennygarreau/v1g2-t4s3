@@ -18,6 +18,7 @@ extern "C" {
 void ui_init();
 void ui_tick();
 void ui_boot();
+void ui_tick_statusBar();
 
 #if !defined(EEZ_FOR_LVGL)
 void loadScreen(enum ScreensEnum screenId);

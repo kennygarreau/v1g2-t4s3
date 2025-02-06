@@ -426,6 +426,7 @@ bool LilyGo_AMOLED::initBUS(DriverBusType type)
             .data6_io_num = BOARD_NONE_PIN,
             .data7_io_num = BOARD_NONE_PIN,
             .max_transfer_sz = (SEND_BUF_SIZE * 16) + 8,
+            //.max_transfer_sz = SEND_BUF_SIZE + 8,
             .flags = SPICOMMON_BUSFLAG_MASTER | SPICOMMON_BUSFLAG_GPIO_PINS,
         };
 
@@ -684,6 +685,17 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
 
     setRotation(0);
 
+    // pinMode(boards->display.rst, OUTPUT);
+    // digitalWrite(boards->display.rst, LOW);
+    // delay(100);
+    // digitalWrite(boards->display.rst, HIGH);
+    // delay(100);
+
+    // writeCommand(0x11, NULL, 0);  // Sleep Out
+    // delay(120);  // Required delay
+    // writeCommand(0x29, NULL, 0);  // Display ON
+    // delay(50);
+
     return true;
 }
 
@@ -890,6 +902,74 @@ void LilyGo_AMOLED::setAddrWindow(uint16_t xs, uint16_t ys, uint16_t xe, uint16_
     for (uint32_t i = 0; i < 3; i++) {
         writeCommand(t[i].addr, t[i].param, t[i].len);
     }
+}
+
+bool LilyGo_AMOLED::checkDisplayReady() {
+    int tePin = 18;
+    pinMode(tePin, INPUT);
+    
+    return digitalRead(tePin) == HIGH;
+}
+
+void LilyGo_AMOLED::pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *data) {
+    if (!spi) {
+        Serial.println("SPI device not initialized!");
+        return;
+    }
+
+    size_t totalPixels = width * height;
+    size_t totalBytes = totalPixels * sizeof(uint16_t);
+    size_t maxTransferSize = SEND_BUF_SIZE;
+    uint16_t *p = data;
+
+    setCS();
+
+    setAddrWindow(x, y, x + width - 1, y + height - 1);
+    writeCommand(LCD_CMD_RAMWR, NULL, 0);
+
+    size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_DMA);
+    Serial.printf("Available DMA memory: %d bytes\n", freeMem);
+
+    uint16_t *dmaBuffer = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_DMA | MALLOC_CAP_32BIT);
+    if (!dmaBuffer) {
+        Serial.println("DMA Buffer allocation failed!");
+        clrCS();
+        return;
+    }
+
+    size_t remainingBytes = totalBytes;
+    spi_transaction_t trans = {0};
+
+    while (remainingBytes > 0) {
+        size_t chunkSize = (remainingBytes > maxTransferSize) ? maxTransferSize : remainingBytes;
+        memcpy(dmaBuffer, p, chunkSize);
+
+        memset(&trans, 0, sizeof(spi_transaction_t));
+        trans.flags = SPI_TRANS_MODE_QIO;
+        trans.tx_buffer = dmaBuffer;
+        trans.length = chunkSize * 8;
+
+        esp_err_t ret = spi_device_queue_trans(spi, &trans, portMAX_DELAY);
+        if (ret != ESP_OK) {
+            Serial.printf("Failed to queue SPI transaction: %d\n", ret);
+            break;
+        }
+
+        spi_transaction_t *done_trans;
+        ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
+        if (ret != ESP_OK) {
+            Serial.printf("Error in getting transaction result: %d\n", ret);
+            break;
+        }
+
+        Serial.printf("Transaction completed, %zu bytes transferred.\n", chunkSize);
+        remainingBytes -= chunkSize;
+        p += chunkSize / sizeof(uint16_t);
+    }
+
+    heap_caps_free(dmaBuffer);
+    clrCS();
+    Serial.println("DMA buffer freed and SPI transaction complete.");
 }
 
 // Push (aka write pixel) colours to the TFT (use setAddrWindow() first)

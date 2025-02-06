@@ -18,12 +18,12 @@ lv_obj_t* signal_bars[MAX_BARS];
 lv_obj_t* alert_rows[MAX_ALERT_ROWS];
 lv_obj_t* alert_directions[MAX_ALERT_ROWS];
 
-lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Stores images to blink
-bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which should blink
+lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Store elements to blink
+bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should blink
 int blink_count = 0;
 
 static uint32_t last_blink_time = 0;
-static bool blink_state = false; // Tracks whether the arrow is currently visible
+static bool blink_state = false;
 
 lv_obj_t* create_alert_row(lv_obj_t* parent, int x, int y, const char* frequency) {
     lv_obj_t* obj = lv_label_create(parent);
@@ -32,7 +32,7 @@ lv_obj_t* create_alert_row(lv_obj_t* parent, int x, int y, const char* frequency
     lv_label_set_text(obj, frequency);
     lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN); // Start as hidden
+    lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
     return obj;
 }
 
@@ -307,7 +307,7 @@ void create_screen_main() {
             objects.band_laser = obj;
             lv_obj_set_pos(obj, 14, 108);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
+            lv_label_set_text(obj, "L");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -318,7 +318,7 @@ void create_screen_main() {
             objects.band_ka = obj;
             lv_obj_set_pos(obj, 14, 146);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
+            lv_label_set_text(obj, "KA");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -329,7 +329,7 @@ void create_screen_main() {
             objects.band_k = obj;
             lv_obj_set_pos(obj, 14, 184);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
+            lv_label_set_text(obj, "K");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -340,7 +340,7 @@ void create_screen_main() {
             objects.band_x = obj;
             lv_obj_set_pos(obj, 14, 222);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
+            lv_label_set_text(obj, "X");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -359,12 +359,77 @@ void create_screen_main() {
     }
 }
 
-void tick_screen_main() {
+void tick_status_bar() {
+    // Bluetooth status
     {
-        // Up Arrow
+        bool new_val = get_var_bt_connected(); // true when connected
+        bool cur_val = lv_obj_has_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
+        if (new_val == cur_val) {
+            LV_LOG_INFO("update BT status");
+            tick_value_change_obj = objects.bt_logo;
+            if (new_val) lv_obj_clear_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // Logic Mode
+    {
+        const char *new_val = get_var_logicmode();
+        const char *cur_val = (objects.mode_type) ? lv_label_get_text(objects.mode_type) : NULL;
+        if (new_val && cur_val && strcmp(new_val, cur_val) != 0) {
+            LV_LOG_INFO("update Logic Mode");
+            tick_value_change_obj = objects.mode_type;
+            lv_label_set_text(objects.mode_type, new_val);
+            tick_value_change_obj = NULL;
+        } else if (!new_val) {
+            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
+        } else if (!objects.mode_type) {
+            LV_LOG_ERROR("Error: objects.mode_type is NULL!");
+        }
+    }
+    // Nav enabled logo
+    {
+        bool new_val = get_var_gpsEnabled(); // true if enabled
+        bool cur_val = lv_obj_has_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
+        if (new_val == cur_val) {
+            tick_value_change_obj = objects.nav_logo_enabled;
+            if (new_val) lv_obj_clear_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // show the gps enabled logo
+            else lv_obj_add_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // Nav disabled logo
+    {
+        bool new_val = get_var_gpsEnabled(); // true if enabled
+        bool cur_val = lv_obj_has_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.nav_logo_disabled; 
+            if (new_val) lv_obj_clear_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // show the gps disabled logo
+            else lv_obj_add_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // SilentRide threshold
+    {
+        const char *new_val = get_var_lowspeedthreshold();
+        const char *cur_val = lv_label_get_text(objects.automutespeed);
+        if (strcmp(new_val, cur_val) != 0) {
+            LV_LOG_INFO("update silentride");
+            tick_value_change_obj = objects.automutespeed;
+            lv_obj_clear_flag(objects.automutespeed, LV_OBJ_FLAG_HIDDEN);
+            lv_label_set_text(objects.automutespeed, new_val); 
+            tick_value_change_obj = NULL;
+        }
+    }
+}
+
+void tick_screen_main() {
+    // Up Arrow
+    {
         uint32_t now = lv_tick_get();
         bool should_blink = blink_enabled[BLINK_FRONT];
         if (should_blink) {
+            LV_LOG_INFO("paint front blink");
             if (now - last_blink_time >= BLINK_FREQUENCY) {
                 last_blink_time = now;
                 blink_state = !blink_state;
@@ -379,6 +444,7 @@ void tick_screen_main() {
             bool new_val = get_var_arrowPrioFront(); // true when front should paint
             bool cur_val = lv_obj_has_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
             if (new_val == cur_val) {
+                LV_LOG_INFO("paint front solid");
                 tick_value_change_obj = objects.front_arrow;
                 if (new_val) lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
                 else lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
@@ -386,11 +452,12 @@ void tick_screen_main() {
             }
         }
     }
-    {
-        // Side Arrow
+    // Side Arrow
+    { 
         uint32_t now = lv_tick_get();
         bool should_blink = blink_enabled[BLINK_SIDE];
         if (should_blink) {
+            LV_LOG_INFO("paint side blink");
             if (now - last_blink_time >= BLINK_FREQUENCY) {
                 last_blink_time = now;
                 blink_state = !blink_state;
@@ -405,6 +472,7 @@ void tick_screen_main() {
             bool new_val = get_var_arrowPrioSide(); // true when side should paint
             bool cur_val = lv_obj_has_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
             if (new_val == cur_val) {
+                LV_LOG_INFO("paint side solid");
                 tick_value_change_obj = objects.side_arrow;
                 if (new_val) lv_obj_clear_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
                 else lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
@@ -412,11 +480,12 @@ void tick_screen_main() {
             }
         }
     }
+    // Rear Arrow
     {
-        // Rear Arrow
         uint32_t now = lv_tick_get();
         bool should_blink = blink_enabled[BLINK_REAR];
         if (should_blink) {
+            LV_LOG_INFO("paint rear blink");
             if (now - last_blink_time >= BLINK_FREQUENCY) {
                 last_blink_time = now;
                 blink_state = !blink_state;
@@ -431,6 +500,7 @@ void tick_screen_main() {
             bool new_val = get_var_arrowPrioRear(); // true when rear should paint
             bool cur_val = lv_obj_has_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
             if (new_val == cur_val) {
+                LV_LOG_INFO("paint rear solid");
                 tick_value_change_obj = objects.rear_arrow;
                 if (new_val) lv_obj_clear_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
                 else lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
@@ -438,157 +508,105 @@ void tick_screen_main() {
             }
         }
     }
+    // Priority Alert Frequency & Bars
     {    
-        // Priority Alert Frequency
         const char *new_val = get_var_prio_alert_freq();
         const char *cur_val = lv_label_get_text(objects.prioalertfreq);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.prioalertfreq;
-            if (new_val) { lv_label_set_text(objects.prioalertfreq, new_val);
-            //lv_obj_clear_flag(objects.prioalertfreq, LV_OBJ_FLAG_HIDDEN); 
+            if (new_val) { 
+                LV_LOG_INFO("updating prioAlert freq");
+                lv_label_set_text(objects.prioalertfreq, new_val);
+
+                LV_LOG_INFO("updating signal bars");
+                int numBars = get_var_prioBars();
+                update_signal_bars(numBars);
             }
-            //else lv_obj_add_flag(objects.prioalertfreq, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         } 
     }
+    // Alert Table, Frequencies & Arrows
     {
-        // Priority Alert Signal Bars
-        int numBars = get_var_prioBars();
-        update_signal_bars(numBars);
-    }
-    {
-        // Alert Table visibility
         bool new_val = get_alertPresent(); // true if alert present
         bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("show alert table");
             tick_value_change_obj = objects.alert_table;
-            if (new_val) lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+            if (new_val) {
+                lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+                LV_LOG_INFO("update alert table");
+                int alertCount = get_var_alertCount();
+                const char** frequencies = get_var_frequencies();
+                const char** directions = get_var_directions();
+                update_alert_rows(alertCount, frequencies);
+                update_alert_arrows(alertCount, directions);
+            }
             else lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         }
     }
+    // Mute status
     {
-        // Alert Table
-        int alertCount = get_var_alertCount();
-        const char** frequencies = get_var_frequencies();
-        const char** directions = get_var_directions();
-        update_alert_rows(alertCount, frequencies);
-        update_alert_arrows(alertCount, directions);
-    }
-    {
-        // Bluetooth status
-        bool new_val = get_var_bt_connected(); // true when connected
-        bool cur_val = lv_obj_has_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
-        if (new_val == cur_val) {
-            tick_value_change_obj = objects.bt_logo;
-            if (new_val) lv_obj_clear_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
-            else lv_obj_add_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        // Logic Mode
-        const char *new_val = get_var_logicmode();
-        const char *cur_val = (objects.mode_type) ? lv_label_get_text(objects.mode_type) : NULL;
-        if (new_val && cur_val && strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.mode_type;
-            lv_label_set_text(objects.mode_type, new_val);
-            tick_value_change_obj = NULL;
-        } else if (!new_val) {
-            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
-        } else if (!objects.mode_type) {
-            LV_LOG_ERROR("Error: objects.mode_type is NULL!");
-        }
-    }
-    {
-        // Mute status
         bool new_val = get_var_muted(); // true if muted
         bool cur_val = lv_obj_has_flag(objects.mute_logo, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("mute updated");
             tick_value_change_obj = objects.mute_logo;
             if (new_val) lv_obj_clear_flag(objects.mute_logo, LV_OBJ_FLAG_HIDDEN);
             else lv_obj_add_flag(objects.mute_logo, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         }
     }
+    // KA alert
     {
-        // Nav enabled logo
-        bool new_val = get_var_gpsEnabled(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
-            tick_value_change_obj = objects.nav_logo_enabled;
-            if (new_val) lv_obj_clear_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // show the gps enabled logo
-            else lv_obj_add_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        // Nav disabled logo
-        bool new_val = get_var_gpsEnabled(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val != cur_val) {
-            tick_value_change_obj = objects.nav_logo_disabled; 
-            if (new_val) lv_obj_clear_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // show the gps disabled logo
-            else lv_obj_add_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        // KA alert
         bool new_val = get_var_kaAlert(); // true if enabled
         bool cur_val = lv_obj_has_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("paint ka");
             tick_value_change_obj = objects.band_ka;
             if (new_val) { lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.band_ka, "KA"); }
+            //lv_label_set_text(objects.band_ka, "KA"); 
+            }
             else lv_obj_add_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         }
     }
+    // Laser alert
     {
-        // Laser alert
         bool new_val = get_var_laserAlert(); // true if enabled
         bool cur_val = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("paint laser");
             tick_value_change_obj = objects.band_laser;
             if (new_val) { lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.band_laser, "L"); }
+            }
             else lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         }
     }
+    // K alert
     {
-        // K alert
         bool new_val = get_var_kAlert(); // true if enabled
         bool cur_val = lv_obj_has_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("paint k");
             tick_value_change_obj = objects.band_k;
             if (new_val) { lv_obj_clear_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.band_k, "K"); }
+            }
             else lv_obj_add_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;
         }
     }
+    // X alert
     {
-        // X alert
         bool new_val = get_var_xAlert(); // true if enabled
         bool cur_val = lv_obj_has_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN); // true if hidden
         if (new_val == cur_val) {
+            LV_LOG_INFO("paint x");
             tick_value_change_obj = objects.band_x;
             if (new_val) { lv_obj_clear_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.band_x, "X"); }
+            }
             else lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
-    }
-    {
-        // SilentRide threshold
-        const char *new_val = get_var_lowspeedthreshold();
-        const char *cur_val = lv_label_get_text(objects.automutespeed);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.automutespeed;
-            lv_obj_clear_flag(objects.automutespeed, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.automutespeed, new_val); 
             tick_value_change_obj = NULL;
         }
     }

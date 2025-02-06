@@ -40,7 +40,7 @@ bool connected = false;
 static bool laserAlert = false;
 static String hexData = "";
 static String previousHexData = "";
-//char previousHexData[48] = {0};  // Pre-allocate memory
+static std::string lastPacket = "";
 static std::string bogeyValue, barValue, bandValue, directionValue;
 
 LilyGo_AMOLED amoled;
@@ -112,6 +112,7 @@ class MyClientCallback : public BLEClientCallbacks {
 
 // TODO: remove the conversion dependency
 static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+  unsigned long bleCallbackStart = millis();
   hexData = "";
   if (pData) {
     for (size_t i = 0; i < length; i++) {
@@ -121,11 +122,14 @@ static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint
     }
     // uncomment below for debug before entry into the payload calls
     if (hexData != previousHexData) {
-      // Serial.print("HEX rcvd: ");
-      // Serial.println(hexData);
+      //Serial.print("HEX decode: ");
+      //Serial.println(hexData);
       previousHexData = hexData;
     }
   }
+  unsigned long bleCallbackLength = millis() - bleCallbackStart;
+  // Serial.print("HEX decode time: ");
+  // Serial.println(bleCallbackLength);
 }
 
 
@@ -351,7 +355,6 @@ void setup()
   }
 
   beginLvglHelper(amoled);
-
   //loadSelectedConstants(selectedConstants);
   // if not initialized yet (first boot) - initialize settings
   // if (selectedConstants.MAX_X == 0 && selectedConstants.MAX_Y == 0) {
@@ -436,24 +439,35 @@ void loop() {
     //std::string packets[] = {"AAD8EA31095B1F38280C0000E7AB"};
 
     for (const std::string& packet : packets) {
+      //unsigned long decodeLoopStart = millis();
       PacketDecoder decoder(packet); 
       decoder.decode(settings.lowSpeedThreshold, currentSpeed);
-      delay(250);
+      // unsigned long decodeLoopEnd = millis() - decodeLoopStart;
+      // Serial.print("Decode loop: ");
+      // Serial.println(decodeLoopEnd);
+      delay(25);
     }
-
-    //delay(50);
   }
 
-  // decode loop takes 6-7ms - possibly longer with the amoled screens
+  // decode loop takes ~4ms
   std::string packet = hexData.c_str();
-  PacketDecoder decoder(packet);
-  std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
+  if (packet != lastPacket) {
+    //unsigned long decodeLoopStart = millis();
+    PacketDecoder decoder(packet);
+    std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
+    lastPacket = packet;
 
+    // unsigned long decodeLoopEnd = millis() - decodeLoopStart;
+    // Serial.print("Decode loop: ");
+    // Serial.println(decodeLoopEnd);
+  } 
+  
   unsigned long currentMillis = millis();
 
   if (currentMillis - lastMillis >= 2000) {
     //Serial.println("Loops executed: " + String(loopCounter)); // uncomment for loop profiling
-    
+    ui_tick_statusBar();
+
     isVBusIn = amoled.isVbusIn();
     if (isVBusIn) {
       vBusVoltage = amoled.getVbusVoltage();
@@ -474,17 +488,20 @@ void loop() {
       } else {
         Serial.println("User settings obtained!");
         configHasRun = true;
-        decoder.clearTableAlerts();
       }
     }
+    uint32_t cpuIdle = lv_timer_get_idle();  
+    gpsData.cpuBusy = 100 - cpuIdle;  
+
+    //Serial.printf("CPU Busy: %u%%\n", gpsData.cpuBusy);
+
     lastMillis = currentMillis;
     loopCounter = 0;
     checkReboot();
 
   }
-
+  
   if (settings.enableGPS) {
-    //unsigned long gpsMillis = millis();
 
     while (gpsSerial.available() > 0) {
         char c = gpsSerial.read();
@@ -525,25 +542,24 @@ void loop() {
           }
         }
       }
-      // unsigned long elapsedTime = millis() - gpsMillis;
-      // Serial.print("GPS loop: " + String(elapsedTime));
   }
-
-  loopCounter++;
   
   // TODO: add deep sleep for BLE disconnect timeout
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {
     lastTick = now;
     ui_tick();
-    //unsigned long q = millis();
+    unsigned long startTime = millis();
     lv_task_handler();
-    // unsigned long qd = millis() - q;
-    // Serial.println("lv_task_handler time: " + String(qd));
+    // unsigned long endTime = millis();
+    // if (endTime - startTime > 1) {
+    //   Serial.printf("lv_task_handler execution time: %lu ms\n", endTime - startTime);
+    // }
   }
 
   // 500us delay: ~1500 loops/s
   // 1000us delay: ~850 loops/s
+  
   delayMicroseconds(500);
   yield();
 }

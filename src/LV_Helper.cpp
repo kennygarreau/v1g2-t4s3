@@ -23,14 +23,45 @@ static lv_indev_drv_t indev_mouse;
 static lv_indev_drv_t indev_keypad;
 static struct InputParams params_copy;
 
-/* Display flushing */
 static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p )
 {
-    uint32_t w = ( area->x2 - area->x1 + 1 );
-    uint32_t h = ( area->y2 - area->y1 + 1 );
+    uint32_t w = (area->x2 - area->x1 + 1);
+    uint32_t h = (area->y2 - area->y1 + 1);
+    
+    static uint16_t last_x1 = 0, last_y1 = 0, last_x2 = 0, last_y2 = 0;
+    if (area->x1 != last_x1 || area->y1 != last_y1 || area->x2 != last_x2 || area->y2 != last_y2) {
+        static_cast<LilyGo_Display *>(disp_drv->user_data)->setAddrWindow(area->x1, area->y1, w, h);
+        last_x1 = area->x1;
+        last_y1 = area->y1;
+        last_x2 = area->x2;
+        last_y2 = area->y2;
+    }
+
     static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColors(area->x1, area->y1, w, h, (uint16_t *)color_p);
-    lv_disp_flush_ready( disp_drv );
+
+    lv_disp_flush_ready(disp_drv);
 }
+
+/* Display flushing */
+// static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p )
+// {
+//     uint32_t w = ( area->x2 - area->x1 + 1 );
+//     uint32_t h = ( area->y2 - area->y1 + 1 );
+//     static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColors(area->x1, area->y1, w, h, (uint16_t *)color_p);
+//     lv_disp_flush_ready( disp_drv );
+// }
+
+/* DMA display flush */
+// static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
+//     uint32_t w = (area->x2 - area->x1 + 1);
+//     uint32_t h = (area->y2 - area->y1 + 1);
+
+//     LilyGo_Display *tft = static_cast<LilyGo_Display *>(disp_drv->user_data);
+//     tft->pushColorsDMA(area->x1, area->y1, w, h, (uint16_t *)color_p);
+
+//     lv_disp_flush_ready(disp_drv);
+// }
+
 
 /*Read the touchpad*/
 static void touchpad_read( lv_indev_drv_t *indev_driver, lv_indev_data_t *data )
@@ -123,14 +154,18 @@ void beginLvglHelper(LilyGo_Display &board, bool debug)
     #endif
 
     size_t lv_buffer_size = board.width() * board.height() * sizeof(lv_color_t);
-    buf = (lv_color_t *)ps_malloc(lv_buffer_size);
-    assert(buf);
+    //buf = (lv_color_t *)ps_malloc(lv_buffer_size);
+    //assert(buf);
+    lv_color_t *buf1 = (lv_color_t *)ps_malloc(lv_buffer_size);
+    lv_color_t *buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
+    assert(buf1 && buf2);
+    Serial.println("Buffer size: " + String(lv_buffer_size));
 
-    lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
+    //lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
+    lv_disp_draw_buf_init(&draw_buf, buf1, buf2, board.width() * board.height());
 
     /*Initialize the display*/
     lv_disp_drv_init( &disp_drv );
-    /* display resolution */
     disp_drv.hor_res = board.width();
     disp_drv.ver_res = board.height();
     disp_drv.flush_cb = disp_flush;
