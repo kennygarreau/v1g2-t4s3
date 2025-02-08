@@ -390,7 +390,6 @@ void setup()
   pClient->setClientCallbacks(new MyClientCallback());
 
   pBLEScan = BLEDevice::getScan();
-  //pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true);
 
   connectToServer();
@@ -445,7 +444,7 @@ void loop() {
       // unsigned long decodeLoopEnd = millis() - decodeLoopStart;
       // Serial.print("Decode loop: ");
       // Serial.println(decodeLoopEnd);
-      delay(25);
+      delay(50);
     }
   }
 
@@ -559,7 +558,7 @@ void loop() {
 
   // 500us delay: ~1500 loops/s
   // 1000us delay: ~850 loops/s
-  
-  delayMicroseconds(500);
+  loopCounter++;
+  delayMicroseconds(10);
   yield();
 }

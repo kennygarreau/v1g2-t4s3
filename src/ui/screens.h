@@ -20,7 +20,7 @@ typedef struct _objects_t {
     lv_obj_t *alert1freq;
     lv_obj_t *alert2freq;
     lv_obj_t *alert3freq;
-    lv_obj_t *bar_str_1;
+    lv_obj_t *bar_str;
     lv_obj_t *nav_logo_enabled;
     lv_obj_t *nav_logo_disabled;
     lv_obj_t *band_ka;

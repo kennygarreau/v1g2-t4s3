@@ -21,6 +21,8 @@ lv_obj_t* alert_directions[MAX_ALERT_ROWS];
 lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Store elements to blink
 bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should blink
 int blink_count = 0;
+int cur_bars = 0;
+int cur_alert_count = 0;
 
 static uint32_t last_blink_time = 0;
 static bool blink_state = false;
@@ -517,15 +519,34 @@ void tick_screen_main() {
             if (new_val) { 
                 LV_LOG_INFO("updating prioAlert freq");
                 lv_label_set_text(objects.prioalertfreq, new_val);
-
-                LV_LOG_INFO("updating signal bars");
-                int numBars = get_var_prioBars();
-                update_signal_bars(numBars);
             }
             tick_value_change_obj = NULL;
         } 
     }
-    // Alert Table, Frequencies & Arrows
+    // Update Priority Bars (TODO: shift to infDisplayData?)
+    {
+        int numBars = get_var_prioBars();
+        if (numBars != cur_bars) {
+            tick_value_change_obj = objects.bar_str;
+            LV_LOG_INFO("updating signal bars");
+            update_signal_bars(numBars);
+            cur_bars = numBars;
+            tick_value_change_obj = NULL;
+        }
+    }
+    // Alert Table Freq & Direction update
+    {
+        int alertCount = get_var_alertCount();
+        if (alertCount != cur_alert_count && alertCount > 1) {
+            LV_LOG_INFO("update alert table");
+            const char** frequencies = get_var_frequencies();
+            const char** directions = get_var_directions();
+            update_alert_rows(alertCount, frequencies);
+            update_alert_arrows(alertCount, directions);
+            cur_alert_count = alertCount;
+        }
+    }
+    // Alert Table visibility
     {
         bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
         bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
@@ -534,12 +555,6 @@ void tick_screen_main() {
             tick_value_change_obj = objects.alert_table;
             if (new_val) {
                 lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-                LV_LOG_INFO("update alert table");
-                int alertCount = get_var_alertCount();
-                const char** frequencies = get_var_frequencies();
-                const char** directions = get_var_directions();
-                update_alert_rows(alertCount, frequencies);
-                update_alert_arrows(alertCount, directions);
             }
             else lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
             tick_value_change_obj = NULL;

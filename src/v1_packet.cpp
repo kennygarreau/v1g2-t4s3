@@ -274,8 +274,8 @@ BandArrowData processBandArrow(const std::string& bandArrow) {
             Serial.println("Error: Invalid bandArrow length");
         }
         } catch (const std::exception& e) {
-        Serial.print("Error in processBandArrow: ");
-        Serial.println(e.what());
+        // Serial.print("Error in processBandArrow: ");
+        // Serial.println(e.what());
     }
 
     return data;
@@ -283,15 +283,6 @@ BandArrowData processBandArrow(const std::string& bandArrow) {
 
 void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2) {
     set_var_muted(arrow1.muteIndicator);
-    
-    if (arrow1.laser) {
-        enable_blinking(BLINK_LASER);
-        set_var_prio_alert_freq("LASER");
-        set_var_prioBars(6);
-        Serial.print("== blink laser ");
-    } else {
-        set_var_laserAlert(arrow1.laser);
-    }
 
     if (arrow1.ka != arrow2.ka) {
         enable_blinking(BLINK_KA);
@@ -335,6 +326,17 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         Serial.println("Blink rear");
     } else if (!blink_enabled[BLINK_REAR]) {
         set_var_arrowPrioRear(arrow1.rear);
+    }
+        
+    if (arrow1.laser) {
+        enable_blinking(BLINK_LASER);
+        set_var_prio_alert_freq("LASER");
+        set_var_prioBars(6);
+        if (arrow1.front || arrow1.rear) {
+            enable_blinking(arrow1.front ? BLINK_FRONT : BLINK_REAR);
+        }
+    } else {
+        set_var_laserAlert(arrow1.laser);
     }
 }
 
@@ -448,15 +450,13 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                     requestMute();
                 }
             }
-            
+
             // paint the main signal bar
             if (rearStrengthVal > frontStrengthVal) {
                 set_var_prioBars(rearStrengthVal);
-                //displayController.drawHorizontalBars(selectedConstants.MHZ_DISP_Y + (selectedConstants.MHZ_DISP_Y_OFFSET * i) - 10, rearStrengthVal, UI_COLOR); 
             }
             else {
                 set_var_prioBars(frontStrengthVal);
-                //displayController.drawHorizontalBars(selectedConstants.MHZ_DISP_Y + (selectedConstants.MHZ_DISP_Y_OFFSET * i) - 10, frontStrengthVal, UI_COLOR);
             }
 
             // paint the frequency of the prio alert
@@ -523,6 +523,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         else {
             Serial.println("clearing alerts via ID31 bandArrow empty");
             clearInfAlerts();
+            clearTableAlerts();
         }
 
         std::string auxByte0 = packet.substr(packet.length() - 10, 2);
@@ -567,21 +568,14 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         if (payload == lastPayload && alertC == "00") {
             // this shouldn't be necessary if inf is clearing the table anyway?
             if (alertPresent) {
-                Serial.println("duplicate empty payload with alertPresent TRUE; setting to false");
+                //Serial.println("duplicate empty payload with alertPresent TRUE; setting to false");
                 alertPresent = false;
                 clearInfAlerts();
+                clearTableAlerts();
             }
             return "";
         } 
         else {
-            /*
-            if (!muted) {
-                if (currentSpeed <= lowSpeedThreshold) {
-                    Serial.println("SilentRide requesting mute");
-                    requestMute();
-                }
-            }
-            */
             lastPayload = payload;
             std::string alertIndexStr = packet.substr(10, 2);
 
@@ -611,6 +605,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             if (alertTable.size() >= alertCountValue) {
                 alertPresent = true;
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
+                set_var_showAlertTable(alertCountValue > 1);
                 alertTable.clear();
             } else {
                 if (alertCountValue == 0) {
