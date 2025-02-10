@@ -136,6 +136,7 @@ struct AlertTableData {
     int alertCount;
     float frequencies[MAX_ALERTS];
     std::string direction[MAX_ALERTS];
+    int barCount;
     int freqCount;
 };
 

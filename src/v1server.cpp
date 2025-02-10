@@ -62,7 +62,7 @@ Preferences preferences;
 int loopCounter = 0;
 unsigned long lastMillis = 0;
 static unsigned long lastTick = 0;
-const unsigned long uiTickInterval = 10;
+const unsigned long uiTickInterval = 5;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
@@ -136,7 +136,8 @@ static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint
 void onWiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case SYSTEM_EVENT_STA_DISCONNECTED:
-      delay(1000);
+      Serial.println("Disconnected from WiFi");
+      delay(10);
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
       Serial.print("WiFi begin succeeded ");
@@ -408,6 +409,8 @@ void setup()
 
 void loop() {  
   static bool configHasRun = false;
+  static unsigned long lastGPSUpdate = 0;
+  unsigned long gpsMillis = millis();
 
   if (settings.disableBLE == false && !settings.displayTest) {
     if (pClient->isConnected()) {
@@ -448,7 +451,7 @@ void loop() {
     }
   }
 
-  // decode loop takes ~4ms
+  // decode loop takes ~2ms
   std::string packet = hexData.c_str();
   if (packet != lastPacket) {
     //unsigned long decodeLoopStart = millis();
@@ -500,7 +503,8 @@ void loop() {
 
   }
   
-  if (settings.enableGPS) {
+  if (settings.enableGPS && (currentMillis - lastGPSUpdate >= 250)) {
+    lastGPSUpdate = currentMillis; 
 
     while (gpsSerial.available() > 0) {
         char c = gpsSerial.read();

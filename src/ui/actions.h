@@ -14,7 +14,7 @@ extern void enable_blinking(int index);
 #define MAX_BARS 6
 #define MAX_ALERT_ROWS 4
 #define BLINK_FREQUENCY 96
-#define BLINK_DURATION_MS BLINK_FREQUENCY * 6
+#define BLINK_DURATION_MS BLINK_FREQUENCY * 8
 
 extern lv_obj_t *blink_images[MAX_BLINK_IMAGES];
 extern bool blink_enabled[MAX_BLINK_IMAGES];

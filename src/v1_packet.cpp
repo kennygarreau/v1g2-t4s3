@@ -91,12 +91,27 @@ void PacketDecoder::clearInfAlerts() {
     set_var_arrowPrioFront(false);
     set_var_arrowPrioRear(false);
     set_var_arrowPrioSide(false);
-    for (int i = 0; i < MAX_BLINK_IMAGES; i++) {
-        blink_enabled[i] = false;
-    }
+    std::fill(std::begin(blink_enabled), std::end(blink_enabled), false);
+    
+    // for (int i = 0; i < MAX_BLINK_IMAGES; i++) {
+    //     blink_enabled[i] = false;
+    // }
 }
 
 int mapXToBars(const std::string& hex) {
+    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
+        Serial.println("Invalid hex input");
+        return -1;
+    }
+
+    int decimalValue = std::stoi(hex, 0, 16);
+    static constexpr uint8_t thresholds[] = {0x00, 0x95, 0x9F, 0xA9, 0xB3, 0xBC, 0xC4, 0xCF, 0xFF};
+
+    for (int i = 0; i < 8; ++i) {
+        if (decimalValue <= thresholds[i]) return i;
+    }
+    return -1;
+    /*
     int decimalValue = 0;
     try {
         if (hex.empty()) {
@@ -119,9 +134,24 @@ int mapXToBars(const std::string& hex) {
     else if (decimalValue <= 0xCF) {return 7;}
     else if (decimalValue <= 0xFF) {return 8;}
     else {return -1;}
+    */
 }
 
 int mapKToBars(const std::string& hex) {
+    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
+        Serial.println("Invalid hex input");
+        return -1;
+    }
+
+    int decimalValue = std::stoi(hex, 0, 16);
+    static constexpr uint8_t thresholds[] = {0x00, 0x87, 0x8F, 0x99, 0xA3, 0xAD, 0xB7, 0xC1, 0xFF};
+    
+    for (int i = 0; i < 8; ++i) {
+        if (decimalValue <= thresholds[i]) return i;
+    }
+    return -1;
+
+    /*
     int decimalValue = 0;
     try {
         if (hex.empty()) {
@@ -144,9 +174,24 @@ int mapKToBars(const std::string& hex) {
     else if (decimalValue <= 0xC1) {return 7;}
     else if (decimalValue <= 0xFF) {return 8;}
     else {return -1;}
+    */
 }
 
 int mapKaToBars(const std::string& hex) {
+    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
+        Serial.println("Invalid Ka hex input");
+        return -1;
+    }
+
+    int decimalValue = std::stoi(hex, 0, 16);
+    static constexpr uint8_t thresholds[] = {0x00, 0x8F, 0x96, 0x9D, 0xA4, 0xAB, 0xB2, 0xB9, 0xFF};
+    
+    for (int i = 0; i < 8; ++i) {
+        if (decimalValue <= thresholds[i]) return i;
+    }
+    return -1;
+
+    /*
     int decimalValue = 0;
     try {
         if (hex.empty()) {
@@ -169,6 +214,7 @@ int mapKaToBars(const std::string& hex) {
     else if (decimalValue <= 0xB9) {return 7;}
     else if (decimalValue <= 0xFF) {return 8;}
     else {return -1;}
+    */
 }
 
 int combineMSBLSB(const std::string& msb, const std::string& lsb) {
@@ -344,7 +390,8 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 Execute if we successfully write reqStartAlertData to clientWriteUUID
 */
 void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int currentSpeed) {
-    
+    static unsigned long startTimeMillis = millis();
+
     frontStrengthVal = 0;
     rearStrengthVal = 0;
 
@@ -423,11 +470,6 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             }
         }
 
-        if (!found) {
-            AlertTableData newAlertData = {alertCountValue, {freqGhz}, {directionValue}, 1}; // Initialize the array
-            alertDataList.push_back(newAlertData);
-        }
-
         /* after this there should be no substring processing; we should only focus on painting the display */
         // paint the alert table arrows
         if (bandValue == "X") {
@@ -467,9 +509,19 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             }
         }
 
+        int barCount = get_var_prioBars();
+        if (!found) {
+            AlertTableData newAlertData = {alertCountValue, {freqGhz}, {directionValue}, barCount, 1};
+            alertDataList.push_back(newAlertData);
+        }
+
+        unsigned long elapsedTimeMillis = millis() - startTimeMillis;
+        // Serial.print("decode time: ");
+        // Serial.println(elapsedTimeMillis);
+
         // enable below for debugging
         std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
-                                    " FREQ_GHZ:" + std::to_string(freqGhz) +
+                                    " FREQ:" + std::to_string(freqGhz) +
                                     " FSTR:" + std::to_string(frontStrengthVal) +
                                     " RSTR:" + std::to_string(rearStrengthVal) +
                                     " BAND:" + bandValue +
@@ -477,7 +529,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                                     " PRIO:" + std::to_string(priority) +
                                     " JUNK:" + std::to_string(junkAlert) +
                                     " SPEED: " + std::to_string(gpsData.speed);
-                                    //+ " decode(ms): ";
+                                    //+ " decodeAlert(ms): " + std::to_string(elapsedTimeMillis);
         Serial.println(("respAlertData: " + decodedPayload).c_str());
 
     }
