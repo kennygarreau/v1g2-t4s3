@@ -398,6 +398,12 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
     std::vector<AlertTableData> alertDataList;
 
     for (int i = 0; i < alerts.size(); i++) {
+        if (alerts[i].length() < 14) {
+            Serial.print("Error: alert string too short: ");
+            Serial.println(alerts[i].c_str());
+            continue;
+        }
+
         std::string alertIndexStr = alerts[i].substr(0, 2);
         std::string freqMSB = alerts[i].substr(2, 2);
         std::string freqLSB = alerts[i].substr(4, 2);
@@ -408,6 +414,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         std::string frontStrength = alerts[i].substr(6, 2);
         std::string rearStrength = alerts[i].substr(8, 2);
         std::string bandArrowDef = alerts[i].substr(10, 2);
+        std::string auxByte = alerts[i].substr(12, 2);
 
         std::map<std::string, BandDirection> bandArrowMap;
             bandArrowMap["21"] = {"LASER", "FRONT"};
@@ -433,7 +440,6 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             Serial.println(errorMessage.c_str());
         }
 
-        std::string auxByte = alerts[i].substr(12, 2);
         if (auxByte == "80") {priority = true;}
         else if (auxByte == "40") {junkAlert = true;}
         else {priority = false; junkAlert = false;}

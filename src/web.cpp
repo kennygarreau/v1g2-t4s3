@@ -39,6 +39,7 @@ void serveStaticFile(AsyncWebServer &server, const char *path, const char *mimeT
 
 void checkReboot() {
     if (isRebootPending && millis() - rebootTime >= 5000) {
+        Serial.println("Rebooting...");
         ESP.restart();
     }
 }
@@ -157,8 +158,8 @@ void setupWebServer()
         JsonObject displaySettingsJson = jsonDoc.createNestedObject("displaySettings");
         displaySettingsJson["brightness"] = settings.brightness;
         displaySettingsJson["wifiMode"] = settings.wifiMode;
-        displaySettingsJson["ssid"] = settings.ssid;
-        displaySettingsJson["password"] = settings.password;
+        displaySettingsJson["localSSID"] = settings.localSSID;
+        displaySettingsJson["localPW"] = settings.localPW;
         displaySettingsJson["disableBLE"] = settings.disableBLE;
         displaySettingsJson["timezone"] = settings.timezone;
         displaySettingsJson["enableGPS"] = settings.enableGPS;
@@ -169,6 +170,14 @@ void setupWebServer()
         displaySettingsJson["onlyDisplayBTIcon"] = settings.onlyDisplayBTIcon;
         displaySettingsJson["displayTest"] = settings.displayTest;
         displaySettingsJson["unitSystem"] = settings.unitSystem;
+
+        JsonArray wifiArray = displaySettingsJson.createNestedArray("wifiCredentials");
+
+        for (const auto& cred : settings.wifiCredentials) {
+            JsonObject wifiObj = wifiArray.createNestedObject();
+            wifiObj["ssid"] = cred.ssid;
+            wifiObj["password"] = cred.password;
+        }
 
         char hexColor[8];
         sprintf(hexColor, "#%06X", settings.textColor & 0xFFFFFF);
@@ -237,7 +246,7 @@ void setupWebServer()
         
             String body = String((char*)data).substring(0, len);
 
-            DynamicJsonDocument doc(2048);
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, body);
 
             if (error) {
@@ -258,16 +267,37 @@ void setupWebServer()
                 settings.wifiMode = doc["wifiMode"].as<String>();
                 Serial.println("wifiMode: " + settings.wifiMode);
                 preferences.putString("wifiMode", settings.wifiMode);
-            }  
-            if (doc.containsKey("ssid")) {
-                settings.ssid = doc["ssid"].as<String>();
-                Serial.println("ssid: " + settings.ssid);
-                preferences.putString("ssid", settings.ssid);
+            } 
+            if (doc.containsKey("wifiCredentials") && doc["wifiCredentials"].is<JsonArray>()) {
+                JsonArray wifiCredentials = doc["wifiCredentials"].as<JsonArray>();
+                int networkCount = min((int)wifiCredentials.size(), MAX_WIFI_NETWORKS);
+                
+                Serial.println("Updating WiFi credentials...");
+                
+                for (int i = 0; i < networkCount; i++) {
+                    JsonObject network = wifiCredentials[i];
+                    if (network.containsKey("ssid") && network.containsKey("password")) {
+                        String ssid = network["ssid"].as<String>();
+                        String password = network["password"].as<String>();
+            
+                        Serial.println("Storing WiFi network " + String(i) + ": " + ssid);
+                        preferences.putString(("wifi_ssid_" + String(i)).c_str(), ssid);
+                        preferences.putString(("wifi_pass_" + String(i)).c_str(), password);
+                    }
+                }
+                
+                preferences.putInt("networkCount", networkCount);
+                Serial.println("Total networks stored: " + String(networkCount));
             }
-            if (doc.containsKey("password")) {
-                settings.password = doc["password"].as<String>();
-                Serial.println("password: " + settings.password);
-                preferences.putString("password", settings.password);
+            if (doc.containsKey("localSSID")) {
+                settings.localSSID = doc["ssid"].as<String>();
+                Serial.println("ssid: " + settings.localSSID);
+                preferences.putString("ssid", settings.localSSID);
+            }
+            if (doc.containsKey("localPW")) {
+                settings.localPW = doc["password"].as<String>();
+                Serial.println("password: " + settings.localPW);
+                preferences.putString("password", settings.localPW);
             }
             if (doc.containsKey("disableBLE")) {
                 settings.disableBLE = doc["disableBLE"].as<bool>();

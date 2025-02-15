@@ -3,24 +3,31 @@
 #include <Preferences.h>
 #include "LilyGo_AMOLED.h"
 
-#define FIRMWARE_VERSION "0.9.8.1b"
+#define FIRMWARE_VERSION "0.9.14.1a"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
 #define MAX_ALERTS 4
+#define MAX_WIFI_NETWORKS 4
 
 extern LilyGo_AMOLED amoled;
 extern bool bt_connected;
 extern bool muted;
 extern bool alertPresent;
 
+struct WiFiCredential {
+    String ssid;
+    String password;
+};
+
 struct v1Settings {
   int displayOrientation;
   uint8_t brightness;
   uint32_t textColor;
-  String ssid;
-  String password;
+  std::vector<WiFiCredential> wifiCredentials;
+  String localSSID;
+  String localPW;
   String wifiMode;
   String unitSystem;
   bool isPortraitMode;
@@ -31,6 +38,7 @@ struct v1Settings {
   bool onlyDisplayBTIcon;
   int lowSpeedThreshold;
   String timezone;
+  int networkCount;
 };
 
 extern v1Settings settings;

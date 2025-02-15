@@ -33,13 +33,27 @@
               </select>
             </td>
           </tr>
-            <td>WiFi SSID</td>
-            <td><input type="text" id="ssid" name="ssid" placeholder="Enter SSID"></td>
+          <tr>
+            <td>Local SSID</td>
+            <td>
+              <input type="text" id="localSSID" name="localSSID">
+            </td>
           </tr>
           <tr>
-            <td>WiFi Password</td>
-            <td><input type="password" id="password" name="password" placeholder="Enter password"></td>
+            <td>Local Wifi Password</td>
+            <td>
+              <input type="text" id="localPW" name="localPW">
+            </td>
           </tr>
+          <tr>
+            <td>WiFi Networks</td>
+            <td>
+              <div id="wifiCredentialsContainer">
+                <!-- WiFi credentials will be added dynamically here -->
+              </div>
+              <button type="button" onclick="addWifiCredential()">Add WiFi Network</button>
+            </td>
+          </tr>          
           <tr>
             <td>Bluetooth</td>
             <td>

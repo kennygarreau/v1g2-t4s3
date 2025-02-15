@@ -188,17 +188,47 @@ void wifiSetup() {
 }
 
 void wifiConnect() {
- //scanWiFiNetworks();
-
   WiFi.mode(WIFI_MODE);
+
   if (WIFI_MODE == WIFI_MODE_AP) {
-    WiFi.softAP(settings.ssid, settings.password);
+    Serial.println("Starting Access Point...");
+    WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str());
     WiFi.softAPConfig(local_ip, gateway, subnet);
-  }
-  else {
-    WiFi.begin(settings.ssid, settings.password);
+    Serial.println("Access Point started.");
+  } else {
+    Serial.println("Attempting to connect to saved WiFi networks...");
+
+    for (const auto& cred : settings.wifiCredentials) {
+      Serial.print("Trying to connect to: ");
+      Serial.println(cred.ssid);
+
+      WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
+      int retries = 20;
+      while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
+        delay(500);
+        Serial.print(".");
+      }
+      Serial.println();
+
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("Connected to WiFi: " + cred.ssid);
+        Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+        return;
+      }
+    }
+
+    Serial.println("Failed to connect to any saved WiFi networks; starting Access Point...");
+    WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str());
+    WiFi.softAPConfig(local_ip, gateway, subnet);
+
+    String fallbackAPIP = WiFi.softAPIP().toString();
+    Serial.println("Fallback Access Point started.");
+    Serial.println("SSID: " + settings.localSSID);
+    Serial.println("IP Address: " + fallbackAPIP);
   }
 }
+
 
 void queryDeviceInfo(BLEClient* pClient) {
   BLERemoteService* pService = pClient->getService(deviceInfoUUID);
@@ -274,8 +304,8 @@ void displayReader() {
 void loadSettings() {
   settings.brightness = preferences.getUInt("brightness", amoled.getBrightness());
   settings.wifiMode = preferences.getString("wifiMode", "WIFI_STA");
-  settings.ssid = preferences.getString("ssid", "AdeptaSororitas");
-  settings.password = preferences.getString("password", "SaintCelestine");
+  settings.localSSID = preferences.getString("localSSID", "v1display");
+  settings.localPW = preferences.getString("localPW", "password123");
   settings.disableBLE = preferences.getBool("disableBLE", false);
   settings.displayTest = preferences.getBool("displayTest", false);
   settings.enableGPS = preferences.getBool("enableGPS", true);
@@ -295,7 +325,18 @@ void loadSettings() {
   settings.onlyDisplayBTIcon = preferences.getBool("onlyDispBTIcon", true);
 
   // selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
-  // Serial.println("Panel Width: " + String(selectedConstants.MAX_X));
+
+  settings.wifiCredentials.clear();
+  int networkCount = preferences.getInt("networkCount", 0);  // Retrieve stored count
+
+  for (int i = 0; i < networkCount; i++) {  // Loop through stored networks
+      String ssid = preferences.getString(("wifi_ssid_" + String(i)).c_str(), "");
+      String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
+
+      if (ssid.length() > 0) {  // Ensure non-empty SSID
+          settings.wifiCredentials.push_back({ssid, password});
+      }
+  }
 }
 
 void saveSelectedConstants(const DisplayConstants& constants) {
@@ -547,7 +588,7 @@ void loop() {
       }
   }
   
-  // TODO: add deep sleep for BLE disconnect timeout
+  // TODO: add deep sleep for BLE disconnect timeout??
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {
     lastTick = now;
@@ -560,8 +601,6 @@ void loop() {
     // }
   }
 
-  // 500us delay: ~1500 loops/s
-  // 1000us delay: ~850 loops/s
   loopCounter++;
   delayMicroseconds(10);
   yield();

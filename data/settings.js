@@ -9,6 +9,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let currentValues = {};
 
+function removeWifiCredential(button) {
+    button.parentElement.remove();
+}
+
+function addWifiCredential(ssid = "", password = "") {
+    const wifiContainer = document.getElementById("wifiCredentialsContainer");
+
+    const div = document.createElement("div");
+    div.classList.add("wifi-credential");
+
+    div.innerHTML = `
+        <input type="text" name="ssid" placeholder="Enter SSID" value="${ssid}">
+        <input type="password" name="password" placeholder="Enter password" value="${password}">
+        <button type="button" onclick="removeWifiCredential(this)">Remove</button>
+    `;
+
+    wifiContainer.appendChild(div);
+}
+window.addWifiCredential = addWifiCredential;
+window.removeWifiCredential = removeWifiCredential;
+
 async function populateBoardInfo() {
         try {
             const response = await fetch("/board-info");
@@ -34,6 +55,7 @@ async function populateBoardInfo() {
                 onlyDisplayBTIcon: boardInfo.displaySettings.onlyDisplayBTIcon || false,
                 displayTest: boardInfo.displaySettings.displayTest || false,
                 unitSystem: boardInfo.displaySettings.unitSystem || "Imperial",
+                wifiCredentials: boardInfo.displaySettings.wifiCredentials || [],
             };
 
             let wifiType, orientation;
@@ -55,8 +77,8 @@ async function populateBoardInfo() {
             // Populate the form fields with current values
             document.getElementById("brightness").value = currentValues.brightness;
             document.getElementById("wifiMode").value = currentValues.wifiMode;
-            document.getElementById("ssid").value = currentValues.ssid;
-            document.getElementById("password").value = currentValues.password;
+            document.getElementById("localSSID").value = currentValues.ssid;
+            document.getElementById("localPW").value = currentValues.password;
             document.getElementById("disableBLE").value = currentValues.disableBLE.toString();
             document.getElementById("timezone").value = currentValues.timezone;
             document.getElementById("enableGPS").value = currentValues.enableGPS.toString();
@@ -67,6 +89,12 @@ async function populateBoardInfo() {
             document.getElementById("onlyDisplayBTIcon").value = currentValues.onlyDisplayBTIcon.toString();
             document.getElementById("displayTest").value = currentValues.displayTest.toString();
             document.getElementById("unitSystem").value = currentValues.unitSystem;
+
+            const wifiContainer = document.getElementById("wifiCredentialsContainer");
+            wifiContainer.innerHTML = "";
+            currentValues.wifiCredentials.forEach((cred, index) => {
+                addWifiCredential(cred.ssid, cred.password);
+            });
 
         } catch (error) {
             console.error("Failed to fetch board info:", error);
@@ -119,6 +147,20 @@ document.getElementById("settingsForm").addEventListener("submit", function(even
         }
         if (formData.get("unitSystem") !== currentValues.unitSystem) {
             updatedSettings.unitSystem = formData.get("unitSystem");
+        }
+
+        const wifiCredentials = [];
+        document.querySelectorAll("#wifiCredentialsContainer .wifi-credential").forEach((div) => {
+            const ssid = div.querySelector("input[name='ssid']").value.trim();
+            const password = div.querySelector("input[name='password']").value.trim();
+            
+            if (ssid) {
+                wifiCredentials.push({ ssid, password });
+            }
+        });
+
+        if (JSON.stringify(wifiCredentials) !== JSON.stringify(currentValues.wifiCredentials)) {
+            updatedSettings.wifiCredentials = wifiCredentials;
         }
     
         if (Object.keys(updatedSettings).length > 0) {
