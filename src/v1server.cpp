@@ -48,11 +48,10 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(1);
 int currentSpeed = 0;
 float batteryPercentage = 0.0f;
-bool batteryConnected;
-bool batteryCharging;
-bool isVBusIn;
+bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
+unsigned long wifiStartTime = 0;
 
 v1Settings settings;
 Preferences preferences;
@@ -74,16 +73,15 @@ void requestMute() {
 }
 
 void scanAndConnect() {
-  BLEScanResults foundDevices = pBLEScan->start(5);
+  BLEScanResults foundDevices = pBLEScan->start(5, false);
   for (int i = 0; i < foundDevices.getCount(); i++) {
     BLEAdvertisedDevice device = foundDevices.getDevice(i);
     if (device.haveServiceUUID() && device.isAdvertisingService(BLEUUID(bmeServiceUUID))) {
-      Serial.println("V1 found. Attempting to connect...");
-      Serial.printf("Device Address: %s\n", device.getAddress().toString().c_str());
+      Serial.printf("V1 found! Attempting to connect to: %s\n", device.getAddress().toString().c_str());
 
       if (pClient->connect(&device)) {
         Serial.println("Connected!");
-        pBLEScan->stop();
+        pBLEScan->clearResults();
         return;
       }
       else {
@@ -91,6 +89,9 @@ void scanAndConnect() {
       }
     }
   }
+
+  Serial.println("No matching BLE devices found.");
+  pBLEScan->clearResults();
 }
 
 void connectToServer() {
@@ -210,6 +211,7 @@ void loadSettings() {
   settings.disableBLE = preferences.getBool("disableBLE", false);
   settings.displayTest = preferences.getBool("displayTest", false);
   settings.enableGPS = preferences.getBool("enableGPS", true);
+  settings.enableWifi = preferences.getBool("enableWifi", true);
   settings.lowSpeedThreshold = preferences.getInt("lowSpeedThres", 35);
   settings.unitSystem = preferences.getString("unitSystem", "Imperial");
   settings.displayOrientation = preferences.getInt("displayOrient", 0);
@@ -277,7 +279,7 @@ void setup()
 {
   Serial.begin();
   analogReadResolution(12);
-  delay(1000);
+  //delay(1000);
 
   Serial.println("Reading initial settings...");
   preferences.begin("settings", false);
@@ -320,6 +322,8 @@ void setup()
   }
 
   ui_init();
+  ui_tick();
+  lv_task_handler();
 
  if (!settings.disableBLE && !settings.displayTest) {
   Serial.println("Searching for V1 bluetooth..");
@@ -344,10 +348,8 @@ void setup()
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
   
   wifiSetup();
-  wifiConnect();
-
+  startWifiAsync();
   setupWebServer();
-
 }
 
 void loop() {  
@@ -357,7 +359,9 @@ void loop() {
   static unsigned long lastTick = 0;
   unsigned long gpsMillis = millis();
 
-  if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() != WL_CONNECTED) {
+  handleWifi();
+
+  if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() != WL_CONNECTED && !wifiConnecting) {
     if (millis() - lastWifiReconnect > 10000) {
       Serial.println("WiFi lost. Reconnecting...");
       WiFi.disconnect();

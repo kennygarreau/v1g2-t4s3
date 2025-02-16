@@ -155,6 +155,8 @@ void create_screen_logo_screen() {
     objects.logo_screen = obj;
     lv_obj_set_pos(obj, 0, 0);
     lv_obj_set_size(obj, 600, 450);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     {
         lv_obj_t *parent_obj = obj;
         {
@@ -643,33 +645,169 @@ void create_screen_settings() {
     objects.settings = obj;
     lv_obj_set_pos(obj, 0, 0);
     lv_obj_set_size(obj, 600, 450);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     {
         lv_obj_t *parent_obj = obj;
         {
-            lv_obj_t *obj = lv_obj_create(parent_obj);
-            objects.obj0 = obj;
-            lv_obj_set_pos(obj, 0, 0);
-            lv_obj_set_size(obj, 600, 52);
-            lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_bottom(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_radius(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            //lv_obj_set_style_bg_color(obj, lv_color_hex(0xffd4d9e2), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_opa(obj, 22, LV_PART_MAIN | LV_STATE_DEFAULT);
+            // label_ip
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ip = obj;
+            lv_obj_set_pos(obj, 8, 225);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "IP");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
-            lv_obj_t *obj = lv_dropdown_create(parent_obj);
-            lv_obj_set_pos(obj, 234, 102);
-            lv_obj_set_size(obj, 341, LV_SIZE_CONTENT);
-            lv_dropdown_set_options(obj, "Option 1\nOption 2\nOption 3");
+            // label_ip_val
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ip_val = obj;
+            lv_obj_set_pos(obj, 8, 258);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "0.0.0.0");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_ssid
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ssid = obj;
+            lv_obj_set_pos(obj, 8, 23);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "SSID");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_ssid_val
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ssid_val = obj;
+            lv_obj_set_pos(obj, 8, 55);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_long_mode(obj, LV_LABEL_LONG_SCROLL);
+            lv_label_set_text(obj, "default");
+            lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_pass
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_pass = obj;
+            lv_obj_set_pos(obj, 8, 130);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "PASS");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_pass_val
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_pass_val = obj;
+            lv_obj_set_pos(obj, 6, 162);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_long_mode(obj, LV_LABEL_LONG_SCROLL);
+            lv_label_set_text(obj, "default");
+            lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // slider_brightness
+            lv_obj_t *obj = lv_slider_create(parent_obj);
+            objects.slider_brightness = obj;
+            lv_obj_set_pos(obj, 62, 361);
+            lv_obj_set_size(obj, 477, 33);
+            lv_slider_set_range(obj, 10, 255);
+            lv_slider_set_value(obj, 200, LV_ANIM_OFF);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffffffff), LV_PART_KNOB | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_event_cb(objects.slider_brightness, slider_brightness_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // label_brightness
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_brightness = obj;
+            lv_obj_set_pos(obj, 205, 406);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "BRIGHTNESS");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_wifi
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_wifi = obj;
+            lv_obj_set_pos(obj, 514, 24);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "WIFI");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // switch_wifi
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.switch_wifi = obj;
+            lv_obj_set_pos(obj, 514, 63);
+            lv_obj_set_size(obj, 76, 39);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.switch_wifi, wifi_switch_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
         }
     }
+    
+    tick_screen_settings();
 }
 
 void tick_screen_settings() {
+    // WiFi SSID
+    {
+        const char *new_val = get_var_ssid();
+        const char *cur_val = (objects.label_ssid_val) ? lv_label_get_text(objects.label_ssid_val) : NULL;
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = objects.label_ssid_val;
+            LV_LOG_INFO("updating SSID");
+            lv_label_set_text(objects.label_ssid_val, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // WiFi password
+    {
+        const char *new_val = get_var_password();
+        const char *cur_val = (objects.label_pass_val) ? lv_label_get_text(objects.label_pass_val) : NULL;
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = objects.label_pass_val;
+            LV_LOG_INFO("updating password");
+            lv_label_set_text(objects.label_pass_val, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // IP address
+    {
+        const char *new_val = get_var_ipAddress();
+        const char *cur_val = (objects.label_ip_val) ? lv_label_get_text(objects.label_ip_val) : NULL;
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = objects.label_ip_val;
+            LV_LOG_INFO("updating IP address");
+            lv_label_set_text(objects.label_ip_val, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    // WiFi enable/disable
+    {
+        if (!objects.switch_wifi) return; // Ensure the switch object exists
+
+        bool wifi_enabled = get_var_wifiEnabled();  // Get actual WiFi state
+        bool switch_checked = lv_obj_has_state(objects.switch_wifi, LV_STATE_CHECKED); // Get UI switch state
+    
+        if (wifi_enabled && !switch_checked) {
+            lv_obj_add_state(objects.switch_wifi, LV_STATE_CHECKED);  // Sync UI to WiFi
+        } else if (!wifi_enabled && switch_checked) {
+            lv_obj_clear_state(objects.switch_wifi, LV_STATE_CHECKED); // Sync UI to WiFi
+        }
+    }
 }
 
 
@@ -681,6 +819,12 @@ void create_screens() {
     create_screen_logo_screen();
     create_screen_main();
     create_screen_settings();
+
+    lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+    lv_obj_add_event_cb(objects.settings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+
+    lv_scr_load(objects.logo_screen);
+    currentScreen = SCREEN_ID_LOGO_SCREEN;
 }
 
 typedef void (*tick_screen_func_t)();

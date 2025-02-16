@@ -1,8 +1,10 @@
 #include "v1_config.h"
+#include <ESPAsyncWebServer.h>
 #include "lvgl.h"
 #include "ui/ui.h"
 #include "tft_v2.h"
 #include <vector>
+#include "wifi.h"
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";
@@ -12,6 +14,65 @@ const char* direction_ptrs[MAX_ALERTS];
 int alertCount = 0;
 int prio_bars = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
+
+extern "C" uint8_t get_var_brightness() {
+    uint8_t value = amoled.getBrightness();
+    return value;
+}
+
+extern "C" void set_var_brightness(uint8_t value) {
+    amoled.setBrightness(value);
+}
+
+extern "C" bool get_var_wifiEnabled() {
+    return settings.enableWifi;
+}
+
+extern "C" void set_var_wifiEnabled(bool enable) {
+    if (enable) {
+        settings.enableWifi = true;
+        Serial.println("WiFi enabled and attempting to connect...");
+        startWifiAsync();
+        //WiFi.mode(WIFI_MODE_STA);
+        //WiFi.begin(settings.ssid.c_str(), settings.password.c_str());
+    } else {
+        settings.enableWifi = false;
+        Serial.println("Disabling WiFi...");
+
+        if (WiFi.getMode() == WIFI_MODE_STA) {
+            WiFi.disconnect(true, true);
+            Serial.println("Disconnected from WiFi network.");
+        } 
+        else if (WiFi.getMode() == WIFI_MODE_AP) {
+            WiFi.softAPdisconnect(true);
+            Serial.println("Access Point disabled.");
+        }
+
+        WiFi.mode(WIFI_MODE_NULL);
+        Serial.println("WiFi module powered down.");
+    }
+}
+
+extern "C" const char *get_var_ssid() {
+    return settings.localSSID.c_str();
+}
+
+extern "C" const char *get_var_password() {
+    return settings.localPW.c_str();
+}
+
+extern "C" const char *get_var_ipAddress() {
+    static String ipAddress;
+
+    if (WiFi.getMode() == WIFI_MODE_AP) {
+        ipAddress = WiFi.softAPIP().toString();
+    } else if (WiFi.getMode() == WIFI_MODE_STA) {
+        ipAddress = WiFi.localIP().toString();
+    } else {
+        ipAddress = "255.255.255.255";
+    }
+    return ipAddress.c_str();
+}
 
 extern "C" bool get_var_bt_connected() {
     return bt_connected;

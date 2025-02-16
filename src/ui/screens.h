@@ -33,6 +33,16 @@ typedef struct _objects_t {
     lv_obj_t *front_arrow;
     lv_obj_t *side_arrow;
     lv_obj_t *rear_arrow;
+    lv_obj_t *label_ip;
+    lv_obj_t *label_ip_val;
+    lv_obj_t *label_ssid;
+    lv_obj_t *label_ssid_val;
+    lv_obj_t *label_pass;
+    lv_obj_t *label_pass_val;
+    lv_obj_t *slider_brightness;
+    lv_obj_t *label_brightness;
+    lv_obj_t *label_wifi;
+    lv_obj_t *switch_wifi;
 } objects_t;
 
 extern objects_t objects;

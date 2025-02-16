@@ -15,6 +15,8 @@ extern LilyGo_AMOLED amoled;
 extern bool bt_connected;
 extern bool muted;
 extern bool alertPresent;
+extern bool wifiConnecting;
+extern unsigned long wifiStartTime;
 
 struct WiFiCredential {
     String ssid;
@@ -33,6 +35,7 @@ struct v1Settings {
   bool isPortraitMode;
   bool disableBLE;
   bool enableGPS;
+  bool enableWifi;
   bool displayTest;
   bool turnOffDisplay;
   bool onlyDisplayBTIcon;

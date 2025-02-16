@@ -40,30 +40,6 @@ extern const char *get_var_lowspeedthreshold();
 extern const char *get_var_logicmode();
 extern bool get_var_bt_connected();
 extern void set_var_bt_connected(bool value);
-// extern const char *get_var_logic_mode();
-// extern void set_var_logic_mode(const char *value);
-// extern const char *get_var_alert1freq();
-// extern void set_var_alert1freq(const char *value);
-// extern const char *get_var_alert2freq();
-// extern void set_var_alert2freq(const char *value);
-// extern const char *get_var_alert3freq();
-// extern void set_var_alert3freq(const char *value);
-//extern bool get_var_prio_bar1();
-//extern void set_var_prio_bar1(bool value);
-// extern bool get_var_gps_enabled();
-// extern void set_var_gps_enabled(bool value);
-// extern bool get_var_is_muted();
-// extern void set_var_is_muted(bool value);
-//extern void set_var_lowspeedthreshold(int32_t value);
-// extern void set_var_logicmode(const char *value);
-// extern bool get_var_laser_alert();
-// extern void set_var_laser_alert(bool value);
-// extern bool get_var_ka_alert();
-// extern void set_var_ka_alert(bool value);
-// extern bool get_var_k_alert();
-// extern void set_var_k_alert(bool value);
-// extern bool get_var_x_alert();
-// extern void set_var_x_alert(bool value);
 
 
 #ifdef __cplusplus

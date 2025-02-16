@@ -107,3 +107,44 @@ void wifiConnect() {
         }
     }
 }
+
+void startWifiAsync() {
+    WiFi.mode(WIFI_MODE);
+    
+    if (WiFi.getMode() == WIFI_MODE_AP) {
+        Serial.println("Starting Access Point...");
+        WiFi.softAPConfig(local_ip, gateway, subnet);
+        if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
+            Serial.printf("AP started. SSID: %s, IP: %s, Channel: 9\n", 
+                          settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
+        } else {
+            Serial.println("Failed to start Access Point.");
+        }
+    } else {
+        Serial.println("Attempting to connect to WiFi...");
+        wifiConnecting = true;
+        wifiStartTime = millis();
+        WiFi.begin(settings.wifiCredentials[0].ssid.c_str(), settings.wifiCredentials[0].password.c_str());
+    }
+}
+
+void handleWifi() {
+    if (wifiConnecting) {
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.printf("Connected to WiFi: %s, IP: %s\n", 
+                          WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+            wifiConnecting = false;
+        } else if (millis() - wifiStartTime > 5000) {
+            Serial.println("WiFi connection timeout. Starting AP mode...");
+            WiFi.mode(WIFI_MODE_AP);
+            WiFi.softAPConfig(local_ip, gateway, subnet);
+            if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
+                Serial.printf("Fallback AP started. SSID: %s, IP: %s, Channel: 9\n", 
+                              settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
+            } else {
+                Serial.println("Failed to start fallback Access Point.");
+            }
+            wifiConnecting = false;
+        }
+    }
+}

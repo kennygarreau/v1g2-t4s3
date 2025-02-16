@@ -32,7 +32,7 @@ void ui_tick() {
 
 #include <string.h>
 
-static int16_t currentScreen = -1;
+int16_t currentScreen = -1;
 
 static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
     if (index == -1) {

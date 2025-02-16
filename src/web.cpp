@@ -169,6 +169,7 @@ void setupWebServer()
         displaySettingsJson["disableBLE"] = settings.disableBLE;
         displaySettingsJson["timezone"] = settings.timezone;
         displaySettingsJson["enableGPS"] = settings.enableGPS;
+        displaySettingsJson["enableWifi"] = settings.enableWifi;
         displaySettingsJson["lowSpeedThreshold"] = settings.lowSpeedThreshold;
         displaySettingsJson["displayOrientation"] = settings.displayOrientation;
         displaySettingsJson["isPortraitMode"] = settings.isPortraitMode;

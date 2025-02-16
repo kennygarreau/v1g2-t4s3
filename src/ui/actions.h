@@ -19,6 +19,9 @@ extern void enable_blinking(int index);
 extern lv_obj_t *blink_images[MAX_BLINK_IMAGES];
 extern bool blink_enabled[MAX_BLINK_IMAGES];
 extern int blink_count;
+void wifi_switch_event_handler(lv_event_t * e);
+void gesture_event_handler(lv_event_t * e);
+void slider_brightness_event_handler(lv_event_t * e);
 
 #ifdef __cplusplus
 }

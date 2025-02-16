@@ -20,6 +20,8 @@ void ui_tick();
 void ui_boot();
 void ui_tick_statusBar();
 
+extern int16_t currentScreen;
+
 #if !defined(EEZ_FOR_LVGL)
 void loadScreen(enum ScreensEnum screenId);
 #endif
