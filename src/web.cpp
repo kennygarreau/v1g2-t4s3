@@ -102,11 +102,17 @@ void setupWebServer()
         jsonDoc["satelliteCount"] = gpsData.satelliteCount;
         jsonDoc["signalQuality"] = gpsData.signalQuality;
         jsonDoc["timezone"] = settings.timezone;
+        jsonDoc["bluetoothRSSI"] = gpsData.btStr;
+        jsonDoc["connectedClients"] = gpsData.connectedClients;
 
         // Hardware data
         jsonDoc["batteryPercent"] = batteryPercentage;
         jsonDoc["batteryVoltage"] = voltageInMv;
         jsonDoc["cpu"] = gpsData.cpuBusy;
+        jsonDoc["totalHeap"] = gpsData.totalHeap / 1024;
+        jsonDoc["freeHeapInKB"] = gpsData.freeHeap / 1024;
+        jsonDoc["totalPsram"] = gpsData.totalPsram / 1024;
+        jsonDoc["freePsramInKB"] = gpsData.freePsram / 1024;
         if (isVBusIn) {
             jsonDoc["vBusVoltage"] = vBusVoltage;
         }

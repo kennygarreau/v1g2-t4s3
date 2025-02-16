@@ -654,8 +654,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 alertCountValue = alerts.count;
                 alertIndexValue = alerts.index;
             } else {
-                Serial.print("error in alertCountMap key: ");
-                Serial.println(alertIndexStr.c_str());
+                Serial.printf("error in alertCountMap key: %s payload: %s\n", alertIndexStr.c_str(), payload.c_str());
+                return "";
             }
 
             alertTable.push_back(payload);

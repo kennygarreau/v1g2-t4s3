@@ -2,20 +2,32 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    overflow-y: auto;
 }
 
 form {
-    position: absolute; /* Position the form relative to the body */
+    position: relative; /* Remove absolute/fixed positioning */
+    top: auto;
+    transform: none;
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto; /* Centers properly */
+    overflow-y: auto;
+}
+
+/*
+form {
     top: 10%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Center the form by moving it back by half its width and height */
+    transform: translate(-50%, -50%);
     padding: 20px;
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 30%; /* set a fixed width */
+    width: 30%;
 }
+*/
 
 #upload_form {
     top: 15%;
@@ -28,8 +40,12 @@ form {
 }
 
 #settingsForm {
-    top: 50%;
+    position: relative; /* Allow natural page flow */
+    top: auto;
     width: 90%;
+    max-width: 600px; /* Keep it readable */
+    margin: 20px auto; /* Center it properly */
+    overflow-y: auto; /* Ensure form content can scroll */
 }
 
 nav {
@@ -48,6 +64,11 @@ nav a {
 
 nav a:hover {
     background-color: #12365f; /* Darker blue on hover */
+}
+
+.container {
+    overflow-y: auto;
+    max-height: 90vh; /* Prevents the form from going off the screen */
 }
 
 .container h2 {
@@ -156,8 +177,11 @@ h2, h3 {
 
 table {
     border-collapse: collapse;
-    width: 50%;
+    width: 100%;
     margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 #map {
@@ -176,10 +200,22 @@ table {
 }
 
 @media screen and (max-width: 768px) {
+    body {
+        overflow-y: auto;
+    }
+    .container {
+        position: relative; /* Ensure it follows normal document flow */
+        margin: 20px auto; /* Centers it */
+        padding: 10px;
+        max-width: 90%;
+        overflow-y: auto; /* Allow scrolling inside if needed */
+    }
     table {
         width: 100%;
-        margin: 5px;
-        padding: 2px;
+        /* margin: 5px;
+        padding: 2px; */
+        display: block;
+        overflow-x: auto;
     }
     #upload_form {
         top: 25%;
@@ -190,15 +226,12 @@ table {
         width: 90%;
     }
     #settingsForm {
-        position: fixed;
-        top: 50%;
-        width: 95%;
-    }
-    th, td {
-        padding: 2px;
-        font-size: 14px;
-        text-align: left;
-        border: 1px solid #ddd;
+        position: relative; /* Allows normal scrolling */
+        top: auto;
+        width: 90%;
+        max-width: 600px; /* Keep it readable on larger screens */
+        margin: 20px auto; /* Centers it */
+        overflow-y: auto; /* Ensures content inside can scroll */
     }
     h2 {
         margin-top: 5px;
@@ -215,15 +248,25 @@ table {
     }
 }
 
-/*
 th, td {
     border: 1px solid #ddd;
+    font-size: 14px;
     padding: 8px;
     text-align: left;
-} */
+}
 
 th {
-    background-color: #f2f2f2; /* Light gray */
+    background-color: #007BFF;
+    color: white;
+    text-transform: uppercase;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
 }
 
 label {

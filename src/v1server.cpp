@@ -20,15 +20,13 @@
 #include "v1_fs.h"
 #include <TinyGPS++.h>
 #include "web.h"
+#include "wifi.h"
 #include <ui/ui.h>
 #include "lvgl.h"
 #include "tft_v2.h"
 #include <FreeRTOS.h>
 
 AsyncWebServer server(80);
-IPAddress local_ip(192, 168, 242, 1);
-IPAddress gateway(192, 168, 242, 1);
-IPAddress subnet(255, 255, 255, 0);
 
 BLERemoteService* dataRemoteService;
 BLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
@@ -61,8 +59,9 @@ Preferences preferences;
 
 int loopCounter = 0;
 unsigned long lastMillis = 0;
-static unsigned long lastTick = 0;
 const unsigned long uiTickInterval = 5;
+//static unsigned long lastTick = 0;
+//unsigned long lastWifiReconnect = 0;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
@@ -131,104 +130,6 @@ static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint
   // Serial.print("HEX decode time: ");
   // Serial.println(bleCallbackLength);
 }
-
-
-void onWiFiEvent(WiFiEvent_t event) {
-  switch (event) {
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-      Serial.println("Disconnected from WiFi");
-      delay(10);
-      break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-      Serial.print("WiFi begin succeeded ");
-      Serial.println(WiFi.localIP());
-      break;
-    default:
-       // Display additional events???
-      break;    
-  }
-}
-
-const char* encryptionTypeToString(wifi_auth_mode_t authMode) {
-  switch (authMode) {
-    case WIFI_AUTH_OPEN: return "Open";
-    case WIFI_AUTH_WEP: return "WEP";
-    case WIFI_AUTH_WPA_PSK: return "WPA/PSK";
-    case WIFI_AUTH_WPA2_PSK: return "WPA2/PSK";
-    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/WPA2/PSK";
-    case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2/Enterprise";
-    default: return "Unknown";
-  }
-}
-
-void scanWiFiNetworks() {
-  Serial.println("Scanning for WiFi networks...");
-  
-  int networkCount = WiFi.scanNetworks();
-  
-  if (networkCount == 0) {
-    Serial.println("No networks found.");
-  } else {
-    Serial.printf("%d networks found:\n", networkCount);
-    for (int i = 0; i < networkCount; ++i) {
-      Serial.printf("[%d] SSID: %s, RSSI: %d dBm, Encryption: %s, Channel: %d\n",
-        i + 1,
-        WiFi.SSID(i).c_str(),
-        WiFi.RSSI(i),
-        encryptionTypeToString(WiFi.encryptionType(i)),
-        WiFi.channel(i));
-    }
-  }
-
-  WiFi.scanDelete();
-}
-
-void wifiSetup() {
-  WiFi.onEvent(onWiFiEvent);
-}
-
-void wifiConnect() {
-  WiFi.mode(WIFI_MODE);
-
-  if (WIFI_MODE == WIFI_MODE_AP) {
-    Serial.println("Starting Access Point...");
-    WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str());
-    WiFi.softAPConfig(local_ip, gateway, subnet);
-    Serial.println("Access Point started.");
-  } else {
-    Serial.println("Attempting to connect to saved WiFi networks...");
-
-    for (const auto& cred : settings.wifiCredentials) {
-      Serial.print("Trying to connect to: ");
-      Serial.println(cred.ssid);
-
-      WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
-      int retries = 20;
-      while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
-        delay(500);
-        Serial.print(".");
-      }
-      Serial.println();
-
-      if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("Connected to WiFi: " + cred.ssid);
-        Serial.print("IP Address: ");
-        Serial.println(WiFi.localIP());
-        return;
-      }
-    }
-
-    Serial.println("Failed to connect to any saved WiFi networks; starting Access Point...");
-    WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str());
-    WiFi.softAPConfig(local_ip, gateway, subnet);
-
-    String fallbackAPIP = WiFi.softAPIP().toString();
-    Serial.println("Fallback Access Point started.");
-    Serial.println("SSID: " + settings.localSSID);
-    Serial.println("IP Address: " + fallbackAPIP);
-  }
-}
-
 
 void queryDeviceInfo(BLEClient* pClient) {
   BLERemoteService* pService = pClient->getService(deviceInfoUUID);
@@ -327,13 +228,13 @@ void loadSettings() {
   // selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
 
   settings.wifiCredentials.clear();
-  int networkCount = preferences.getInt("networkCount", 0);  // Retrieve stored count
+  int networkCount = preferences.getInt("networkCount", 0);
 
-  for (int i = 0; i < networkCount; i++) {  // Loop through stored networks
+  for (int i = 0; i < networkCount; i++) {
       String ssid = preferences.getString(("wifi_ssid_" + String(i)).c_str(), "");
       String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
 
-      if (ssid.length() > 0) {  // Ensure non-empty SSID
+      if (ssid.length() > 0) {
           settings.wifiCredentials.push_back({ssid, password});
       }
   }
@@ -412,18 +313,13 @@ void setup()
     Serial.println("Initializing GPS...");
     gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
   }
- ui_init();
-
-  // TODO: add a failsafe handler for invalid wifi credentials
-  wifiSetup();
-  wifiConnect();
 
   if (!fileManager.init()) {
     Serial.println("Failed to initialize SPIFFS");
     return;
   }
 
- setupWebServer();
+  ui_init();
 
  if (!settings.disableBLE && !settings.displayTest) {
   Serial.println("Searching for V1 bluetooth..");
@@ -444,14 +340,31 @@ void setup()
   }
 
   queryDeviceInfo(pClient);
- }
- Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
+  }
+  Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
+  
+  wifiSetup();
+  wifiConnect();
+
+  setupWebServer();
+
 }
 
 void loop() {  
   static bool configHasRun = false;
   static unsigned long lastGPSUpdate = 0;
+  static unsigned long lastWifiReconnect = 0;
+  static unsigned long lastTick = 0;
   unsigned long gpsMillis = millis();
+
+  if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() != WL_CONNECTED) {
+    if (millis() - lastWifiReconnect > 10000) {
+      Serial.println("WiFi lost. Reconnecting...");
+      WiFi.disconnect();
+      WiFi.reconnect();
+      lastWifiReconnect = millis();
+    }
+  }
 
   if (settings.disableBLE == false && !settings.displayTest) {
     if (pClient->isConnected()) {
@@ -474,9 +387,6 @@ void loop() {
     }
  }
   if (settings.displayTest) {
-    // Serial.println("========================");
-    // Serial.println("====  DISPLAY TEST  ====");
-    // Serial.println("========================");
 
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
     //std::string packets[] = {"AAD8EA31095B1F38280C0000E7AB"};
@@ -510,6 +420,13 @@ void loop() {
   if (currentMillis - lastMillis >= 2000) {
     //Serial.println("Loops executed: " + String(loopCounter)); // uncomment for loop profiling
     ui_tick_statusBar();
+    gpsData.btStr = getBluetoothSignalStrength();
+
+    if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
+      gpsData.connectedClients = 0;
+    } else {
+      gpsData.connectedClients = WiFi.softAPgetStationNum();
+    }
 
     isVBusIn = amoled.isVbusIn();
     if (isVBusIn) {
@@ -520,13 +437,14 @@ void loop() {
     uint16_t batteryVoltage = amoled.getBattVoltage();
     voltageInMv = batteryVoltage; // cast this to float
     batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
-    if (batteryPercentage > 100) batteryPercentage = 100;
-    if (batteryPercentage < 0) batteryPercentage = 0;
+    batteryPercentage = constrain(batteryPercentage, 0, 100);
 
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
       if (globalConfig.muteTo.empty()) {
         Serial.print("Awaiting user settings...");
+        gpsData.totalHeap = ESP.getHeapSize();
+        gpsData.totalPsram = ESP.getPsramSize();
         clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
       } else {
         Serial.println("User settings obtained!");
@@ -535,7 +453,10 @@ void loop() {
       }
     }
     uint32_t cpuIdle = lv_timer_get_idle();  
-    gpsData.cpuBusy = 100 - cpuIdle;  
+    gpsData.cpuBusy = 100 - cpuIdle;
+    gpsData.freeHeap = ESP.getFreeHeap();
+    gpsData.freePsram = ESP.getFreePsram();
+    
     //Serial.printf("CPU Busy: %u%%\n", gpsData.cpuBusy);
 
     lastMillis = currentMillis;
@@ -552,45 +473,32 @@ void loop() {
         //Serial.print(c);
         gps.encode(c);
       }
-      if (gps.location.isUpdated()) {
-        if (gps.location.isValid()) {
-          gpsData.latitude = gps.location.lat();
-          gpsData.longitude = gps.location.lng();
-          gpsData.satelliteCount = gps.satellites.value();
-          gpsData.course = gps.course.deg();
-          gpsData.date = formatDate(gps);
-          gpsData.time = formatTime(gps);
-          gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
+      if (gps.location.isUpdated() && gps.location.isValid()) {
+        gpsData.latitude = gps.location.lat();
+        gpsData.longitude = gps.location.lng();
+        gpsData.satelliteCount = gps.satellites.value();
+        gpsData.course = gps.course.deg();
+        gpsData.date = formatDate(gps);
+        gpsData.time = formatTime(gps);
+        gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
 
-          if (gpsData.hdop < 2) {
-            gpsData.signalQuality = "excellent";
-          } 
-          else if (gpsData.hdop <= 5) {
-            gpsData.signalQuality = "good";
-          } 
-          else if (gpsData.hdop <= 10) {
-            gpsData.signalQuality = "moderate";
-          } 
-          else {
-            gpsData.signalQuality = "poor";
-          }
+        gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";
 
-          if (settings.unitSystem == "Metric") {
-            gpsData.speed = gps.speed.kmph();
-            gpsData.altitude = gps.altitude.meters();
-            currentSpeed = static_cast<int>(gps.speed.kmph());
-          } else {
-            gpsData.speed = gps.speed.mph();
-            gpsData.altitude = gps.altitude.feet();
-            currentSpeed = static_cast<int>(gps.speed.mph());
-          }
+        if (settings.unitSystem == "Metric") {
+          gpsData.speed = gps.speed.kmph();
+          gpsData.altitude = gps.altitude.meters();
+          currentSpeed = static_cast<int>(gps.speed.kmph());
+        } else {
+          gpsData.speed = gps.speed.mph();
+          gpsData.altitude = gps.altitude.feet();
+          currentSpeed = static_cast<int>(gps.speed.mph());
         }
       }
   }
   
   // TODO: add deep sleep for BLE disconnect timeout??
   unsigned long now = millis();
-  if (now - lastTick >= uiTickInterval) {
+  if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
     ui_tick();
     unsigned long startTime = millis();
