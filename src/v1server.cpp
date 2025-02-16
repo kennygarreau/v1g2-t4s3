@@ -14,7 +14,6 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include "BLEDevice.h"
-#include "pin_config.h"
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
@@ -25,6 +24,8 @@
 #include "lvgl.h"
 #include "tft_v2.h"
 #include <FreeRTOS.h>
+#include <ezTime.h>
+#include "gps.h"
 
 AsyncWebServer server(80);
 
@@ -55,12 +56,11 @@ unsigned long wifiStartTime = 0;
 
 v1Settings settings;
 Preferences preferences;
+Timezone tz;
 
 int loopCounter = 0;
 unsigned long lastMillis = 0;
 const unsigned long uiTickInterval = 5;
-//static unsigned long lastTick = 0;
-//unsigned long lastWifiReconnect = 0;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
@@ -311,6 +311,8 @@ void setup()
 
   preferences.end();
 
+  //waitForSync();
+
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
     gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
@@ -350,6 +352,10 @@ void setup()
   wifiSetup();
   startWifiAsync();
   setupWebServer();
+
+  //tz.setLocation(settings.timezone);
+  //Serial.printf("Timezone set to: %s\n", settings.timezone.c_str());
+
 }
 
 void loop() {  
@@ -482,8 +488,10 @@ void loop() {
         gpsData.longitude = gps.location.lng();
         gpsData.satelliteCount = gps.satellites.value();
         gpsData.course = gps.course.deg();
-        gpsData.date = formatDate(gps);
-        gpsData.time = formatTime(gps);
+        // gpsData.date = formatDate(gps);
+        // gpsData.time = formatTime(gps);
+        gpsData.date = formatLocalDate(gps);
+        gpsData.time = formatLocalTime(gps);
         gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
 
         gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";

@@ -51,6 +51,17 @@ bool get_var_arrowPrioRear();
 
 //void update_alert_rows(const char* alerts[], int num_alerts);
 
+//pins
+#define PIN_SD_CMD                   13
+#define PIN_SD_CLK                   11
+#define PIN_SD_D0                    12
+#define PIN_D9   44  //              RXD0
+#define PIN_D10  43  //              TXD0
+#define RXD 44
+#define TXD 43
+#define PIN_IIC_SCL                  12
+#define PIN_IIC_SDA                  11
+
 #ifdef __cplusplus
 }
 void set_var_frequencies(const std::vector<AlertTableData>& alertDataList);
