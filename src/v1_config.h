@@ -1,7 +1,9 @@
 #pragma once
 #include "BLEDevice.h"
 #include <Preferences.h>
+#include <ESPAsyncWebServer.h>
 #include "LilyGo_AMOLED.h"
+#include "wifi.h"
 
 #define FIRMWARE_VERSION "0.9.15.0a"
 #define BAUD_RATE 9600
@@ -30,7 +32,7 @@ struct v1Settings {
   std::vector<WiFiCredential> wifiCredentials;
   String localSSID;
   String localPW;
-  String wifiMode;
+  WiFiModeSetting wifiMode;
   String unitSystem;
   bool isPortraitMode;
   bool disableBLE;

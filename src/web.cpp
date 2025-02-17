@@ -7,7 +7,6 @@
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "web.h"
-#include <ezTime.h>
 
 unsigned long rebootTime = 0;
 bool isRebootPending = false;
@@ -88,7 +87,8 @@ void setupWebServer()
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
 
     server.on("/gps-info", HTTP_GET, [](AsyncWebServerRequest *request) {
-        StaticJsonDocument<200> jsonDoc;
+        //StaticJsonDocument<200> jsonDoc;
+        JsonDocument jsonDoc;
 
         // GPS Data
         jsonDoc["latitude"] = gpsData.latitude;
@@ -125,7 +125,7 @@ void setupWebServer()
         request->send(200, "application/json", jsonResponse); });
 
     server.on("/board-info", HTTP_GET, [](AsyncWebServerRequest *request) {
-        StaticJsonDocument<200> jsonDoc;
+        JsonDocument jsonDoc;
 
         jsonDoc["manufacturer"] = manufacturerName;
         jsonDoc["model"] = modelNumber;
@@ -271,10 +271,16 @@ void setupWebServer()
                 amoled.setBrightness(settings.brightness);
             }
             if (doc.containsKey("wifiMode")) {
-                settings.wifiMode = doc["wifiMode"].as<String>();
-                Serial.println("wifiMode: " + settings.wifiMode);
-                preferences.putString("wifiMode", settings.wifiMode);
-            } 
+                int mode = doc["wifiMode"].as<int>();
+            
+                if (mode >= WIFI_SETTING_AP && mode <= WIFI_SETTING_APSTA) {
+                    settings.wifiMode = static_cast<WiFiModeSetting>(mode);
+                    Serial.println("wifiMode: " + String(mode));
+                    preferences.putInt("wifiMode", mode);
+                } else {
+                    Serial.println("Invalid wifiMode received!");
+                }
+            }
             if (doc.containsKey("wifiCredentials") && doc["wifiCredentials"].is<JsonArray>()) {
                 JsonArray wifiCredentials = doc["wifiCredentials"].as<JsonArray>();
                 int networkCount = min((int)wifiCredentials.size(), MAX_WIFI_NETWORKS);

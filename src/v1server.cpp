@@ -205,7 +205,13 @@ void displayReader() {
 
 void loadSettings() {
   settings.brightness = preferences.getUInt("brightness", amoled.getBrightness());
-  settings.wifiMode = preferences.getString("wifiMode", "WIFI_STA");
+
+  int mode = preferences.getInt("wifiMode", WIFI_SETTING_STA);
+  if (mode < WIFI_SETTING_AP || mode > WIFI_SETTING_APSTA) {
+      mode = WIFI_SETTING_STA;
+  }
+  settings.wifiMode = static_cast<WiFiModeSetting>(mode);
+
   settings.localSSID = preferences.getString("localSSID", "v1display");
   settings.localPW = preferences.getString("localPW", "password123");
   settings.disableBLE = preferences.getBool("disableBLE", false);
