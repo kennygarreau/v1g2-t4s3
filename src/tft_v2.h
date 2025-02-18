@@ -18,6 +18,7 @@ const char *get_var_lowspeedthreshold();
 const char *get_var_ssid();
 const char *get_var_password();
 const char *get_var_ipAddress();
+bool get_var_wifiConnected();
 bool get_var_wifiEnabled();
 void set_var_wifiEnabled(bool enable);
 void set_var_brightness(uint8_t value);

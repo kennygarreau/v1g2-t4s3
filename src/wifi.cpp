@@ -24,13 +24,14 @@ void onWiFiEvent(WiFiEvent_t event) {
     if (currentMode == WIFI_MODE_STA) {
         switch (event) {
             case SYSTEM_EVENT_STA_DISCONNECTED:
+                wifiConnected = false;
                 Serial.println("WiFi disconnected. Attempting reconnect...");
                 if (WiFi.status() != WL_CONNECTED) {
                     WiFi.reconnect();
                 }
                 break;
             case SYSTEM_EVENT_STA_GOT_IP:
-                Serial.printf("WiFi connected. IP: %s\n", WiFi.localIP().toString().c_str());
+                wifiConnected = true;
                 break;
             default:
                 //Serial.printf("Unhandled WiFi Event (STA): %d\n", event);
@@ -61,62 +62,16 @@ void wifiSetup() {
     WiFi.onEvent(onWiFiEvent);
 }
 
-void wifiConnect() {
-    WiFi.mode(WIFI_MODE);
-    int channel = 9;
-    
-    if (WiFi.getMode() == WIFI_MODE_AP) {
-        Serial.println("Starting Access Point...");
-        
-        WiFi.softAPConfig(local_ip, gateway, subnet);
-        if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), channel)) {
-            Serial.printf("Access Point started. SSID: %s, IP: %s, Channel: %d\n", 
-                          settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str(), channel);
-        } else {
-            Serial.println("Failed to start Access Point.");
-        }
-    } else {
-        Serial.println("Attempting to connect to saved WiFi networks...");
-        
-        for (const auto& cred : settings.wifiCredentials) {
-            Serial.printf("Trying to connect to: %s\n", cred.ssid.c_str());
-            
-            WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
-            unsigned long startAttemptTime = millis();
-
-            while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
-                delay(100);
-                Serial.print(".");
-            }
-
-            if (WiFi.status() == WL_CONNECTED) {
-                Serial.printf("Connected to WiFi: %s, IP: %s\n", 
-                              cred.ssid.c_str(), WiFi.localIP().toString().c_str());
-                return;
-            }
-        }
-
-        Serial.println("Failed to connect to any WiFi network. Starting Access Point...");
-        WiFi.mode(WIFI_MODE_AP);
-        WiFi.softAPConfig(local_ip, gateway, subnet);
-        if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
-            Serial.printf("Fallback AP started. SSID: %s, IP: %s, Channel: 9\n", 
-                          settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
-        } else {
-            Serial.println("Failed to start fallback Access Point.");
-        }
-    }
-}
-
 void startWifiAsync() {
-    WiFi.mode(WIFI_MODE);
+    WiFi.mode(static_cast<wifi_mode_t>(settings.wifiMode));
+    //Serial.printf("Wifi Mode set to: %d\n", settings.wifiMode);
     
     if (WiFi.getMode() == WIFI_MODE_AP) {
         Serial.println("Starting Access Point...");
         WiFi.softAPConfig(local_ip, gateway, subnet);
         if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
             Serial.printf("AP started. SSID: %s, IP: %s, Channel: 9\n", 
-                          settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
+                settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
         } else {
             Serial.println("Failed to start Access Point.");
         }
@@ -124,23 +79,43 @@ void startWifiAsync() {
         Serial.println("Attempting to connect to WiFi...");
         wifiConnecting = true;
         wifiStartTime = millis();
-        WiFi.begin(settings.wifiCredentials[0].ssid.c_str(), settings.wifiCredentials[0].password.c_str());
+        for (const auto& cred : settings.wifiCredentials) {
+            Serial.printf("Trying to connect to: %s", cred.ssid.c_str());
+        
+            WiFi.disconnect(true);
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
+        
+            unsigned long startAttemptTime = millis();
+            while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 7500) {
+                delay(100);
+                Serial.print(".");
+            }
+        
+            if (WiFi.status() == WL_CONNECTED) {
+                //Serial.printf("\nConnected to WiFi: %s, IP: %s\n", 
+                //    cred.ssid.c_str(), WiFi.localIP().toString().c_str());
+                return;
+            }
+        
+            Serial.println("\nFailed to connect. Trying next network...");
+        }
     }
 }
 
 void handleWifi() {
     if (wifiConnecting) {
         if (WiFi.status() == WL_CONNECTED) {
-            Serial.printf("Connected to WiFi: %s, IP: %s\n", 
-                          WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+            Serial.printf("\nConnected to WiFi: %s, IP: %s\n", 
+                WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
             wifiConnecting = false;
-        } else if (millis() - wifiStartTime > 5000) {
+        } else if (millis() - wifiStartTime > 15000) {
             Serial.println("WiFi connection timeout. Starting AP mode...");
             WiFi.mode(WIFI_MODE_AP);
             WiFi.softAPConfig(local_ip, gateway, subnet);
             if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
                 Serial.printf("Fallback AP started. SSID: %s, IP: %s, Channel: 9\n", 
-                              settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
+                    settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
             } else {
                 Serial.println("Failed to start fallback Access Point.");
             }

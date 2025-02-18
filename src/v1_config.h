@@ -18,6 +18,7 @@ extern bool bt_connected;
 extern bool muted;
 extern bool alertPresent;
 extern bool wifiConnecting;
+extern bool wifiConnected;
 extern unsigned long wifiStartTime;
 
 struct WiFiCredential {
@@ -99,6 +100,7 @@ struct GPSData {
 };
 
 extern GPSData gpsData;
+extern bool gpsAvailable;
 
 struct DisplayConstants {
     int MAX_X;

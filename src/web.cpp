@@ -273,7 +273,7 @@ void setupWebServer()
             if (doc.containsKey("wifiMode")) {
                 int mode = doc["wifiMode"].as<int>();
             
-                if (mode >= WIFI_SETTING_AP && mode <= WIFI_SETTING_APSTA) {
+                if (mode >= WIFI_SETTING_STA && mode <= WIFI_SETTING_APSTA) {
                     settings.wifiMode = static_cast<WiFiModeSetting>(mode);
                     Serial.println("wifiMode: " + String(mode));
                     preferences.putInt("wifiMode", mode);

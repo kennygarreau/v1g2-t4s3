@@ -53,6 +53,9 @@ bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
 unsigned long wifiStartTime = 0;
+bool gpsAvailable = false;
+bool wifiConnected = false;
+unsigned long lastValidGPSUpdate = 0;
 
 v1Settings settings;
 Preferences preferences;
@@ -359,7 +362,7 @@ void setup()
   startWifiAsync();
   setupWebServer();
 
-  //tz.setLocation(settings.timezone);
+  tz.setLocation(settings.timezone);
   //Serial.printf("Timezone set to: %s\n", settings.timezone.c_str());
 
 }
@@ -488,30 +491,35 @@ void loop() {
         char c = gpsSerial.read();
         //Serial.print(c);
         gps.encode(c);
-      }
-      if (gps.location.isUpdated() && gps.location.isValid()) {
-        gpsData.latitude = gps.location.lat();
-        gpsData.longitude = gps.location.lng();
-        gpsData.satelliteCount = gps.satellites.value();
-        gpsData.course = gps.course.deg();
-        // gpsData.date = formatDate(gps);
-        // gpsData.time = formatTime(gps);
-        gpsData.date = formatLocalDate(gps);
-        gpsData.time = formatLocalTime(gps);
-        gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
+    }
+    if (gps.location.isUpdated() && gps.location.isValid()) {
+      gpsData.latitude = gps.location.lat();
+      gpsData.longitude = gps.location.lng();
+      gpsData.satelliteCount = gps.satellites.value();
+      gpsData.course = gps.course.deg();
+      // gpsData.date = formatDate(gps);
+      // gpsData.time = formatTime(gps);
+      gpsData.date = formatLocalDate(gps);
+      gpsData.time = formatLocalTime(gps);
+      gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
 
-        gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";
+      gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";
 
-        if (settings.unitSystem == "Metric") {
-          gpsData.speed = gps.speed.kmph();
-          gpsData.altitude = gps.altitude.meters();
-          currentSpeed = static_cast<int>(gps.speed.kmph());
-        } else {
-          gpsData.speed = gps.speed.mph();
-          gpsData.altitude = gps.altitude.feet();
-          currentSpeed = static_cast<int>(gps.speed.mph());
-        }
+      if (settings.unitSystem == "Metric") {
+        gpsData.speed = gps.speed.kmph();
+        gpsData.altitude = gps.altitude.meters();
+        currentSpeed = static_cast<int>(gps.speed.kmph());
+      } else {
+        gpsData.speed = gps.speed.mph();
+        gpsData.altitude = gps.altitude.feet();
+        currentSpeed = static_cast<int>(gps.speed.mph());
       }
+      gpsAvailable = true;
+      lastValidGPSUpdate = currentMillis;
+    }
+    if (currentMillis - lastValidGPSUpdate > 5000) {
+      gpsAvailable = false;
+    }
   }
   
   // TODO: add deep sleep for BLE disconnect timeout??

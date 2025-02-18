@@ -15,6 +15,10 @@ int alertCount = 0;
 int prio_bars = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
+extern "C" bool get_var_wifiConnected() {
+    return wifiConnected;
+}
+
 extern "C" uint8_t get_var_brightness() {
     uint8_t value = amoled.getBrightness();
     return value;
@@ -229,5 +233,5 @@ extern "C" const char *get_var_lowspeedthreshold() {
 }
 
 extern "C" bool get_var_gpsEnabled() {
-    return settings.enableGPS;
+    return settings.enableGPS && gpsAvailable;
 }

@@ -203,6 +203,59 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
         }
         {
+            // nav_logo_enabled
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.nav_logo_enabled = obj;
+            lv_obj_set_pos(obj, 502, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_location_red);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // nav_logo_disabled
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.nav_logo_disabled = obj;
+            lv_obj_set_pos(obj, 502, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_location_disabled);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // wifi
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.wifi_logo = obj;
+            lv_obj_set_pos(obj, 466, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_wifi);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // automutespeed
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.automutespeed = obj;
+            //lv_obj_set_pos(obj, 473, 18);
+            lv_obj_set_pos(obj, 439, 18);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // mute_logo
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.mute_logo = obj;
+            //lv_obj_set_pos(obj, 420, 0);
+            lv_obj_set_pos(obj, 386, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_mute_logo_small);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
             // mode_type
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.mode_type = obj;
@@ -211,16 +264,6 @@ void create_screen_main() {
             lv_label_set_text(obj, "");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-        }
-        {
-            // mute_logo
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.mute_logo = obj;
-            lv_obj_set_pos(obj, 420, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_set_src(obj, &img_mute_logo_small);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
             // alert_table
@@ -261,37 +304,6 @@ void create_screen_main() {
             objects.rear_arrow = obj;
             lv_img_set_src(obj, &img_arrow_rear);
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, 50);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        {
-            // nav_logo_enabled
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.nav_logo_enabled = obj;
-            lv_obj_set_pos(obj, 500, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_set_src(obj, &img_location_red);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        {
-            // nav_logo_disabled
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.nav_logo_disabled = obj;
-            lv_obj_set_pos(obj, 500, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_set_src(obj, &img_location_disabled);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        {
-            // automutespeed
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.automutespeed = obj;
-            lv_obj_set_pos(obj, 473, 18);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         // {
@@ -366,15 +378,20 @@ void create_screen_main() {
 void tick_status_bar() {
     // Bluetooth status
     {
-        bool new_val = get_var_bt_connected(); // true when connected
-        bool cur_val = lv_obj_has_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
-        if (new_val == cur_val) {
-            LV_LOG_INFO("update BT status");
-            tick_value_change_obj = objects.bt_logo;
-            if (new_val) lv_obj_clear_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
-            else lv_obj_add_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
+        bool bt_connected = get_var_bt_connected(); // true when connected
+    
+        lv_obj_clear_flag(objects.bt_logo, bt_connected ? LV_OBJ_FLAG_HIDDEN : 0);
+        lv_obj_add_flag(objects.bt_logo, bt_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+        LV_LOG_INFO("Updated Bluetooth status");
+    }
+    
+    // Wifi status
+    {
+        bool wifi_connected = get_var_wifiConnected(); // true when connected
+    
+        lv_obj_clear_flag(objects.wifi_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
+        lv_obj_add_flag(objects.wifi_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+        LV_LOG_INFO("Updated WiFi status");
     }
     // Logic Mode
     {
@@ -391,27 +408,16 @@ void tick_status_bar() {
             LV_LOG_ERROR("Error: objects.mode_type is NULL!");
         }
     }
-    // Nav enabled logo
+    // GPS status
     {
-        bool new_val = get_var_gpsEnabled(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
-            tick_value_change_obj = objects.nav_logo_enabled;
-            if (new_val) lv_obj_clear_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN); // show the gps enabled logo
-            else lv_obj_add_flag(objects.nav_logo_enabled, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
-    }
-    // Nav disabled logo
-    {
-        bool new_val = get_var_gpsEnabled(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val != cur_val) {
-            tick_value_change_obj = objects.nav_logo_disabled; 
-            if (new_val) lv_obj_clear_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN); // show the gps disabled logo
-            else lv_obj_add_flag(objects.nav_logo_disabled, LV_OBJ_FLAG_HIDDEN);
-            tick_value_change_obj = NULL;
-        }
+        bool gps_enabled = get_var_gpsEnabled(); // true if enabled and connected
+    
+        lv_obj_clear_flag(objects.nav_logo_enabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
+        lv_obj_add_flag(objects.nav_logo_enabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
+    
+        lv_obj_clear_flag(objects.nav_logo_disabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(objects.nav_logo_disabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
+        LV_LOG_INFO("Updated GPS status");
     }
     // SilentRide threshold
     {
@@ -809,7 +815,6 @@ void tick_screen_settings() {
         }
     }
 }
-
 
 void create_screens() {
     lv_disp_t *dispp = lv_disp_get_default();
