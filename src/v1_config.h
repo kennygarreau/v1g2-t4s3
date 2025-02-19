@@ -13,6 +13,7 @@
 #define MAX_ALERTS 4
 #define MAX_WIFI_NETWORKS 4
 
+extern BLEClient* pClient;
 extern LilyGo_AMOLED amoled;
 extern bool bt_connected;
 extern bool muted;

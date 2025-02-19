@@ -44,8 +44,6 @@ public:
     PacketDecoder(const std::string& packet);
 
     std::string decode(int lowSpeedThreshold, int currentSpeed);
-    //std::string decodeDisplayData();
-    //std::string decodeAlertData(const std::vector<alertTable>& alerts);
     void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int curentSpeed);
     void clearInfAlerts();
     void clearTableAlerts();

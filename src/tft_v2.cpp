@@ -15,6 +15,39 @@ int alertCount = 0;
 int prio_bars = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
+extern "C" unsigned long getMillis() {
+    return millis();
+}
+
+extern "C" int getWifiRSSI() {
+    if (WiFi.status() == WL_CONNECTED) {
+        return WiFi.RSSI();
+    } else {
+        return 0;
+    }
+}
+
+extern "C" int getBluetoothSignalStrength() {
+    if (pClient == nullptr) {
+        LV_LOG_WARN("BLE Client is null, returning RSSI as 0");
+        return 0;  // Use 0 or another invalid value to indicate an error
+    }
+
+    if (!pClient->isConnected()) {
+        LV_LOG_WARN("BLE Client is not connected, returning RSSI as 0");
+        return 0;
+    }
+
+    int rssi = pClient->getRssi();
+
+    if (rssi == 0) {
+        LV_LOG_WARN("Received an invalid RSSI value");
+        return 0;
+    }
+
+    return rssi;
+  }
+
 extern "C" bool get_var_wifiConnected() {
     return wifiConnected;
 }
@@ -58,7 +91,16 @@ extern "C" void set_var_wifiEnabled(bool enable) {
 }
 
 extern "C" const char *get_var_ssid() {
-    return settings.localSSID.c_str();
+    static char ssid_buf[33];
+
+    if (WiFi.getMode() == WIFI_MODE_AP) {
+        strncpy(ssid_buf, settings.localSSID.c_str(), sizeof(ssid_buf) - 1);
+    } else if (WiFi.getMode() == WIFI_MODE_STA) {
+        strncpy(ssid_buf, WiFi.SSID().c_str(), sizeof(ssid_buf) - 1);
+    }
+
+    ssid_buf[sizeof(ssid_buf) - 1] = '\0';
+    return ssid_buf;
 }
 
 extern "C" const char *get_var_password() {
@@ -66,16 +108,18 @@ extern "C" const char *get_var_password() {
 }
 
 extern "C" const char *get_var_ipAddress() {
-    static String ipAddress;
+    static char ip_buf[16];
 
     if (WiFi.getMode() == WIFI_MODE_AP) {
-        ipAddress = WiFi.softAPIP().toString();
+        strncpy(ip_buf, WiFi.softAPIP().toString().c_str(), sizeof(ip_buf) - 1);
     } else if (WiFi.getMode() == WIFI_MODE_STA) {
-        ipAddress = WiFi.localIP().toString();
+        strncpy(ip_buf, WiFi.localIP().toString().c_str(), sizeof(ip_buf) - 1);
     } else {
-        ipAddress = "255.255.255.255";
+        strncpy(ip_buf, "0.0.0.0", sizeof(ip_buf) - 1);
     }
-    return ipAddress.c_str();
+
+    ip_buf[sizeof(ip_buf) - 1] = '\0';
+    return ip_buf;
 }
 
 extern "C" bool get_var_bt_connected() {

@@ -23,6 +23,9 @@ bool get_var_wifiEnabled();
 void set_var_wifiEnabled(bool enable);
 void set_var_brightness(uint8_t value);
 uint8_t get_var_brightness();
+int getBluetoothSignalStrength();
+int getWifiRSSI();
+extern unsigned long getMillis();
 
 void set_var_prioBars(int value);
 int get_var_prioBars();

@@ -159,7 +159,7 @@ void beginLvglHelper(LilyGo_Display &board, bool debug)
     lv_color_t *buf1 = (lv_color_t *)ps_malloc(lv_buffer_size);
     lv_color_t *buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
     assert(buf1 && buf2);
-    Serial.println("Buffer size: " + String(lv_buffer_size));
+    //Serial.println("Buffer size: " + String(lv_buffer_size));
 
     //lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, board.width() * board.height());

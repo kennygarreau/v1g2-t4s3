@@ -399,8 +399,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
     for (int i = 0; i < alerts.size(); i++) {
         if (alerts[i].length() < 14) {
-            Serial.print("Error: alert string too short: ");
-            Serial.println(alerts[i].c_str());
+            Serial.printf("Error: alert string too short: %s\n", alerts[i].c_str());
             continue;
         }
 
@@ -440,9 +439,8 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             Serial.println(errorMessage.c_str());
         }
 
-        if (auxByte == "80") {priority = true;}
-        else if (auxByte == "40") {junkAlert = true;}
-        else {priority = false; junkAlert = false;}
+        priority = (auxByte == "80");
+        junkAlert = (auxByte == "40");
 
         std::map<std::string, alertByte> alertByteMap;
         // {alertCount, alertIndex}
@@ -463,8 +461,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             alertCountValue = alerts.count;
             alertIndexValue = alerts.index;
         } else {
-            Serial.print("error in alertCountMap key: ");
-            Serial.println(alertIndexStr.c_str());
+            Serial.printf("error in alertCountMap key: %s\n", alertIndexStr.c_str());
         }
 
         bool found = false;
@@ -522,8 +519,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
 
         unsigned long elapsedTimeMillis = millis() - startTimeMillis;
-        // Serial.print("decode time: ");
-        // Serial.println(elapsedTimeMillis);
+        //Serial.printf("decode time: %lu\n", elapsedTimeMillis);
 
         // enable below for debugging
         std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
@@ -608,13 +604,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                     globalConfig.mode = "ADV LOGIC";
                     break;
             }
-        //}
-
-        // unsigned long elapsedTimeMillis = millis() - startTimeMillis;
-        // Serial.print("infDisplayData loop time: ");
-        // Serial.println(elapsedTimeMillis);
         }
-        
+        //Serial.printf("infDisplayData loop time: %lu\n", millis() - startTimeMillis);
         lastinfPayload = payload;
     }
     }
@@ -674,9 +665,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 // is there anything to be done here?
             }
             
-        // unsigned long elapsedTimeMillis = millis() - startTimeMillis;
-        // Serial.print("respAlertData loop time: ");
-        // Serial.println(elapsedTimeMillis);
+        //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
         }
     }
     else if (packetID == "12") {

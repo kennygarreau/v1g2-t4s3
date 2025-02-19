@@ -44,6 +44,10 @@ typedef struct _objects_t {
     lv_obj_t *label_brightness;
     lv_obj_t *label_wifi;
     lv_obj_t *switch_wifi;
+    lv_obj_t *label_ble_rssi;
+    lv_obj_t *label_ble_rssi_val;
+    lv_obj_t *label_wifi_rssi_val;
+    lv_obj_t *label_wifi_rssi;
 } objects_t;
 
 extern objects_t objects;

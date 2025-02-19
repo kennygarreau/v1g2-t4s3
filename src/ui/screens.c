@@ -660,72 +660,78 @@ void create_screen_settings() {
             // label_ip
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_ip = obj;
-            lv_obj_set_pos(obj, 8, 225);
+            //lv_obj_set_pos(obj, 98, 258);
+            lv_obj_set_pos(obj, 98, 157);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "IP");
+            lv_label_set_text(obj, "IP:");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_ip_val
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_ip_val = obj;
-            lv_obj_set_pos(obj, 8, 258);
+            //lv_obj_set_pos(obj, 262, 258);
+            lv_obj_set_pos(obj, 262, 157);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "0.0.0.0");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_ssid
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_ssid = obj;
-            lv_obj_set_pos(obj, 8, 23);
+            //lv_obj_set_pos(obj, 98, 157);
+            lv_obj_set_pos(obj, 98, 208);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "SSID");
+            lv_label_set_text(obj, "SSID:");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_ssid_val
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_ssid_val = obj;
-            lv_obj_set_pos(obj, 8, 55);
+            //lv_obj_set_pos(obj, 262, 157);
+            lv_obj_set_pos(obj, 262, 208);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_long_mode(obj, LV_LABEL_LONG_SCROLL);
             lv_label_set_text(obj, "default");
             lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_pass
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_pass = obj;
-            lv_obj_set_pos(obj, 8, 130);
+            //lv_obj_set_pos(obj, 98, 208);
+            lv_obj_set_pos(obj, 98, 258);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "PASS");
+            lv_label_set_text(obj, "PASS:");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_pass_val
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_pass_val = obj;
-            lv_obj_set_pos(obj, 6, 162);
+            //lv_obj_set_pos(obj, 262, 208);
+            lv_obj_set_pos(obj, 262, 258);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_long_mode(obj, LV_LABEL_LONG_SCROLL);
             lv_label_set_text(obj, "default");
             lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // slider_brightness
             lv_obj_t *obj = lv_slider_create(parent_obj);
             objects.slider_brightness = obj;
-            lv_obj_set_pos(obj, 62, 361);
-            lv_obj_set_size(obj, 477, 33);
+            lv_obj_set_pos(obj, 168, 45);
+            lv_obj_set_size(obj, 402, 40);
             lv_slider_set_range(obj, 10, 255);
             lv_slider_set_value(obj, 200, LV_ANIM_OFF);
             lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -737,30 +743,70 @@ void create_screen_settings() {
             // label_brightness
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_brightness = obj;
-            lv_obj_set_pos(obj, 205, 406);
+            lv_obj_set_pos(obj, 264, 6);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "BRIGHTNESS");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_wifi
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_wifi = obj;
-            lv_obj_set_pos(obj, 514, 24);
+            lv_obj_set_pos(obj, 14, 6);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "WIFI");
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // switch_wifi
             lv_obj_t *obj = lv_switch_create(parent_obj);
             objects.switch_wifi = obj;
-            lv_obj_set_pos(obj, 514, 63);
-            lv_obj_set_size(obj, 76, 39);
+            lv_obj_set_pos(obj, 14, 45);
+            lv_obj_set_size(obj, 76, 40);
             lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_CHECKED);
             lv_obj_add_event_cb(objects.switch_wifi, wifi_switch_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // label_ble_rssi
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ble_rssi = obj;
+            lv_obj_set_pos(obj, 362, 418);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "BLE");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xff517bd6), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_ble_rssi_val
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_ble_rssi_val = obj;
+            lv_obj_set_pos(obj, 437, 418);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "0 dBm");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xff517bd6), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_wifi_rssi_val
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_wifi_rssi_val = obj;
+            lv_obj_set_pos(obj, 437, 386);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "0 dBm");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // label_wifi_rssi
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_wifi_rssi = obj;
+            lv_obj_set_pos(obj, 343, 386);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "WIFI");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     }
     
@@ -781,13 +827,21 @@ void tick_screen_settings() {
     }
     // WiFi password
     {
-        const char *new_val = get_var_password();
-        const char *cur_val = (objects.label_pass_val) ? lv_label_get_text(objects.label_pass_val) : NULL;
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.label_pass_val;
-            LV_LOG_INFO("updating password");
-            lv_label_set_text(objects.label_pass_val, new_val);
-            tick_value_change_obj = NULL;
+        //const char *cur_val = (objects.label_pass_val) ? lv_label_get_text(objects.label_pass_val) : NULL;
+        bool show = get_var_wifiConnected();
+        if (show) {
+            lv_obj_add_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            const char *password = get_var_password();
+            {
+                tick_value_change_obj = objects.label_pass_val;
+                LV_LOG_INFO("updating password");
+                lv_label_set_text(objects.label_pass_val, password);
+                lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+                tick_value_change_obj = NULL;
+            }
         }
     }
     // IP address
@@ -803,16 +857,42 @@ void tick_screen_settings() {
     }
     // WiFi enable/disable
     {
-        if (!objects.switch_wifi) return; // Ensure the switch object exists
+        if (!objects.switch_wifi) return;
 
-        bool wifi_enabled = get_var_wifiEnabled();  // Get actual WiFi state
-        bool switch_checked = lv_obj_has_state(objects.switch_wifi, LV_STATE_CHECKED); // Get UI switch state
+        bool wifi_enabled = get_var_wifiEnabled();
+        bool switch_checked = lv_obj_has_state(objects.switch_wifi, LV_STATE_CHECKED);
     
         if (wifi_enabled && !switch_checked) {
-            lv_obj_add_state(objects.switch_wifi, LV_STATE_CHECKED);  // Sync UI to WiFi
+            lv_obj_add_state(objects.switch_wifi, LV_STATE_CHECKED);
         } else if (!wifi_enabled && switch_checked) {
-            lv_obj_clear_state(objects.switch_wifi, LV_STATE_CHECKED); // Sync UI to WiFi
+            lv_obj_clear_state(objects.switch_wifi, LV_STATE_CHECKED);
         }
+    }
+    // RSSI vals
+    {
+        static unsigned long lastUpdateTime = 0;
+        unsigned long currentTime = getMillis();
+
+        if (currentTime - lastUpdateTime < 2000) {
+            return;
+        }
+
+        lastUpdateTime = currentTime;
+
+        int bleRssi = getBluetoothSignalStrength();
+        int wifiRssi = getWifiRSSI();
+        char bleRssi_str[8];
+        char wifiRssi_str[8];
+        snprintf(bleRssi_str, sizeof(bleRssi_str), "%d dBm", bleRssi);
+        snprintf(wifiRssi_str, sizeof(wifiRssi_str), "%d dBm", wifiRssi);
+        
+        tick_value_change_obj = objects.label_ble_rssi_val;
+        LV_LOG_INFO("updating BLE RSSI");
+        lv_label_set_text(objects.label_ble_rssi_val, bleRssi_str);
+        LV_LOG_INFO("updating Wifi RSSI");
+        tick_value_change_obj = objects.label_wifi_rssi_val;
+        lv_label_set_text(objects.label_wifi_rssi_val, wifiRssi_str);
+        tick_value_change_obj = NULL;
     }
 }
 

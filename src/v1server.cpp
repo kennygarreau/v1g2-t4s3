@@ -1,9 +1,9 @@
 /*
  * Valentine V1 Gen2 Remote Display
- * version: v2.0a
+ * version: v1.0
  * Author: Kenny G
- * Date: 2024.December
- * License: GPL 3.0
+ * Date: February 2025
+ * License: MIT
  */
 
 #include <Arduino.h>
@@ -123,16 +123,14 @@ static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint
       sprintf(hexBuffer, "%02X", pData[i]);
       hexData += hexBuffer;
     }
-    // uncomment below for debug before entry into the payload calls
     if (hexData != previousHexData) {
-      //Serial.print("HEX decode: ");
-      //Serial.println(hexData);
+      // uncomment below for debug before entry into the payload calls
+      //Serial.printf("HEX decode: %s", hexData.c_str());
       previousHexData = hexData;
     }
   }
   unsigned long bleCallbackLength = millis() - bleCallbackStart;
-  // Serial.print("HEX decode time: ");
-  // Serial.println(bleCallbackLength);
+  //Serial.printf("HEX decode time: %d", bleCallbackLength);
 }
 
 void queryDeviceInfo(BLEClient* pClient) {
@@ -257,11 +255,6 @@ void saveSelectedConstants(const DisplayConstants& constants) {
 
 void loadSelectedConstants(DisplayConstants& constants) {
   preferences.getBytes("selConstants", &constants, sizeof(DisplayConstants));
-}
-
-int getBluetoothSignalStrength() {
-  int rssi = pClient->getRssi();
-  return rssi;
 }
 
 String formatTime(TinyGPSPlus &gps) {
@@ -414,9 +407,7 @@ void loop() {
       //unsigned long decodeLoopStart = millis();
       PacketDecoder decoder(packet); 
       decoder.decode(settings.lowSpeedThreshold, currentSpeed);
-      // unsigned long decodeLoopEnd = millis() - decodeLoopStart;
-      // Serial.print("Decode loop: ");
-      // Serial.println(decodeLoopEnd);
+      //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
       delay(50);
     }
   }
@@ -429,9 +420,7 @@ void loop() {
     std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
     lastPacket = packet;
 
-    // unsigned long decodeLoopEnd = millis() - decodeLoopStart;
-    // Serial.print("Decode loop: ");
-    // Serial.println(decodeLoopEnd);
+    //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
   } 
   
   unsigned long currentMillis = millis();
