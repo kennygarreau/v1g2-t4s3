@@ -56,6 +56,21 @@ No alerts:
 Settings screen:
 ![settings](./sample-images/IMG_1331.jpg)
 
+Single alert:
+![single alert](./sample-images/IMG_1334.jpg)
+
+Multi-alert:
+![multi alert](./sample-images/IMG_1335.MOV)
+
+Web UI:
+![web 1](./sample-images/IMG_1337.PNG)
+
+![web 2](./sample-images/IMG_1339.PNG)
+
+![web 3](./sample-images/IMG_1340.PNG)
+
+![web 4](./sample-images/IMG_1341.PNG)
+
 # Debugging
 
 In the event you'd like to debug or troubleshoot, your best bet is to open VScode, open the serial monitor and then connect your ESP32 device directly
