@@ -38,6 +38,7 @@ static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color
     }
 
     static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColors(area->x1, area->y1, w, h, (uint16_t *)color_p);
+    //static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColorsDMA(area->x1, area->y1, w, h, (uint16_t *)color_p);
 
     lv_disp_flush_ready(disp_drv);
 }

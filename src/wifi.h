@@ -14,5 +14,6 @@ void wifiSetup();
 //void wifiConnect();
 void startWifiAsync();
 void handleWifi();
+void wifiScan();
 
 #endif

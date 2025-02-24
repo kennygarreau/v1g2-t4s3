@@ -5,13 +5,14 @@
 #include "LilyGo_AMOLED.h"
 #include "wifi.h"
 
-#define FIRMWARE_VERSION "0.9.15.0a"
+#define FIRMWARE_VERSION "1.0.0a"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
 #define MAX_ALERTS 4
 #define MAX_WIFI_NETWORKS 4
+#define BLE_RETRY_INTERVAL 10000
 
 extern BLEClient* pClient;
 extern LilyGo_AMOLED amoled;

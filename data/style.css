@@ -184,6 +184,19 @@ table {
     overflow: hidden;
 }
 
+.side-navbar tbody tr:nth-child(odd) {
+    background-color: #2b5d9b; /* A slightly lighter blue for odd rows */
+}
+
+.side-navbar tbody tr:nth-child(even) {
+    background-color: #1e477a; /* Same as sidebar background for even rows */
+}
+
+.side-navbar td {
+    color: white; /* Ensure text remains visible */
+}
+
+
 #map {
     height: 400px;
     width: 100%;

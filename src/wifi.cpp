@@ -123,3 +123,21 @@ void handleWifi() {
         }
     }
 }
+
+void wifiScan() {
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+
+    Serial.println("Scanning for WiFi networks...");
+    int networkCount = WiFi.scanNetworks();
+    if (networkCount == 0) {
+        Serial.println("No networks found");
+    } else {
+        Serial.printf("%d networks found:\n", networkCount);
+        for (int i = 0; i < networkCount; i++) {
+            Serial.printf("%d: %s (RSSI: %d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
+        }
+    }
+    WiFi.scanDelete();
+}

@@ -233,6 +233,16 @@ void create_screen_main() {
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
+            // wifi_local
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.wifi_local_logo = obj;
+            lv_obj_set_pos(obj, 466, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_wifi_local);
+            lv_img_set_zoom(obj, 128);
+            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
             // automutespeed
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.automutespeed = obj;
@@ -384,13 +394,16 @@ void tick_status_bar() {
         lv_obj_add_flag(objects.bt_logo, bt_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
         LV_LOG_INFO("Updated Bluetooth status");
     }
-    
     // Wifi status
     {
         bool wifi_connected = get_var_wifiConnected(); // true when connected
     
         lv_obj_clear_flag(objects.wifi_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
+        lv_obj_add_flag(objects.wifi_local_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
+        
         lv_obj_add_flag(objects.wifi_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(objects.wifi_local_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+
         LV_LOG_INFO("Updated WiFi status");
     }
     // Logic Mode

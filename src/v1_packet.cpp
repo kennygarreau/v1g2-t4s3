@@ -100,7 +100,7 @@ void PacketDecoder::clearInfAlerts() {
 
 int mapXToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid hex input");
+        //Serial.println("Invalid hex input");
         return -1;
     }
 

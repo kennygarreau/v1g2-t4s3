@@ -438,16 +438,19 @@ bool LilyGo_AMOLED::initBUS(DriverBusType type)
             .clock_speed_hz = boards->display.freq,
             .spics_io_num = -1,
             .flags = SPI_DEVICE_HALFDUPLEX,
+            //.flags = SPI_TRANS_MODE_QIO,
             .queue_size = 17,
         };
         esp_err_t ret = spi_bus_initialize(DEFAULT_SPI_HANDLER, &buscfg, SPI_DMA_CH_AUTO);
         if (ret != ESP_OK) {
             log_e("spi_bus_initialize fail!");
+            Serial.println("spi bus initialize failed!");
             return false;
         }
         ret = spi_bus_add_device(DEFAULT_SPI_HANDLER, &devcfg, &spi);
         if (ret != ESP_OK) {
             log_e("spi_bus_add_device fail!");
+            Serial.println("spi bus add device failed!");
             return false;
         }
     } else {
@@ -686,17 +689,6 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
 
     setRotation(0);
 
-    // pinMode(boards->display.rst, OUTPUT);
-    // digitalWrite(boards->display.rst, LOW);
-    // delay(100);
-    // digitalWrite(boards->display.rst, HIGH);
-    // delay(100);
-
-    // writeCommand(0x11, NULL, 0);  // Sleep Out
-    // delay(120);  // Required delay
-    // writeCommand(0x29, NULL, 0);  // Display ON
-    // delay(50);
-
     return true;
 }
 
@@ -921,63 +913,61 @@ void LilyGo_AMOLED::pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16
 
     size_t totalPixels = width * height;
     size_t totalBytes = totalPixels * sizeof(uint16_t);
-    size_t maxTransferSize = SEND_BUF_SIZE;
+    size_t maxTransferSize = 1024;
     uint16_t *p = data;
 
     setCS();
-
     setAddrWindow(x, y, x + width - 1, y + height - 1);
     writeCommand(LCD_CMD_RAMWR, NULL, 0);
 
-    size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_DMA);
+    size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     Serial.printf("Available DMA memory: %d bytes\n", freeMem);
 
-    uint16_t *dmaBuffer = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_DMA | MALLOC_CAP_32BIT);
-    if (!dmaBuffer) {
+    uint16_t *dmaBuffer1 = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT);
+    uint16_t *dmaBuffer2 = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT);    
+    if (!dmaBuffer1 || !dmaBuffer2) {
         Serial.println("DMA Buffer allocation failed!");
+        if (dmaBuffer1) heap_caps_free(dmaBuffer1);
+        if (dmaBuffer2) heap_caps_free(dmaBuffer2);
         clrCS();
         return;
     }
 
     size_t remainingBytes = totalBytes;
-    spi_transaction_t trans = {0};
-    std::vector<spi_transaction_t> queuedTrans;
+    std::vector<spi_transaction_t*> queuedTrans;
+    //spi_transaction_t trans = {0};
 
+    bool useBuffer1 = true;
     while (remainingBytes > 0) {
         size_t chunkSize = (remainingBytes > maxTransferSize) ? maxTransferSize : remainingBytes;
         if (chunkSize % 2 != 0) chunkSize -= 1;
 
-        // Serial.printf("First 5 pixels: %04X %04X %04X %04X %04X\n",
-        //     data[0], data[1], data[2], data[3], data[4]);
-        memcpy(dmaBuffer, p, chunkSize);
-        // Serial.printf("DMA Buffer First 5 Pixels: %04X %04X %04X %04X %04X\n",
-        //       dmaBuffer[0], dmaBuffer[1], dmaBuffer[2], dmaBuffer[3], dmaBuffer[4]);
+        uint16_t *currentBuffer = useBuffer1 ? dmaBuffer1 : dmaBuffer2;
+        memcpy(currentBuffer, p, chunkSize);
+        p += chunkSize / sizeof(uint16_t); 
 
-
-        memset(&trans, 0, sizeof(spi_transaction_t));
-        trans.flags = SPI_TRANS_MODE_QIO;
-        trans.tx_buffer = dmaBuffer;
-        trans.length = chunkSize * 8;
-
-        digitalWrite(boards->display.d1, HIGH);
-        esp_err_t ret = spi_device_queue_trans(spi, &trans, portMAX_DELAY);
-        if (ret != ESP_OK) {
-            Serial.printf("Failed to queue SPI transaction: %d\n", ret);
+        spi_transaction_t *trans = (spi_transaction_t *)heap_caps_malloc(sizeof(spi_transaction_t), MALLOC_CAP_DMA);
+        if (!trans) {
+            Serial.println("Failed to allocate SPI transaction!");
             break;
         }
-        Serial.printf("Queued transaction: %d bytes\n", chunkSize);
+        //memset(&trans, 0, sizeof(spi_transaction_t));
+        trans->flags = SPI_TRANS_MODE_QIO;
+        trans->tx_buffer = currentBuffer;
+        trans->length = chunkSize * 8;
 
-        // spi_transaction_t *done_trans;
-        // ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
-        // if (ret != ESP_OK) {
-        //     Serial.printf("Error in getting transaction result: %d\n", ret);
-        //     break;
-        // }
-
-        //Serial.printf("Transaction completed, %zu bytes transferred.\n", chunkSize);
+        digitalWrite(boards->display.d1, HIGH);
+        esp_err_t ret = spi_device_queue_trans(spi, trans, portMAX_DELAY);
+        if (ret != ESP_OK) {
+            Serial.printf("Failed to queue SPI transaction: %d\n", ret);
+            heap_caps_free(trans);
+            break;
+        }
         queuedTrans.push_back(trans);
+
+        Serial.printf("Queued transaction: %d bytes\n", chunkSize);
         remainingBytes -= chunkSize;
-        p += chunkSize / sizeof(uint16_t);
+        useBuffer1 = !useBuffer1;
     }
 
     // Wait for all transactions to finish
@@ -989,9 +979,11 @@ void LilyGo_AMOLED::pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16
             Serial.printf("Error in getting transaction result: %d\n", ret);
             break;
         }
+        heap_caps_free(t);
     }
 
-    heap_caps_free(dmaBuffer);
+    heap_caps_free(dmaBuffer1);
+    heap_caps_free(dmaBuffer2);
     clrCS();
     Serial.println("DMA buffer freed and SPI transaction complete.");
 }

@@ -56,6 +56,7 @@ unsigned long wifiStartTime = 0;
 bool gpsAvailable = false;
 bool wifiConnected = false;
 unsigned long lastValidGPSUpdate = 0;
+unsigned long lastBLEAttempt = 0;
 
 v1Settings settings;
 Preferences preferences;
@@ -84,6 +85,7 @@ void scanAndConnect() {
 
       if (pClient->connect(&device)) {
         Serial.println("Connected!");
+        connected = true;
         pBLEScan->clearResults();
         return;
       }
@@ -92,15 +94,7 @@ void scanAndConnect() {
       }
     }
   }
-
-  Serial.println("No matching BLE devices found.");
   pBLEScan->clearResults();
-}
-
-void connectToServer() {
-  if (!connected) {
-    scanAndConnect();
-  }
 }
 
 class MyClientCallback : public BLEClientCallbacks {
@@ -191,7 +185,6 @@ void displayReader() {
             clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(), 8, false);
             delay(50);
           }
-
           clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
           }
       }
@@ -234,6 +227,14 @@ void loadSettings() {
   settings.turnOffDisplay = preferences.getBool("turnOffDisplay", true);
   settings.onlyDisplayBTIcon = preferences.getBool("onlyDispBTIcon", true);
 
+  //loadSelectedConstants(selectedConstants);
+  // if not initialized yet (first boot) - initialize settings
+  // if (selectedConstants.MAX_X == 0 && selectedConstants.MAX_Y == 0) {
+  //   selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
+
+  //   Serial.println("CONFIG: this appears to be the first boot, saving defaults");
+  //   saveSelectedConstants(selectedConstants);
+  // }
   // selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
 
   settings.wifiCredentials.clear();
@@ -244,7 +245,8 @@ void loadSettings() {
       String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
 
       if (ssid.length() > 0) {
-          settings.wifiCredentials.push_back({ssid, password});
+        Serial.printf("Saved network %d: %s\n", i, ssid.c_str());
+        settings.wifiCredentials.push_back({ssid, password});
       }
   }
 }
@@ -281,7 +283,7 @@ void setup()
 {
   Serial.begin();
   analogReadResolution(12);
-  //delay(1000);
+  delay(1000);
 
   Serial.println("Reading initial settings...");
   preferences.begin("settings", false);
@@ -302,18 +304,7 @@ void setup()
   }
 
   beginLvglHelper(amoled);
-  //loadSelectedConstants(selectedConstants);
-  // if not initialized yet (first boot) - initialize settings
-  // if (selectedConstants.MAX_X == 0 && selectedConstants.MAX_Y == 0) {
-  //   selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
-
-  //   Serial.println("CONFIG: this appears to be the first boot, saving defaults");
-  //   saveSelectedConstants(selectedConstants);
-  // }
-
   preferences.end();
-
-  //waitForSync();
 
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
@@ -337,8 +328,8 @@ void setup()
 
   pBLEScan = BLEDevice::getScan();
   pBLEScan->setActiveScan(true);
-
-  connectToServer();
+  /*
+  scanAndConnect();
 
   if (connected) {
     displayReader();
@@ -346,17 +337,18 @@ void setup()
   } else {
     Serial.println("Could not find a V1 connection");
   }
-
   queryDeviceInfo(pClient);
+  */
   }
+
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
   
   wifiSetup();
+  wifiScan();
   startWifiAsync();
   setupWebServer();
 
   tz.setLocation(settings.timezone);
-  //Serial.printf("Timezone set to: %s\n", settings.timezone.c_str());
 
 }
 
@@ -378,26 +370,26 @@ void loop() {
     }
   }
 
-  if (settings.disableBLE == false && !settings.displayTest) {
-    if (pClient->isConnected()) {
-      connected = true;
-    } else {
-      if (!settings.displayTest) {
-        Serial.println("disconnected - attempting reconnect");
+  if (!settings.disableBLE && !settings.displayTest) {
+    if (!pClient->isConnected()) {
+      unsigned long currentMillis = millis();
+      if (currentMillis - lastBLEAttempt >= BLE_RETRY_INTERVAL) {
+        lastBLEAttempt = currentMillis;
+        Serial.println("Disconnected - attempting reconnect...");
         set_var_bt_connected(false);
-        pBLEScan = BLEDevice::getScan();
-        pBLEScan->setActiveScan(true);
-        connectToServer();
-        
-        if (connected) {
-          displayReader();
-          infDisplayDataCharacteristic->registerForNotify(notifyDisplayCallback);
-        } else {
+        scanAndConnect();
+
+      if (connected) {
+        displayReader();
+        infDisplayDataCharacteristic->registerForNotify(notifyDisplayCallback);
+        queryDeviceInfo(pClient);
+      } else {
         Serial.println("Could not find a V1 connection");
-        }
       }
     }
- }
+  }
+}
+
   if (settings.displayTest) {
 
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
@@ -450,10 +442,12 @@ void loop() {
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
       if (globalConfig.muteTo.empty()) {
-        Serial.print("Awaiting user settings...");
         gpsData.totalHeap = ESP.getHeapSize();
         gpsData.totalPsram = ESP.getPsramSize();
-        clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
+        if (connected) {
+          Serial.print("Awaiting user settings...");
+          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false); 
+        }
       } else {
         Serial.println("User settings obtained!");
         configHasRun = true;
@@ -465,8 +459,6 @@ void loop() {
     gpsData.freeHeap = ESP.getFreeHeap();
     gpsData.freePsram = ESP.getFreePsram();
     
-    //Serial.printf("CPU Busy: %u%%\n", gpsData.cpuBusy);
-
     lastMillis = currentMillis;
     loopCounter = 0;
     checkReboot();
@@ -511,7 +503,6 @@ void loop() {
     }
   }
   
-  // TODO: add deep sleep for BLE disconnect timeout??
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
