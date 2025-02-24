@@ -48,6 +48,14 @@ Hopefully you have a 3d printer, or access to one. I used this design on [thingi
 but if you search for "lilygo" or "t-display-s3" on thingiverse you should find some pretty cool ones. As folks use different ones I'll be happy
 to link them below.
 
+# Sample images
+
+No alerts:
+![no alerts](./sample-images/IMG_1330.jpg)
+
+Settings screen:
+![settings](./sample-images/IMG_1331.jpg)
+
 # Debugging
 
 In the event you'd like to debug or troubleshoot, your best bet is to open VScode, open the serial monitor and then connect your ESP32 device directly
