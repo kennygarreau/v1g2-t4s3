@@ -30,9 +30,17 @@ Here's what's done in the current release:
 
 Here's the TODO as of Feb 2025: (in descending order of priority)
 - Touch-screen interaction for user-defined lockouts
-- Add graphics/screenshots into this README
+- Timezone support for auto-brightness (sunrise/sunset)
 
 If you have suggestions or requests, please ping me on the [rdforum valentine one](https://www.rdforum.org/threads/136559/) sub on rdforum.
+
+# How you can support this project
+
+A few months ago, my six-year-old son was diagnosed with a very rare form of cancer called Chordoma. After a complete resection of the tumor in November 2024, we've had several months of healing, throughout which I've poured my free time into this project. We have a long road of daily radiation ahead, but this is something I can continue to fill my hours with while also serving the countermeasure community.
+
+Donate here: [Chordoma Foundation](https://www.chordomafoundation.org/?campaign=462024) - if you can check "in honor of":
+Name: D Garreau
+Email: dggameon@proton.me
 
 # Installing to your T4 S3
 
@@ -42,11 +50,15 @@ If you have suggestions or requests, please ping me on the [rdforum valentine on
 3. Compile and push to your board
 4. Turn on your V1, then connect to a wireless charger or USB-C
 
+OR
+
+1. In releases, download the firmware binaries
+2. Load spiffs.bin as your filesystem image
+3. Load firmware.bin as the board firmware
+
 # Picking a case
 
-Hopefully you have a 3d printer, or access to one. I used this design on [thingiverse](https://www.thingiverse.com/thing:6095867) to print a case,
-but if you search for "lilygo" or "t-display-s3" on thingiverse you should find some pretty cool ones. As folks use different ones I'll be happy
-to link them below.
+Hopefully you have a 3d printer, or access to one! This will be updated once I've finished some designs that accommodate the hardware components.
 
 # Sample images
 
