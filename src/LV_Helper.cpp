@@ -184,6 +184,7 @@ void beginLvglHelper(LilyGo_Display &board, bool debug)
         indev_drv.type = LV_INDEV_TYPE_POINTER;
         indev_drv.read_cb = touchpad_read;
         indev_drv.user_data = &board;
+        indev_drv.long_press_time = 2000;
         lv_indev_drv_register( &indev_drv );
     }
 

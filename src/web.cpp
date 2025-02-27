@@ -113,6 +113,8 @@ void setupWebServer()
         jsonDoc["freeHeapInKB"] = gpsData.freeHeap / 1024;
         jsonDoc["totalPsram"] = gpsData.totalPsram / 1024;
         jsonDoc["freePsramInKB"] = gpsData.freePsram / 1024;
+        jsonDoc["totalStorage"] = gpsData.totalStorageKB;
+        jsonDoc["usedStorage"] = gpsData.usedStorageKB;
         if (isVBusIn) {
             jsonDoc["vBusVoltage"] = vBusVoltage;
         }

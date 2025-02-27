@@ -444,12 +444,21 @@ void loop() {
       if (globalConfig.muteTo.empty()) {
         gpsData.totalHeap = ESP.getHeapSize();
         gpsData.totalPsram = ESP.getPsramSize();
+        gpsData.totalStorageKB = fileManager.getStorageTotal();
+        gpsData.usedStorageKB = fileManager.getStorageUsed();
+
         if (connected) {
           Serial.print("Awaiting user settings...");
           clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false); 
         }
       } else {
         Serial.println("User settings obtained!");
+
+        lv_obj_t * scr = lv_scr_act();
+        if (scr) {
+        lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
+        }
+
         configHasRun = true;
         set_var_prio_alert_freq("");
       }

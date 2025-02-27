@@ -5,6 +5,8 @@
 #include "tft_v2.h"
 #include <vector>
 #include "wifi.h"
+#include "v1_packet.h"
+#include "math.h"
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";
@@ -13,7 +15,75 @@ const char* frequency_ptrs[MAX_ALERTS];
 const char* direction_ptrs[MAX_ALERTS]; 
 int alertCount = 0;
 int prio_bars = 0;
+int locationCount = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
+
+double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+    double lat1_rad = lat1 * M_PI / 180.0;
+    double lon1_rad = lon1 * M_PI / 180.0;
+    double lat2_rad = lat2 * M_PI / 180.0;
+    double lon2_rad = lon2 * M_PI / 180.0;
+
+    double delta_lat = lat2_rad - lat1_rad;
+    double delta_lon = lon2_rad - lon1_rad;
+
+    // Haversine formula
+    double a = sin(delta_lat / 2) * sin(delta_lat / 2) +
+               cos(lat1_rad) * cos(lat2_rad) * sin(delta_lon / 2) * sin(delta_lon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = EARTH_RADIUS_KM * c;
+
+    return distance; // this is in km
+}
+
+void checkProximityForMute(double currentLat, double currentLon) {
+    if (locationCount == 0) return;
+
+    for (int i = 0; i < locationCount; i++) {
+        double latDiff = fabs(currentLat - savedLockoutLocations[i].latitude);
+        double lonDiff = fabs(currentLon - savedLockoutLocations[i].longitude);
+
+        // Quick bounding box check
+        if (latDiff > LAT_OFFSET || lonDiff > LON_OFFSET) continue;
+
+        // Precise Haversine distance check
+        double distance = haversineDistance(
+            savedLockoutLocations[i].latitude, savedLockoutLocations[i].longitude, currentLat, currentLon
+        );
+
+        if (distance <= MUTING_RADIUS_KM) {
+            Serial.println("Auto-mute activated!");
+            clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
+            return;
+        }
+    }
+}
+
+extern "C" void main_press_handler(lv_event_t * e) {
+    static bool long_press_detected = false;
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if(code == LV_EVENT_LONG_PRESSED) {
+        LV_LOG_INFO("requesting manual lockout via long press");
+        Serial.println("requesting manual lockout via long press");
+        long_press_detected = true;
+
+        if (gpsAvailable) {
+            double curLat = gpsData.latitude;
+            double curLong = gpsData.longitude;
+
+            Serial.printf("Locking out lat: %d, lon: %d", curLat, curLong);
+        }
+    }
+    else if(code == LV_EVENT_CLICKED && !long_press_detected) {
+        LV_LOG_INFO("requesting mute via short press");
+        Serial.println("requesting mute via short press");
+        clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
+    }
+    else if(code == LV_EVENT_RELEASED) {
+        long_press_detected = false;
+    }
+}
 
 extern "C" unsigned long getMillis() {
     return millis();

@@ -4,8 +4,9 @@
 #include <ESPAsyncWebServer.h>
 #include "LilyGo_AMOLED.h"
 #include "wifi.h"
+#include "v1_fs.h"
 
-#define FIRMWARE_VERSION "1.0.0a"
+#define FIRMWARE_VERSION "1.0.1b"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -14,7 +15,22 @@
 #define MAX_WIFI_NETWORKS 4
 #define BLE_RETRY_INTERVAL 10000
 
+#define EARTH_RADIUS_KM 6371.0
+#define MUTING_RADIUS_KM 0.4
+#define LAT_OFFSET 0.004 // Roughly 0.4 km in degrees latitude (~400m)
+#define LON_OFFSET LAT_OFFSET
+#define MAX_LOCATIONS 256
+
+struct LockoutEntry {
+    uint32_t timestamp;
+    double latitude;
+    double longitude;
+};
+
+extern LockoutEntry savedLockoutLocations[MAX_LOCATIONS];
+
 extern BLEClient* pClient;
+extern BLERemoteCharacteristic* clientWriteCharacteristic;
 extern LilyGo_AMOLED amoled;
 extern bool bt_connected;
 extern bool muted;
@@ -97,6 +113,8 @@ struct GPSData {
   uint32_t freePsram;
   uint32_t totalHeap;
   uint32_t totalPsram;
+  uint32_t totalStorageKB;
+  uint32_t usedStorageKB;
   int connectedClients;
   int btStr;
 };
