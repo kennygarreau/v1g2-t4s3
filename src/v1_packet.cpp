@@ -365,8 +365,8 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                 alertCountValue = alertIndex & 0b00001111;
                 alertIndexValue = (alertIndex & 0b11110000) >> 4;
             } catch (const std::exception& e) {
-                Serial.print("Error parsing alert index: ");
-                Serial.println(alertIndexStr.c_str());
+                // Serial.print("Error parsing alert index: ");
+                // Serial.println(alertIndexStr.c_str());
             }
         } else {
             Serial.print("Invalid alertIndexStr: ");
@@ -405,7 +405,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                     case 0b10000000: dirValue = "REAR"; break;
                 }
             } catch (const std::exception& e) {
-
+                // anything to be done here?
             }
         }
 
@@ -583,12 +583,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         
                     alertCountValue = alertIndex & 0b00001111;
                     alertIndexValue = (alertIndex & 0b11110000) >> 4;
-                } catch (const std::invalid_argument& e) {
-                    Serial.print("Invalid argument error in stoi: ");
-                    Serial.println(alertIndexStr.c_str());
-                } catch (const std::out_of_range& e) {
-                    Serial.print("Out of range error in stoi: ");
-                    Serial.println(alertIndexStr.c_str());
+                } catch (const std::exception& e) {
+                    // anything to be done?
                 }
             } else {
                 Serial.println("Warning: alertIndexStr is empty!");

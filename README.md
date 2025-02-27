@@ -46,9 +46,10 @@ Email: dggameon@proton.me
 
 1. Clone this repo
 2. Load the project in VSCode (or your IDE of choice)
-3. In PlatformIO - go to Project Tasks - v1server - Platform - Upload Filesystem Image
-3. Compile and push to your board
-4. Turn on your V1, then connect to a wireless charger or USB-C
+3. In PlatformIO - go to Project Tasks - t4s3 - Platform - Upload Filesystem Image
+   ** note - be sure the environment is set to t4s3 **
+4. Compile and push to your board
+5. Turn on your V1, then connect to a wireless charger or USB-C
 
 OR
 

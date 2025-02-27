@@ -46,5 +46,22 @@ String formatLocalDate(TinyGPSPlus &gps) {
     snprintf(dateBuffer, sizeof(dateBuffer), "%02d/%02d/%04d", month(localTime), day(localTime), year(localTime));
   
     return String(dateBuffer);
-  }
+}
   
+uint32_t convertToUnixTimestamp(TinyGPSPlus &gps) {
+    TinyGPSDate gpsDate = gps.date;
+    TinyGPSTime gpsTime = gps.time;
+
+    tm timeInfo = {};
+    
+    timeInfo.tm_year = gpsDate.year() - 1900;
+    timeInfo.tm_mon = gpsDate.month() - 1;
+    timeInfo.tm_mday = gpsDate.day();
+    timeInfo.tm_hour = gpsTime.hour();
+    timeInfo.tm_min = gpsTime.minute();
+    timeInfo.tm_sec = gpsTime.second();
+
+    uint32_t unixTimestamp = mktime(&timeInfo);
+
+    return unixTimestamp;
+}

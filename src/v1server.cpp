@@ -487,6 +487,7 @@ void loop() {
       gpsData.longitude = gps.location.lng();
       gpsData.satelliteCount = gps.satellites.value();
       gpsData.course = gps.course.deg();
+      gpsData.rawTime = convertToUnixTimestamp(gps);
       // gpsData.date = formatDate(gps);
       // gpsData.time = formatTime(gps);
       gpsData.date = formatLocalDate(gps);

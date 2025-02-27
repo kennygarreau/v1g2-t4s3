@@ -1,4 +1,7 @@
-#pragma once
+//#pragma once
+#ifndef V1_CONFIG_H
+#define V1_CONFIG_H
+
 #include "BLEDevice.h"
 #include <Preferences.h>
 #include <ESPAsyncWebServer.h>
@@ -19,7 +22,7 @@
 #define MUTING_RADIUS_KM 0.4
 #define LAT_OFFSET 0.004 // Roughly 0.4 km in degrees latitude (~400m)
 #define LON_OFFSET LAT_OFFSET
-#define MAX_LOCATIONS 256
+#define MAX_LOCATIONS 512
 
 struct LockoutEntry {
     uint32_t timestamp;
@@ -108,6 +111,7 @@ struct GPSData {
   String time;
   String date;
   String localtime;
+  uint32_t rawTime;
   uint32_t cpuBusy;
   uint32_t freeHeap;
   uint32_t freePsram;
@@ -211,3 +215,5 @@ static BLEUUID infDisplayDataUUID("92A0B2CE-9E05-11E2-AA59-F23C91AEC05E"); // V1
 static BLEUUID clientWriteUUID("92A0B6D4-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in SHORT
 //static BLEUUID char4UUID("92A0B8D2-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in LONG
 //static BLEUUID char6UUID("92A0BAD4-9E05-11E2-AA59-F23C91AEC05E"); // write and write without response 
+
+#endif

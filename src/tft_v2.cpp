@@ -7,6 +7,7 @@
 #include "wifi.h"
 #include "v1_packet.h"
 #include "math.h"
+#include "time.h"
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";
@@ -60,19 +61,23 @@ void checkProximityForMute(double currentLat, double currentLon) {
 }
 
 extern "C" void main_press_handler(lv_event_t * e) {
+    SPIFFSFileManager fileManager;
+
     static bool long_press_detected = false;
     lv_event_code_t code = lv_event_get_code(e);
 
     if(code == LV_EVENT_LONG_PRESSED) {
         LV_LOG_INFO("requesting manual lockout via long press");
-        Serial.println("requesting manual lockout via long press");
         long_press_detected = true;
 
         if (gpsAvailable) {
-            double curLat = gpsData.latitude;
-            double curLong = gpsData.longitude;
+            SPIFFSFileManager::LockoutEntry thisLockout;            
+            thisLockout.timestamp = gpsData.rawTime;
+            thisLockout.latitude = gpsData.latitude;
+            thisLockout.longitude = gpsData.longitude;
 
-            Serial.printf("Locking out lat: %d, lon: %d", curLat, curLong);
+            Serial.printf("%u: Locking out lat: %f, lon: %f", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
+            //fileManager.writeLockoutEntryAsJson("/lockouts.json", thisLockout);
         }
     }
     else if(code == LV_EVENT_CLICKED && !long_press_detected) {
