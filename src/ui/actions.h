@@ -9,6 +9,11 @@ extern "C" {
 
 static void blink_timeout_cb(lv_timer_t *timer);
 extern void enable_blinking(int index);
+extern void disable_blinking(int index);
+
+static void clear_inactive_bands_timer(lv_timer_t * timer);
+void start_clear_inactive_bands_timer();
+void start_band_update_timer();
 
 #define MAX_BLINK_IMAGES 7
 #define MAX_BARS 6

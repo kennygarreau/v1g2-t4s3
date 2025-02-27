@@ -393,7 +393,7 @@ void loop() {
   if (settings.displayTest) {
 
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
-    //std::string packets[] = {"AAD8EA31095B1F38280C0000E7AB"};
+    //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
 
     for (const std::string& packet : packets) {
       //unsigned long decodeLoopStart = millis();

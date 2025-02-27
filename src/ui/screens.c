@@ -596,54 +596,66 @@ void tick_screen_main() {
     // KA alert
     {
         bool new_val = get_var_kaAlert(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
+        bool is_hidden = lv_obj_has_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN); // true if hidden
+
+        if (new_val == is_hidden) {
             LV_LOG_INFO("paint ka");
             tick_value_change_obj = objects.band_ka;
-            if (new_val) { lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
-            //lv_label_set_text(objects.band_ka, "KA"); 
+
+            if (new_val) {
+                lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
             }
-            else lv_obj_add_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
+
             tick_value_change_obj = NULL;
         }
     }
     // Laser alert
     {
         bool new_val = get_var_laserAlert(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
+        bool is_hidden = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
+        if (new_val == is_hidden) {
             LV_LOG_INFO("paint laser");
             tick_value_change_obj = objects.band_laser;
             if (new_val) { 
                 lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
             }
-            else lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
+            else {
+                lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
+            }
             tick_value_change_obj = NULL;
         }
     }
     // K alert
     {
         bool new_val = get_var_kAlert(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
+        bool is_hidden = lv_obj_has_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN); // true if hidden
+        if (new_val == is_hidden) {
             LV_LOG_INFO("paint k");
             tick_value_change_obj = objects.band_k;
-            if (new_val) { lv_obj_clear_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
+            if (new_val) { 
+                lv_obj_clear_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
             }
-            else lv_obj_add_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
+            else {
+                lv_obj_add_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
+            }
             tick_value_change_obj = NULL;
         }
     }
     // X alert
     {
         bool new_val = get_var_xAlert(); // true if enabled
-        bool cur_val = lv_obj_has_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == cur_val) {
+        bool is_hidden = lv_obj_has_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN); // true if hidden
+        if (new_val == is_hidden) {
             LV_LOG_INFO("paint x");
             tick_value_change_obj = objects.band_x;
-            if (new_val) { lv_obj_clear_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
+            if (new_val) { 
+                lv_obj_clear_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
             }
-            else lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
+            else { 
+                lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
+            }
             tick_value_change_obj = NULL;
         }
     }

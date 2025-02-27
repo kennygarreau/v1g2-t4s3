@@ -10,6 +10,8 @@ extern "C" {
 
 #include "lvgl.h"
 
+extern uint8_t activeBands;
+
 void set_var_bt_connected(bool value);
 bool get_var_muted();
 void set_var_muted(bool value);

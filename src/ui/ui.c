@@ -54,6 +54,8 @@ void ui_boot() {
 void ui_init() {
     create_screens();
     loadScreen(SCREEN_ID_MAIN);
+    //start_band_update_timer();
+    //start_clear_inactive_bands_timer();
 }
 
 void ui_tick() {
