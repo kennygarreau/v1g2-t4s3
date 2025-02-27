@@ -9,7 +9,7 @@
 #include "wifi.h"
 #include "v1_fs.h"
 
-#define FIRMWARE_VERSION "1.0.1b"
+#define FIRMWARE_VERSION "1.0.1c"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
