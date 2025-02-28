@@ -73,7 +73,7 @@ Single alert:
 ![single alert](./sample-images/IMG_1334.jpg)
 
 Multi-alert:
-![multi alert](./sample-images/IMG_1335.MOV)
+[![Watch the video](https://img.youtube.com/vi/luYXhNcygPw/default.jpg)](https://www.youtube.com/watch?v=luYXhNcygPw)
 
 Web UI:
 ![web 1](./sample-images/IMG_1337.PNG)
