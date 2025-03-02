@@ -13,7 +13,7 @@
 #include <LV_Helper.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
-#include "BLEDevice.h"
+#include <NimBLEDevice.h>
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
@@ -29,12 +29,12 @@
 
 AsyncWebServer server(80);
 
-BLERemoteService* dataRemoteService;
-BLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
-BLERemoteCharacteristic* clientWriteCharacteristic = nullptr;
-BLEClient* pClient = nullptr;
-BLEScan* pBLEScan;
-bool connected = false;
+NimBLERemoteService* dataRemoteService = nullptr;
+NimBLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
+NimBLERemoteCharacteristic* clientWriteCharacteristic = nullptr;
+NimBLEClient* pClient = nullptr;
+NimBLEScan* pBLEScan = nullptr;
+static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 static bool laserAlert = false;
 static String hexData = "";
@@ -57,6 +57,7 @@ bool gpsAvailable = false;
 bool wifiConnected = false;
 unsigned long lastValidGPSUpdate = 0;
 unsigned long lastBLEAttempt = 0;
+bool bleInit = true;
 
 v1Settings settings;
 Preferences preferences;
@@ -76,39 +77,8 @@ void requestMute() {
   }
 }
 
-void scanAndConnect() {
-  BLEScanResults foundDevices = pBLEScan->start(5, false);
-  for (int i = 0; i < foundDevices.getCount(); i++) {
-    BLEAdvertisedDevice device = foundDevices.getDevice(i);
-    if (device.haveServiceUUID() && device.isAdvertisingService(BLEUUID(bmeServiceUUID))) {
-      Serial.printf("V1 found! Attempting to connect to: %s\n", device.getAddress().toString().c_str());
-
-      if (pClient->connect(&device)) {
-        Serial.println("Connected!");
-        connected = true;
-        pBLEScan->clearResults();
-        return;
-      }
-      else {
-        Serial.println("There was an issue connecting to the V1");
-      }
-    }
-  }
-  pBLEScan->clearResults();
-}
-
-class MyClientCallback : public BLEClientCallbacks {
-  void onConnect(BLEClient* pClient) {
-    connected = true;
-  }
-
-  void onDisconnect(BLEClient* pClient) {
-    connected = false;
-  }
-};
-
 // TODO: remove the conversion dependency
-static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   unsigned long bleCallbackStart = millis();
   hexData = "";
   if (pData) {
@@ -127,8 +97,8 @@ static void notifyDisplayCallback(BLERemoteCharacteristic* pCharacteristic, uint
   //Serial.printf("HEX decode time: %d", bleCallbackLength);
 }
 
-void queryDeviceInfo(BLEClient* pClient) {
-  BLERemoteService* pService = pClient->getService(deviceInfoUUID);
+void queryDeviceInfo(NimBLEClient* pClient) {
+  NimBLERemoteService* pService = pClient->getService(deviceInfoUUID);
 
   if (pService == nullptr) {
     Serial.println("Device Information Service not found.");
@@ -149,9 +119,15 @@ void queryDeviceInfo(BLEClient* pClient) {
   };
 
   for (const auto& charInfo : characteristics) {
-    BLERemoteCharacteristic* pCharacteristic = pService->getCharacteristic(BLEUUID(charInfo.uuid));
+    NimBLERemoteCharacteristic* pCharacteristic = pService->getCharacteristic(NimBLEUUID(charInfo.uuid));
     if (pCharacteristic != nullptr) {
       *charInfo.storage = pCharacteristic->readValue();
+
+      size_t pos = charInfo.storage->find('\0');
+      if (pos != std::string::npos) {
+        charInfo.storage->erase(pos);
+      }
+
       Serial.printf("%s: %s\n", charInfo.name, charInfo.storage->c_str());
     } else {
       Serial.printf("%s not found.\n", charInfo.name);
@@ -159,43 +135,97 @@ void queryDeviceInfo(BLEClient* pClient) {
   }
 }
 
-void displayReader() {
-  if (pClient && pClient->isConnected()) {
-    set_var_bt_connected(true);
-    if (!dataRemoteService) {
-      dataRemoteService = pClient->getService(bmeServiceUUID);
-      if (dataRemoteService == nullptr) {
-        Serial.println("Failed to find infDisplayData service.");
+void displayReader(NimBLEClient* pClient) {
+
+  dataRemoteService = pClient->getService(bmeServiceUUID);
+  if (dataRemoteService) {
+      infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
+      if (infDisplayDataCharacteristic) {
+          if (infDisplayDataCharacteristic->canNotify()) {
+              infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallback);
+              Serial.println("Subscribed to alert notifications.");
+          } else {
+              Serial.println("Characteristic does not support notifications.");
+          }
+      } else {
+          Serial.println("Failed to find infDisplayDataCharacteristic.");
+      }
+  } else {
+      Serial.println("Failed to find bmeServiceUUID.");
+  }
+
+  infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
+  clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
+  if (infDisplayDataCharacteristic && clientWriteCharacteristic) {
+    NimBLERemoteDescriptor* pDesc = infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902));
+    if (pDesc) {
+      pDesc->writeValue((uint8_t*)notificationOn, 2, true);
+    }
+    delay(50);
+    if (settings.turnOffDisplay) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(), 8, false);
+      delay(50);
+    }
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
+  }
+}
+
+class ClientCallbacks : public NimBLEClientCallbacks {
+  void onConnect(NimBLEClient* pClient) override {
+    Serial.printf("BLE Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
+    bt_connected = true;
+    bleInit = true;
+    std::vector<NimBLERemoteService*> services = pClient->getServices();
+    
+  }
+  void onDisconnect(NimBLEClient* pClient, int reason) override {
+    Serial.printf("%s Disconnected, reason = %d - Restarting scan in 2s\n", 
+                  pClient->getPeerAddress().toString().c_str(), reason);
+
+    bt_connected = false;
+    delay(2000);
+    NimBLEDevice::getScan()->start(scanTimeMs);
+  }
+} clientCallbacks;
+
+
+class ScanCallbacks : public NimBLEScanCallbacks {
+  void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+    if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(bmeServiceUUID)) {
+      NimBLEDevice::getScan()->stop();
+
+      std::string deviceAddr = advertisedDevice->getAddress().toString();
+      if (deviceAddr.empty()) {
+        Serial.println("Invalid device address.");
         return;
+      }
+      Serial.printf("V1 found! Attempting to connect to: %s\n", deviceAddr.c_str());
+
+      if (!pClient) {
+        Serial.println("No disconnected client available, creating new one...");
+        pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
+        if (!pClient) {
+          Serial.printf("Failed to create client\n");
+          return;
+        }
+      }
+
+      if (!pClient->connect(true, true, false)) {
+        Serial.println("Failed to connect, deleting client...");
+        NimBLEDevice::deleteClient(pClient);
+        return;
+      }
+
+      pClient->setClientCallbacks(&clientCallbacks, false);
     }
   }
 
-  std::map<std::string, BLERemoteCharacteristic*>* pCharacteristics = dataRemoteService->getCharacteristics();
-  if (pCharacteristics) {
-    for (auto& characteristic : *pCharacteristics) {
-      if (characteristic.first == clientWriteUUID.toString()) {
-        clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
-        if (clientWriteCharacteristic != nullptr) {
-          infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-          infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notificationOn, 2, true);
-          delay(100);
-          
-          // If we allow the user to select full blank vs BT illuminated, we may need to modify the buffer size
-          if (settings.turnOffDisplay) {
-            clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(), 8, false);
-            delay(50);
-          }
-          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
-          }
-      }
-      else if (characteristic.first == infDisplayDataUUID.toString()) {
-        infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-        infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notificationOn, 2, true);
-        }
-      }
-    }
+  void onScanEnd(const NimBLEScanResults& results, int reason) override {
+    Serial.println("Scan ended, restarting scan...");
+    NimBLEDevice::getScan()->start(scanTimeMs);
   }
-}
+} scanCallbacks;
+
 
 void loadSettings() {
   settings.brightness = preferences.getUInt("brightness", amoled.getBrightness());
@@ -259,44 +289,24 @@ void loadSelectedConstants(DisplayConstants& constants) {
   preferences.getBytes("selConstants", &constants, sizeof(DisplayConstants));
 }
 
-String formatTime(TinyGPSPlus &gps) {
-  char timeBuffer[10];
-  if (gps.time.isValid()) {
-    snprintf(timeBuffer, sizeof(timeBuffer), "%02d:%02d:%02d", gps.time.hour(), gps.time.minute(), gps.time.second());
-  } else {
-    snprintf(timeBuffer, sizeof(timeBuffer), "00:00:00");
-  }
-  return String(timeBuffer);
-}
-
-String formatDate(TinyGPSPlus &gps) {
-  char dateBuffer[11];
-  if (gps.date.isValid()) {
-    snprintf(dateBuffer, sizeof(dateBuffer), "%02d/%02d/%04d", gps.date.month(), gps.date.day(), gps.date.year());
-  } else {
-    snprintf(dateBuffer, sizeof(dateBuffer), "00/00/0000");
-  }
-  return String(dateBuffer);
-}
-
 void setup()
 {
   Serial.begin();
   analogReadResolution(12);
-  delay(1000);
+  delay(500);
 
   Serial.println("Reading initial settings...");
   preferences.begin("settings", false);
   loadSettings();
 
-  bool rslt = false;
-  rslt = amoled.begin();
-  amoled.setBrightness(settings.brightness);
-  Serial.println("============================================");
-  Serial.print("    Board Name:LilyGo AMOLED "); Serial.println(amoled.getName());
-  Serial.println("============================================");
-  
-  if (!rslt) {
+  bool rslt = amoled.begin();
+  if (rslt) {
+    amoled.setBrightness(settings.brightness);
+    Serial.println("============================================");
+    Serial.print("    Board Name:LilyGo AMOLED "); Serial.println(amoled.getName());
+    Serial.println("============================================");
+  }
+  else {
     while (1) {
       Serial.println("The board model cannot be detected, please raise the Core Debug Level to ERROR");
       delay(1000);
@@ -321,35 +331,21 @@ void setup()
   lv_task_handler();
 
  if (!settings.disableBLE && !settings.displayTest) {
-  Serial.println("Searching for V1 bluetooth..");
-  BLEDevice::init("ESP32 Client");
-  pClient = BLEDevice::createClient();
-  pClient->setClientCallbacks(new MyClientCallback());
-
-  pBLEScan = BLEDevice::getScan();
-  pBLEScan->setActiveScan(true);
-  /*
-  scanAndConnect();
-
-  if (connected) {
-    displayReader();
-    infDisplayDataCharacteristic->registerForNotify(notifyDisplayCallback);
-  } else {
-    Serial.println("Could not find a V1 connection");
-  }
-  queryDeviceInfo(pClient);
-  */
+    NimBLEDevice::init("Async Client");
+    NimBLEDevice::setPower(3);
+    NimBLEScan* pScan = NimBLEDevice::getScan();
+    pScan->setScanCallbacks(&scanCallbacks);
+    pScan->setInterval(45);
+    pScan->setWindow(45);
+    pScan->setActiveScan(true);
+    pScan->start(scanTimeMs);
   }
 
-  Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
-  
   wifiSetup();
   wifiScan();
-  startWifiAsync();
   setupWebServer();
 
-  tz.setLocation(settings.timezone);
-
+  Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
 }
 
 void loop() {  
@@ -359,39 +355,23 @@ void loop() {
   static unsigned long lastTick = 0;
   unsigned long gpsMillis = millis();
 
-  handleWifi();
+  if (bt_connected && bleInit) {
+    displayReader(pClient);
+    bleInit = false;
+  }
 
-  if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() != WL_CONNECTED && !wifiConnecting) {
-    if (millis() - lastWifiReconnect > 10000) {
+  // in case we get disconnected for a while
+  if (WiFi.getMode() == WIFI_MODE_STA && !wifiConnected) {
+    if (millis() - lastWifiReconnect > 30000) {
       Serial.println("WiFi lost. Reconnecting...");
-      WiFi.disconnect();
-      WiFi.reconnect();
+      wifiScan();
       lastWifiReconnect = millis();
     }
   }
 
-  if (!settings.disableBLE && !settings.displayTest) {
-    if (!pClient->isConnected()) {
-      unsigned long currentMillis = millis();
-      if (currentMillis - lastBLEAttempt >= BLE_RETRY_INTERVAL) {
-        lastBLEAttempt = currentMillis;
-        Serial.println("Disconnected - attempting reconnect...");
-        set_var_bt_connected(false);
-        scanAndConnect();
-
-      if (connected) {
-        displayReader();
-        infDisplayDataCharacteristic->registerForNotify(notifyDisplayCallback);
-        queryDeviceInfo(pClient);
-      } else {
-        Serial.println("Could not find a V1 connection");
-      }
-    }
-  }
-}
-
   if (settings.displayTest) {
 
+    // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
     //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
 
@@ -447,7 +427,7 @@ void loop() {
         gpsData.totalStorageKB = fileManager.getStorageTotal();
         gpsData.usedStorageKB = fileManager.getStorageUsed();
 
-        if (connected) {
+        if (bt_connected) {
           Serial.print("Awaiting user settings...");
           clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false); 
         }
@@ -456,11 +436,12 @@ void loop() {
 
         lv_obj_t * scr = lv_scr_act();
         if (scr) {
-        lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
+          lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
         }
 
         configHasRun = true;
         set_var_prio_alert_freq("");
+        queryDeviceInfo(pClient);
       }
     }
     uint32_t cpuIdle = lv_timer_get_idle();  
@@ -488,8 +469,6 @@ void loop() {
       gpsData.satelliteCount = gps.satellites.value();
       gpsData.course = gps.course.deg();
       gpsData.rawTime = convertToUnixTimestamp(gps);
-      // gpsData.date = formatDate(gps);
-      // gpsData.time = formatTime(gps);
       gpsData.date = formatLocalDate(gps);
       gpsData.time = formatLocalTime(gps);
       gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;

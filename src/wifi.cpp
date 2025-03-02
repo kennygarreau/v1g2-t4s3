@@ -26,12 +26,18 @@ void onWiFiEvent(WiFiEvent_t event) {
             case SYSTEM_EVENT_STA_DISCONNECTED:
                 wifiConnected = false;
                 Serial.println("WiFi disconnected. Attempting reconnect...");
-                if (WiFi.status() != WL_CONNECTED) {
-                    WiFi.reconnect();
+
+                if (!wifiConnecting) {
+                    //wifiConnecting = true;
+                    //WiFi.disconnect();
+                    //WiFi.reconnect();
+                    wifiScan();
                 }
                 break;
             case SYSTEM_EVENT_STA_GOT_IP:
                 wifiConnected = true;
+                wifiConnecting = false;
+                Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
                 break;
             default:
                 //Serial.printf("Unhandled WiFi Event (STA): %d\n", event);
@@ -136,8 +142,33 @@ void wifiScan() {
     } else {
         Serial.printf("%d networks found:\n", networkCount);
         for (int i = 0; i < networkCount; i++) {
-            Serial.printf("%d: %s (RSSI: %d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
+            Serial.printf("%d: %s (RSSI: %d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), 
+                            WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
         }
+        for (auto &cred : settings.wifiCredentials) {
+            for (int i = 0; i < networkCount; i++) {
+                if (WiFi.SSID(i) == cred.ssid) {
+                    wifiConnecting = true;
+                    Serial.printf("Attempting to connect to: %s", cred.ssid.c_str());
+                    WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
+
+                    unsigned long startAttemptTime = millis();
+                    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
+                        Serial.print(".");
+                        delay(500);
+                    }
+                    Serial.println();
+
+                    if (WiFi.status() == WL_CONNECTED) {
+                        return;
+                    } else {
+                        Serial.printf("Failed to connect to %s\n", cred.ssid.c_str());
+                    }
+                }
+            }
+        }
+        Serial.println("No known networks available.");
+        wifiConnecting = false;
     }
     WiFi.scanDelete();
 }

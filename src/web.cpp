@@ -87,7 +87,6 @@ void setupWebServer()
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
 
     server.on("/gps-info", HTTP_GET, [](AsyncWebServerRequest *request) {
-        //StaticJsonDocument<200> jsonDoc;
         JsonDocument jsonDoc;
 
         // GPS Data

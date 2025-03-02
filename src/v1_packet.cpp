@@ -121,7 +121,7 @@ int mapXToBars(const std::string& hex) {
 
 int mapKToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid hex input");
+        //Serial.println("Invalid hex input");
         return -1;
     }
 
@@ -437,7 +437,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
         // paint the priority alert
         if (priority && bandValue != "LASER") {
-            if (!muted) {
+            if (!muted && gpsAvailable) {
                 if (currentSpeed <= lowSpeedThreshold) {
                     Serial.println("SilentRide requesting mute");
                     requestMute();
