@@ -431,7 +431,9 @@ void loop() {
 
         if (bt_connected) {
           Serial.print("Awaiting user settings...");
-          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false); 
+          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+          delay(20);
+          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
         }
       } else {
         Serial.println("User settings obtained!");
@@ -451,6 +453,8 @@ void loop() {
     gpsData.freeHeap = ESP.getFreeHeap();
     gpsData.freePsram = ESP.getFreePsram();
     
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+
     lastMillis = currentMillis;
     loopCounter = 0;
     checkReboot();

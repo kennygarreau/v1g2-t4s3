@@ -76,7 +76,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
             thisLockout.latitude = gpsData.latitude;
             thisLockout.longitude = gpsData.longitude;
 
-            Serial.printf("%u: Locking out lat: %f, lon: %f", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
+            Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
             //fileManager.writeLockoutEntryAsJson("/lockouts.json", thisLockout);
         }
     }

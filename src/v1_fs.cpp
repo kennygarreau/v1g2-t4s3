@@ -34,6 +34,7 @@ void SPIFFSFileManager::writeLockoutEntryAsJson(const char* filePath, LockoutEnt
     doc["timestamp"] = entry.timestamp;
     doc["latitude"] = entry.latitude;
     doc["longitude"] = entry.longitude;
+    //doc["bands"] = entry.bands;
 
     String jsonString;
     serializeJson(doc, jsonString);

@@ -162,6 +162,9 @@ void setupWebServer()
         configJson["Resting Display"] = globalConfig.restingDisplay ? "On" : "Off";
         configJson["BSM Plus"] = globalConfig.bsmPlus ? "Off" : "On";
         configJson["Auto Mute"] = globalConfig.autoMute;
+        
+        configJson["Main Volume"] = globalConfig.mainVolume;
+        configJson["Muted Volume"] = globalConfig.mutedVolume;
 
         JsonObject displaySettingsJson = jsonDoc.createNestedObject("displaySettings");
         displaySettingsJson["brightness"] = settings.brightness;

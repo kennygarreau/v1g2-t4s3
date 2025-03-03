@@ -523,7 +523,6 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             compareBandArrows(arrow1Data, arrow2Data);
         }
         else {
-            Serial.println("clearing alerts via ID31 bandArrow empty");
             clearInfAlerts();
             clearTableAlerts();
         }
@@ -617,6 +616,22 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         decodeByteZero(userByteZero);
         decodeByteOne(userByteOne);
         decodeByteTwo(userByteTwo);
+    }
+    else if (packetID == "38") {
+        int mainVol = 0, mutedVol = 0;
+        try {
+            std::string mainV = packet.substr(10, 2);
+            std::string mutedV = packet.substr(12, 2);
+
+            if (!mainV.empty() && !mutedV.empty()) {
+                mainVol = std::stoi(mainV, nullptr, 16);
+                mutedVol = std::stoi(mutedV, nullptr, 16);
+                globalConfig.mainVolume = mainVol;
+                globalConfig.mutedVolume = mutedVol;
+            }
+        } catch (const std::exception& e) {
+
+        }
     }
     else if (packetID == "63") {
         int voltageInt = 0, voltageDec = 0;
@@ -743,7 +758,6 @@ uint8_t* Packet::reqBatteryVoltage() {
 uint8_t* Packet::reqCurrentVolume() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqCurrentVolume packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQCURRENTVOLUME, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 

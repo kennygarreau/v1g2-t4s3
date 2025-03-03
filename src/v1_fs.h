@@ -11,8 +11,9 @@ public:
 
     struct LockoutEntry {
         uint32_t timestamp;
-        double latitude;
-        double longitude;
+        float latitude;
+        float longitude;
+        std::array<float, 4> bands;
     };
 
     SPIFFSFileManager() {}

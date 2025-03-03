@@ -1,8 +1,6 @@
-//#pragma once
 #ifndef V1_CONFIG_H
 #define V1_CONFIG_H
 
-//#include "BLEDevice.h"
 #include "NimBLEDevice.h"
 #include <Preferences.h>
 #include <ESPAsyncWebServer.h>
@@ -10,7 +8,7 @@
 #include "wifi.h"
 #include "v1_fs.h"
 
-#define FIRMWARE_VERSION "1.0.1e"
+#define FIRMWARE_VERSION "1.0.1f"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -97,6 +95,8 @@ struct Config {
     int autoMuteBit1;
     std::string autoMute;
     const char* mode;
+    int mainVolume;
+    int mutedVolume;
 };
 
 extern Config globalConfig;
