@@ -28,6 +28,7 @@ extern int blink_count;
 void wifi_switch_event_handler(lv_event_t * e);
 void gesture_event_handler(lv_event_t * e);
 void slider_brightness_event_handler(lv_event_t * e);
+void show_popup(const char * message);
 
 #ifdef __cplusplus
 }

@@ -29,7 +29,7 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
 }
 
 void SPIFFSFileManager::writeLockoutEntryAsJson(const char* filePath, LockoutEntry entry) {
-    StaticJsonDocument<200> doc;
+    JsonDocument doc;
 
     doc["timestamp"] = entry.timestamp;
     doc["latitude"] = entry.latitude;
@@ -60,7 +60,7 @@ void SPIFFSFileManager::readLockoutEntriesFromJson(const char* filePath) {
 
     while (file.available()) {
         String jsonString = file.readStringUntil('\n');
-        StaticJsonDocument<200> doc;
+        JsonDocument doc;
         DeserializationError error = deserializeJson(doc, jsonString);
 
         if (error) {
@@ -103,7 +103,7 @@ bool SPIFFSFileManager::removeLockoutEntryByTimestamp(const char* filePath, uint
     
     while (file.available()) {
         String jsonString = file.readStringUntil('\n');
-        StaticJsonDocument<200> doc;
+        JsonDocument doc;
         DeserializationError error = deserializeJson(doc, jsonString);
 
         if (error) {

@@ -10,7 +10,7 @@
         "-DLILYGO_TDISPLAY_AMOLED_SERIES",
         "-DARDUINO_USB_MODE=1",
         "-DARDUINO_RUNNING_CORE=1",
-        "-DARDUINO_EVENT_RUNNING_CORE=1"
+        "-DARDUINO_EVENT_RUNNING_CORE=0"
       ],
       "f_cpu": "240000000L",
       "f_flash": "80000000L",

@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "fonts.h"
 #include "../tft_v2.h"
 #include "screens.h"
 #include "ui.h"
@@ -95,4 +96,38 @@ static void clear_inactive_bands_timer(lv_timer_t * timer) {
 
 void start_clear_inactive_bands_timer() {
     lv_timer_create(clear_inactive_bands_timer, 1000, NULL);
+}
+
+void delete_popup(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+
+    if (obj == NULL) {
+        LV_LOG_USER("delete_popup: NULL object, skipping deletion.");
+        return;
+    }
+
+    LV_LOG_USER("Deleting popup object...");
+}
+
+void show_popup(const char * message) {
+    static lv_obj_t * mbox = NULL;
+
+    if (mbox != NULL && lv_obj_is_valid(mbox)) {
+        LV_LOG_USER("Popup exists, deleting...");
+        lv_obj_del(mbox);
+        mbox = NULL;
+    }
+
+    mbox = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(mbox, 320, 120);
+    lv_obj_align(mbox, LV_ALIGN_CENTER, 0, 0);
+
+    lv_obj_t * label = lv_label_create(mbox);
+    lv_label_set_text(label, message);
+    lv_obj_set_style_text_font(label, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_text_color(label, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_center(label);
+
+    lv_obj_add_event_cb(mbox, delete_popup, LV_EVENT_DELETE, NULL);
+    lv_obj_del_delayed(mbox, 1500);
 }

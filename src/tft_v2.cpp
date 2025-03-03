@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include "lvgl.h"
 #include "ui/ui.h"
+#include "ui/actions.h"
 #include "tft_v2.h"
 #include <vector>
 #include "wifi.h"
@@ -77,6 +78,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
             thisLockout.longitude = gpsData.longitude;
 
             Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
+            show_popup("Lockout Stored");
             //fileManager.writeLockoutEntryAsJson("/lockouts.json", thisLockout);
         }
     }
@@ -84,6 +86,8 @@ extern "C" void main_press_handler(lv_event_t * e) {
         LV_LOG_INFO("requesting mute via short press");
         Serial.println("requesting mute via short press");
         clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
+        delay(20);
+        show_popup("V1 Muted");
     }
     else if(code == LV_EVENT_RELEASED) {
         long_press_detected = false;
