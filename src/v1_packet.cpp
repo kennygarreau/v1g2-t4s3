@@ -619,13 +619,24 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         decodeByteTwo(userByteTwo);
     }
     else if (packetID == "63") {
-        Serial.println("respBatteryVoltage");
+        int voltageInt = 0, voltageDec = 0;
+        try {
+            std::string intPart = packet.substr(10, 2);
+            std::string decPart = packet.substr(12, 2);
+        
+            if (!intPart.empty() && !decPart.empty()) {
+                voltageInt = std::stoi(intPart, nullptr, 16);
+                voltageDec = std::stoi(decPart, nullptr, 16);
+                gpsData.voltage = voltageInt + (voltageDec / 100.0f);
+            }
+        } catch (const std::exception& e) {
+        }
     }
     else if (packetID == "64") {
         Serial.println("respUnsupportedPacket");
     }
     else if (packetID == "66") {
-        Serial.println("infV1Busy");
+        //infV1Busy
     }
     else if (packetID == "67") {
         Serial.println("respDataError encountered");
@@ -665,17 +676,9 @@ uint8_t* Packet::constructPacket(uint8_t destID, uint8_t sendID, uint8_t packetI
         packet[5] = calculateChecksum(packet, 5);
         packet[6] = PACKETEND;
     }
-    
-    // this is broken and needs fixing, but maybe not?
-    /* Serial.print("Packet sent: ");
-    for (int i = 0; i <= sizeof(packet + 2); i++) {
-        Serial.print(packet[i], HEX);
-    }
-    Serial.println(); */
     return packet;
 }
 
-// TODO: add a conditional for whether the user wants fully blank display or BT light to illuminate
 uint8_t* Packet::reqTurnOffMainDisplay(uint8_t mode) {
     uint8_t payloadData[] = {mode, mode};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
@@ -734,7 +737,6 @@ uint8_t* Packet::reqMuteOff() {
 uint8_t* Packet::reqBatteryVoltage() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqBatteryVoltage packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQBATTERYVOLTAGE, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 

@@ -105,8 +105,9 @@ void setupWebServer()
         jsonDoc["connectedClients"] = gpsData.connectedClients;
 
         // Hardware data
+        jsonDoc["carVoltage"] = gpsData.voltage;
         jsonDoc["batteryPercent"] = batteryPercentage;
-        jsonDoc["batteryVoltage"] = voltageInMv;
+        jsonDoc["espVoltage"] = voltageInMv;
         jsonDoc["cpu"] = gpsData.cpuBusy;
         jsonDoc["totalHeap"] = gpsData.totalHeap / 1024;
         jsonDoc["freeHeapInKB"] = gpsData.freeHeap / 1024;
@@ -318,11 +319,6 @@ void setupWebServer()
                 Serial.println("disableBLE: " + String(settings.disableBLE));
                 preferences.putBool("disableBLE", settings.disableBLE);
             }
-            if (doc.containsKey("timezone")) {
-                settings.timezone = doc["timezone"].as<String>();
-                Serial.println("timezone: " + String(settings.timezone));
-                preferences.putString("timezone", settings.timezone);
-            }
             if (doc.containsKey("enableGPS")) {
                 settings.enableGPS = doc["enableGPS"].as<bool>();
                 Serial.println("enableGPS: " + String(settings.enableGPS));
@@ -356,6 +352,7 @@ void setupWebServer()
                 settings.onlyDisplayBTIcon = doc["onlyDisplayBTIcon"].as<bool>();
                 Serial.println("onlyDisplayBTIcon: " + String(settings.onlyDisplayBTIcon));
                 preferences.putBool("onlyDispBTIcon", settings.onlyDisplayBTIcon);
+                clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(static_cast<uint8_t>(settings.onlyDisplayBTIcon)), 7, false);
             }
             if (doc.containsKey("turnOffDisplay")) {
                 settings.turnOffDisplay = doc["turnOffDisplay"].as<bool>();

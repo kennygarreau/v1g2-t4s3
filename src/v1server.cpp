@@ -413,10 +413,11 @@ void loop() {
     if (isVBusIn) {
       vBusVoltage = amoled.getVbusVoltage();
     }
-
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false); 
+    
     batteryCharging = amoled.isCharging();
-    uint16_t batteryVoltage = amoled.getBattVoltage();
-    voltageInMv = batteryVoltage; // cast this to float
+    uint16_t espVoltage = amoled.getBattVoltage();
+    voltageInMv = espVoltage; // cast this to float
     batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
     batteryPercentage = constrain(batteryPercentage, 0, 100);
 

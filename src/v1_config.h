@@ -123,6 +123,7 @@ struct GPSData {
   uint32_t usedStorageKB;
   int connectedClients;
   int btStr;
+  float voltage;
 };
 
 extern GPSData gpsData;
