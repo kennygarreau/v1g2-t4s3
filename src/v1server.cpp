@@ -163,7 +163,8 @@ void displayReader(NimBLEClient* pClient) {
     }
     delay(50);
     if (settings.turnOffDisplay) {
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(), 8, false);
+      uint8_t value = settings.onlyDisplayBTIcon ? 0x01 : 0x00;
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(value), 8, false);
       delay(50);
     }
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);

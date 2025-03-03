@@ -32,7 +32,7 @@ struct LockoutEntry {
     std::array<float, 4> bands;
 };
 
-std::vector<LockoutEntry> savedLockoutLocations;
+extern std::vector<LockoutEntry> savedLockoutLocations;
 
 extern NimBLEClient* pClient;
 extern NimBLERemoteCharacteristic* clientWriteCharacteristic;

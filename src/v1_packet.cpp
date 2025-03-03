@@ -676,8 +676,8 @@ uint8_t* Packet::constructPacket(uint8_t destID, uint8_t sendID, uint8_t packetI
 }
 
 // TODO: add a conditional for whether the user wants fully blank display or BT light to illuminate
-uint8_t* Packet::reqTurnOffMainDisplay() {
-    uint8_t payloadData[] = {0x01, 0x01};
+uint8_t* Packet::reqTurnOffMainDisplay(uint8_t mode) {
+    uint8_t payloadData[] = {mode, mode};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
     Serial.println("Sending reqTurnOffMainDisplay packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQTURNOFFMAINDISPLAY, const_cast<uint8_t*>(payloadData), payloadLength, packet);

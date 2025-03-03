@@ -57,7 +57,7 @@ public:
     static uint8_t* reqVersion();
     static uint8_t* reqSweepSections();
     static uint8_t* reqSerialNumber();
-    static uint8_t* reqTurnOffMainDisplay();
+    static uint8_t* reqTurnOffMainDisplay(uint8_t mode);
     static uint8_t* reqTurnOnMainDisplay();
     static uint8_t* reqBatteryVoltage();
     static uint8_t* reqMuteOff();
