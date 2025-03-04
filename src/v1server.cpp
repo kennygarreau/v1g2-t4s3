@@ -174,6 +174,7 @@ void displayReader(NimBLEClient* pClient) {
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient* pClient) override {
     Serial.printf("BLE Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
+    Serial.printf("BLE Client Connected on core %d\n", xPortGetCoreID());
     bt_connected = true;
     bleInit = true;
     std::vector<NimBLERemoteService*> services = pClient->getServices();
@@ -316,6 +317,8 @@ void setup()
 
   beginLvglHelper(amoled);
   preferences.end();
+
+  Serial.printf("Setup running on core %d\n", xPortGetCoreID());
 
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");

@@ -20,6 +20,7 @@ const char* encryptionTypeToString(wifi_auth_mode_t authMode) {
 
 void onWiFiEvent(WiFiEvent_t event) {
     wifi_mode_t currentMode = WiFi.getMode();
+    Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
 
     if (currentMode == WIFI_MODE_STA) {
         switch (event) {
