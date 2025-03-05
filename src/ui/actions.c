@@ -43,6 +43,12 @@ void wifi_switch_event_handler(lv_event_t * e) {
     lv_obj_t * obj = lv_event_get_target(e);
     bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
 
+    if (switch_state) {
+        show_popup("WiFi scanning...");
+    } else {
+        show_popup("Disabling WiFi");
+    }
+
     LV_LOG_INFO("User toggled WiFi switch. New state: %d", switch_state);
     set_var_wifiEnabled(switch_state);
 }

@@ -11,8 +11,11 @@ enum WiFiModeSetting {
 
 void onWiFiEvent(WiFiEvent_t event);
 void wifiSetup();
+void wifiScan();
+
+/*
 void startWifiAsync();
 void handleWifi();
-void wifiScan();
+*/
 
 #endif

@@ -6,6 +6,7 @@ IPAddress local_ip(192, 168, 242, 1);
 IPAddress gateway(192, 168, 242, 1);
 IPAddress subnet(255, 255, 255, 0);
 
+/*
 const char* encryptionTypeToString(wifi_auth_mode_t authMode) {
     switch (authMode) {
         case WIFI_AUTH_OPEN: return "Open";
@@ -17,6 +18,7 @@ const char* encryptionTypeToString(wifi_auth_mode_t authMode) {
         default: return "Unknown";
     }
 }
+*/
 
 void onWiFiEvent(WiFiEvent_t event) {
     wifi_mode_t currentMode = WiFi.getMode();
@@ -29,9 +31,6 @@ void onWiFiEvent(WiFiEvent_t event) {
                 Serial.println("WiFi disconnected. Attempting reconnect...");
 
                 if (!wifiConnecting) {
-                    //wifiConnecting = true;
-                    //WiFi.disconnect();
-                    //WiFi.reconnect();
                     wifiScan();
                 }
                 break;
@@ -69,6 +68,7 @@ void wifiSetup() {
     WiFi.onEvent(onWiFiEvent);
 }
 
+/*
 void startWifiAsync() {
     WiFi.mode(static_cast<wifi_mode_t>(settings.wifiMode));
     //Serial.printf("Wifi Mode set to: %d\n", settings.wifiMode);
@@ -130,6 +130,7 @@ void handleWifi() {
         }
     }
 }
+*/
 
 void wifiScan() {
     WiFi.mode(WIFI_STA);

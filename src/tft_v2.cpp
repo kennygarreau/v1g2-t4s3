@@ -62,10 +62,17 @@ void checkProximityForMute(double currentLat, double currentLon) {
 }
 
 extern "C" void main_press_handler(lv_event_t * e) {
-    SPIFFSFileManager fileManager;
 
     static bool long_press_detected = false;
     lv_event_code_t code = lv_event_get_code(e);
+    lv_indev_t * indev = lv_indev_get_act();
+
+    if (!indev) {
+        LV_LOG_WARN("No active input device!");
+        return;
+    }
+
+    lv_dir_t gesture = lv_indev_get_gesture_dir(indev);
 
     if(code == LV_EVENT_LONG_PRESSED) {
         LV_LOG_INFO("requesting manual lockout via long press");
@@ -79,15 +86,32 @@ extern "C" void main_press_handler(lv_event_t * e) {
 
             Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
             show_popup("Lockout Stored");
+            //SPIFFSFileManager fileManager;
             //fileManager.writeLockoutEntryAsJson("/lockouts.json", thisLockout);
         }
     }
     else if(code == LV_EVENT_CLICKED && !long_press_detected) {
-        LV_LOG_INFO("requesting mute via short press");
-        Serial.println("requesting mute via short press");
-        clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
-        delay(20);
-        show_popup("V1 Muted");
+        if (gesture == LV_DIR_LEFT) {
+            LV_LOG_INFO("Swipe Left - Go to Settings");
+            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
+            loadScreen(SCREEN_ID_SETTINGS);
+        } 
+        else if (gesture == LV_DIR_RIGHT) {
+            LV_LOG_INFO("Swipe Right - Go to Main Screen");
+            lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
+            loadScreen(SCREEN_ID_MAIN);
+        }
+        else {
+            LV_LOG_INFO("requesting mute via short press");
+            Serial.println("requesting mute via short press");
+            if (clientWriteCharacteristic) {
+                clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
+                delay(20);
+                show_popup("V1 Muted");
+            } else {
+                LV_LOG_WARN("BLE characteristic is NULL, cannot send mute command");
+            }
+        }
     }
     else if(code == LV_EVENT_RELEASED) {
         long_press_detected = false;
@@ -148,9 +172,7 @@ extern "C" void set_var_wifiEnabled(bool enable) {
     if (enable) {
         settings.enableWifi = true;
         Serial.println("WiFi enabled and attempting to connect...");
-        startWifiAsync();
-        //WiFi.mode(WIFI_MODE_STA);
-        //WiFi.begin(settings.ssid.c_str(), settings.password.c_str());
+        wifiScan();
     } else {
         settings.enableWifi = false;
         Serial.println("Disabling WiFi...");

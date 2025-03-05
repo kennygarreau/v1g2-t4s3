@@ -183,6 +183,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   void onDisconnect(NimBLEClient* pClient, int reason) override {
     Serial.printf("%s Disconnected, reason = %d - Restarting scan in 2s\n", 
                   pClient->getPeerAddress().toString().c_str(), reason);
+    Serial.printf("BLE Client disconnected on core %d\n", xPortGetCoreID());
 
     bt_connected = false;
     delay(2000);
@@ -223,7 +224,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
   }
 
   void onScanEnd(const NimBLEScanResults& results, int reason) override {
-    Serial.println("Scan ended, restarting scan...");
+    //Serial.println("Scan ended, restarting scan...");
     NimBLEDevice::getScan()->start(scanTimeMs);
   }
 } scanCallbacks;
@@ -404,7 +405,6 @@ void loop() {
   if (currentMillis - lastMillis >= 2000) {
     //Serial.println("Loops executed: " + String(loopCounter)); // uncomment for loop profiling
     ui_tick_statusBar();
-    gpsData.btStr = getBluetoothSignalStrength();
 
     if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
       gpsData.connectedClients = 0;
@@ -416,7 +416,11 @@ void loop() {
     if (isVBusIn) {
       vBusVoltage = amoled.getVbusVoltage();
     }
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false); 
+    if (bt_connected) {
+      gpsData.btStr = getBluetoothSignalStrength();
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false); 
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+    }
     
     batteryCharging = amoled.isCharging();
     uint16_t espVoltage = amoled.getBattVoltage();
@@ -456,8 +460,6 @@ void loop() {
     gpsData.freeHeap = ESP.getFreeHeap();
     gpsData.freePsram = ESP.getFreePsram();
     
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-
     lastMillis = currentMillis;
     loopCounter = 0;
     checkReboot();

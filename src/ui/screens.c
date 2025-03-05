@@ -930,7 +930,7 @@ void create_screens() {
     create_screen_main();
     create_screen_settings();
 
-    lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+    //lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
     lv_obj_add_event_cb(objects.settings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
 
     lv_scr_load(objects.logo_screen);
