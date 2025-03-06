@@ -172,6 +172,7 @@ void setupWebServer()
         displaySettingsJson["localSSID"] = settings.localSSID;
         displaySettingsJson["localPW"] = settings.localPW;
         displaySettingsJson["disableBLE"] = settings.disableBLE;
+        displaySettingsJson["useV1LE"] = settings.useV1LE;
         displaySettingsJson["timezone"] = settings.timezone;
         displaySettingsJson["enableGPS"] = settings.enableGPS;
         displaySettingsJson["enableWifi"] = settings.enableWifi;
@@ -321,6 +322,12 @@ void setupWebServer()
                 settings.disableBLE = doc["disableBLE"].as<bool>();
                 Serial.println("disableBLE: " + String(settings.disableBLE));
                 preferences.putBool("disableBLE", settings.disableBLE);
+            }
+            if (doc.containsKey("useV1LE")) {
+                settings.useV1LE = doc["useV1LE"].as<bool>();
+                Serial.println("useV1LE: " + String(settings.useV1LE));
+                preferences.putBool("useV1LE", settings.useV1LE);
+                isRebootPending = true;
             }
             if (doc.containsKey("enableGPS")) {
                 settings.enableGPS = doc["enableGPS"].as<bool>();

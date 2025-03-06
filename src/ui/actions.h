@@ -20,11 +20,13 @@ extern void disable_blinking(int index);
 static void clear_inactive_bands_timer(lv_timer_t * timer);
 void start_clear_inactive_bands_timer();
 void start_band_update_timer();
-void main_press_handler(lv_event_t * e);
 
 extern lv_obj_t *blink_images[MAX_BLINK_IMAGES];
 extern bool blink_enabled[MAX_BLINK_IMAGES];
 extern int blink_count;
+
+void main_press_handler(lv_event_t * e);
+void v1cle_switch_event_handler(lv_event_t * e);
 void wifi_switch_event_handler(lv_event_t * e);
 void gesture_event_handler(lv_event_t * e);
 void slider_brightness_event_handler(lv_event_t * e);

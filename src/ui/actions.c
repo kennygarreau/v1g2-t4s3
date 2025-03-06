@@ -53,6 +53,19 @@ void wifi_switch_event_handler(lv_event_t * e) {
     set_var_wifiEnabled(switch_state);
 }
 
+void v1cle_switch_event_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Enabling V1 CLE");
+    } else {
+        show_popup("Disabling V1 CLE");
+    }
+    set_var_usev1cle(switch_state);
+    LV_LOG_INFO("User toggled V1 CLE switch. New state: %d", switch_state);
+}
+
 void gesture_event_handler(lv_event_t * e) {
     lv_dir_t gesture = lv_indev_get_gesture_dir(lv_indev_get_act());
 

@@ -58,6 +58,7 @@ bool wifiConnected = false;
 unsigned long lastValidGPSUpdate = 0;
 unsigned long lastBLEAttempt = 0;
 bool bleInit = true;
+bool v1le = false;
 
 v1Settings settings;
 Preferences preferences;
@@ -127,7 +128,6 @@ void queryDeviceInfo(NimBLEClient* pClient) {
       if (pos != std::string::npos) {
         charInfo.storage->erase(pos);
       }
-
       Serial.printf("%s: %s\n", charInfo.name, charInfo.storage->c_str());
     } else {
       Serial.printf("%s not found.\n", charInfo.name);
@@ -139,35 +139,35 @@ void displayReader(NimBLEClient* pClient) {
 
   dataRemoteService = pClient->getService(bmeServiceUUID);
   if (dataRemoteService) {
-      infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-      if (infDisplayDataCharacteristic) {
-          if (infDisplayDataCharacteristic->canNotify()) {
-              infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallback);
-              Serial.println("Subscribed to alert notifications.");
-          } else {
-              Serial.println("Characteristic does not support notifications.");
-          }
+    infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
+    if (infDisplayDataCharacteristic) {
+      if (infDisplayDataCharacteristic->canNotify()) {
+        infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallback);
+        Serial.println("Subscribed to alert notifications.");
       } else {
-          Serial.println("Failed to find infDisplayDataCharacteristic.");
+        Serial.println("Characteristic does not support notifications.");
       }
-  } else {
-      Serial.println("Failed to find bmeServiceUUID.");
-  }
+    } else {
+      Serial.println("Failed to find infDisplayDataCharacteristic.");
+    }
 
-  infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-  clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
-  if (infDisplayDataCharacteristic && clientWriteCharacteristic) {
-    NimBLERemoteDescriptor* pDesc = infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902));
-    if (pDesc) {
-      pDesc->writeValue((uint8_t*)notificationOn, 2, true);
-    }
-    delay(50);
-    if (settings.turnOffDisplay) {
-      uint8_t value = settings.onlyDisplayBTIcon ? 0x01 : 0x00;
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(value), 8, false);
+    infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
+    clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
+    if (infDisplayDataCharacteristic && clientWriteCharacteristic) {
+      NimBLERemoteDescriptor* pDesc = infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902));
+      if (pDesc) {
+        pDesc->writeValue((uint8_t*)notificationOn, 2, true);
+      }
       delay(50);
+      if (settings.turnOffDisplay) {
+        uint8_t value = settings.onlyDisplayBTIcon ? 0x01 : 0x00;
+        clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(value), 8, false);
+        delay(50);
+      }
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
     }
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
+  } else {
+    Serial.println("Failed to find bmeServiceUUID!");
   }
 }
 
@@ -178,11 +178,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     bt_connected = true;
     bleInit = true;
     std::vector<NimBLERemoteService*> services = pClient->getServices();
-    
   }
   void onDisconnect(NimBLEClient* pClient, int reason) override {
     Serial.printf("%s Disconnected, reason = %d - Restarting scan in 2s\n", 
-                  pClient->getPeerAddress().toString().c_str(), reason);
+        pClient->getPeerAddress().toString().c_str(), reason);
     Serial.printf("BLE Client disconnected on core %d\n", xPortGetCoreID());
 
     bt_connected = false;
@@ -191,35 +190,56 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   }
 } clientCallbacks;
 
-
 class ScanCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+
     if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(bmeServiceUUID)) {
-      NimBLEDevice::getScan()->stop();
+      std::string serviceUuid = advertisedDevice->getServiceUUID().toString(); // service uuid
+      std::string deviceName = advertisedDevice->getName(); // common name
+      std::string deviceAddrStr = advertisedDevice->getAddress().toString(); // mac
 
-      std::string deviceAddr = advertisedDevice->getAddress().toString();
-      if (deviceAddr.empty()) {
-        Serial.println("Invalid device address.");
-        return;
-      }
-      Serial.printf("V1 found! Attempting to connect to: %s\n", deviceAddr.c_str());
+      bool doBLEConnect;
 
-      if (!pClient) {
-        Serial.println("No disconnected client available, creating new one...");
-        pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
-        if (!pClient) {
-          Serial.printf("Failed to create client\n");
-          return;
+      if (deviceName.substr(0,3) == "V1C") {
+        Serial.printf("%s found: %s | MAC: %s\n", deviceName.substr(0,3).c_str(), deviceName.c_str(), deviceAddrStr.c_str());
+        v1le = true;
+        if (settings.useV1LE) {
+          Serial.println("Attempting to connect to V1C LE");
+          NimBLEDevice::getScan()->stop();
+          doBLEConnect = true;
+          if (!pClient) {
+            Serial.println("No disconnected client available, creating new one...");
+            pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
+          }
+        } else {
+          Serial.println("use V1C LE set to false; skipping...");
         }
       }
-
-      if (!pClient->connect(true, true, false)) {
-        Serial.println("Failed to connect, deleting client...");
-        NimBLEDevice::deleteClient(pClient);
-        return;
+      else if (deviceName.substr(0,3) == "V1G") {
+        Serial.printf("%s found: %s | MAC: %s\n", deviceName.substr(0,3).c_str(), deviceName.c_str(), deviceAddrStr.c_str());
+        if (!settings.useV1LE) {
+          Serial.println("Attempting to connect to V1G");
+          NimBLEDevice::getScan()->stop();
+          doBLEConnect = true;
+          if (!pClient) {
+            Serial.println("No disconnected client available, creating new one...");
+            pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
+            if (!pClient) {
+              Serial.printf("Failed to create client\n");
+              return;
+            }
+          }
+        }
       }
-
-      pClient->setClientCallbacks(&clientCallbacks, false);
+      if (doBLEConnect && pClient) {
+        if (!pClient->connect(true, true, false)) {
+          Serial.println("Failed to connect, deleting client...");
+          NimBLEDevice::deleteClient(pClient);
+          pClient = nullptr;
+          return;
+        }
+        pClient->setClientCallbacks(&clientCallbacks, false);
+      }
     }
   }
 
@@ -242,6 +262,7 @@ void loadSettings() {
   settings.localSSID = preferences.getString("localSSID", "v1display");
   settings.localPW = preferences.getString("localPW", "password123");
   settings.disableBLE = preferences.getBool("disableBLE", false);
+  settings.useV1LE = preferences.getBool("useV1LE", false);
   settings.displayTest = preferences.getBool("displayTest", false);
   settings.enableGPS = preferences.getBool("enableGPS", true);
   settings.enableWifi = preferences.getBool("enableWifi", true);

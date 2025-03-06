@@ -106,8 +106,8 @@ void PacketDecoder::clearInfAlerts() {
 
 int mapXToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        //Serial.println("Invalid hex input");
-        return -1;
+        Serial.println("Invalid X hex strength input");
+        return 0;
     }
 
     int decimalValue = std::stoi(hex, 0, 16);
@@ -121,8 +121,8 @@ int mapXToBars(const std::string& hex) {
 
 int mapKToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        //Serial.println("Invalid hex input");
-        return -1;
+        Serial.println("Invalid K hex strength input");
+        return 0;
     }
 
     int decimalValue = std::stoi(hex, 0, 16);
@@ -136,8 +136,8 @@ int mapKToBars(const std::string& hex) {
 
 int mapKaToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid Ka hex input");
-        return -1;
+        Serial.println("Invalid Ka hex strength input");
+        return 0;
     }
 
     int decimalValue = std::stoi(hex, 0, 16);
@@ -153,7 +153,7 @@ int combineMSBLSB(const std::string& msb, const std::string& lsb) {
     int msbDecimal = hexToDecimal(msb);
     int lsbDecimal = hexToDecimal(lsb);
     if (msbDecimal == -1 || lsbDecimal == -1) {
-        return -1;
+        return 0;
     }
     return (msbDecimal * 256) + lsbDecimal;
 }
@@ -510,11 +510,12 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         /* infDisplayData - this should draw the main arrow(s) instead of the respAlertData 
            this will allow the incorporation of blinking arrow for prio alert on multiple alerts
         */
-       std::string payload = packet.substr(12, 10);
+       std::string payload = packet.substr(10, 16);
 
        if (settings.displayTest || payload != lastinfPayload) {
-        std::string bandArrow1 = packet.substr(16, 2);
-        std::string bandArrow2 = packet.substr(18, 2);
+        std::string bandArrow1 = (payload.length() >= 8) ? payload.substr(6, 2) : "";
+        std::string bandArrow2 = (payload.length() >= 10) ? payload.substr(8, 2) : "";
+        //Serial.printf("bandArrow1: %s | bandArrow 2: %s\n", bandArrow1.c_str(), bandArrow2.c_str());
         
         if (!bandArrow1.empty() && !bandArrow2.empty()) {
             BandArrowData arrow1Data = processBandArrow(bandArrow1);

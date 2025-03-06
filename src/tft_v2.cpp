@@ -164,6 +164,29 @@ extern "C" void set_var_brightness(uint8_t value) {
     amoled.setBrightness(value);
 }
 
+extern "C" bool get_var_v1clePresent() {
+    return v1le;
+}
+
+extern "C" void set_var_usev1cle(bool switch_state) {
+    preferences.begin("settings", false);
+    if (!switch_state) {
+        settings.useV1LE = false;
+        Serial.println("V1 CLE disabled; switching to V1");
+    } else {
+        preferences.begin("settings", false);
+        settings.useV1LE = true;
+        Serial.println("V1 CLE enabled; switching from V1");
+    }
+
+    preferences.putBool("useV1LE", settings.useV1LE);
+    preferences.end();
+}
+
+extern "C" bool get_var_usev1cle() {
+    return settings.useV1LE;
+}
+
 extern "C" bool get_var_wifiEnabled() {
     return settings.enableWifi;
 }

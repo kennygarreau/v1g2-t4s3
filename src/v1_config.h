@@ -8,7 +8,7 @@
 #include "wifi.h"
 #include "v1_fs.h"
 
-#define FIRMWARE_VERSION "1.0.1f"
+#define FIRMWARE_VERSION "1.0.1g"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -41,6 +41,7 @@ extern bool alertPresent;
 extern bool wifiConnecting;
 extern bool wifiConnected;
 extern unsigned long wifiStartTime;
+extern bool v1le;
 
 struct WiFiCredential {
     String ssid;
@@ -58,6 +59,7 @@ struct v1Settings {
   String unitSystem;
   bool isPortraitMode;
   bool disableBLE;
+  bool useV1LE;
   bool enableGPS;
   bool enableWifi;
   bool displayTest;

@@ -2,9 +2,8 @@
 
 This is a remote display for the Valentine One Gen 2 radar detector written in C++, inspired by SquirrelMaster on [rdforum](http://rdforum.org)
 
-Connectivity is via Bluetooth Low Energy (BLE) and currently has only been tested as a solo accessory. If you want to use this along
-with another accessory or app such as JBV1, you will need a [V1Connection LE](https://store.valentine1.com/store/item.asp?i=20232). Again
-this is untested and is something I'll be considering in a future release. A quick run-down of the radar-related features:
+Connectivity is via Bluetooth Low Energy (BLE). If you want to use this along with another accessory or app such as JBV1, you will need a 
+[V1Connection LE](https://store.valentine1.com/store/item.asp?i=20232). A quick run-down of the radar-related features:
 - Directional arrows (front/side/rear)
 - Band display (in GHz)
 - Signal strength per alert
@@ -28,7 +27,7 @@ Here's what's done in the current release:
 - Landscape mode (Portrait support TBD)
 - "Store mode" for display testing
 
-Here's the TODO as of Feb 2025: (in descending order of priority)
+Here's the TODO as of Mar 2025: (in descending order of priority)
 - Touch-screen interaction for user-defined lockouts
 - Timezone support for auto-brightness (sunrise/sunset)
 
