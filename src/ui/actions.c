@@ -61,6 +61,7 @@ void v1cle_switch_event_handler(lv_event_t * e) {
         show_popup("Enabling V1 CLE");
     } else {
         show_popup("Disabling V1 CLE");
+        disconnectCurrentDevice();
     }
     set_var_usev1cle(switch_state);
     LV_LOG_INFO("User toggled V1 CLE switch. New state: %d", switch_state);

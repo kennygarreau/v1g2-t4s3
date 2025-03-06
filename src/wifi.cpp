@@ -132,6 +132,19 @@ void handleWifi() {
 }
 */
 
+ void startLocalWifi() {
+    Serial.println("WiFi connection timeout. Starting AP mode...");
+        WiFi.mode(WIFI_MODE_AP);
+        WiFi.softAPConfig(local_ip, gateway, subnet);
+        if (WiFi.softAP(settings.localSSID.c_str(), settings.localPW.c_str(), 9)) {
+            Serial.printf("Fallback AP started. SSID: %s, IP: %s, Channel: 9\n", 
+                settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
+        } else {
+            Serial.println("Failed to start fallback Access Point.");
+        }
+        wifiConnecting = false;
+ }
+
 void wifiScan() {
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
@@ -141,11 +154,12 @@ void wifiScan() {
     int networkCount = WiFi.scanNetworks();
     if (networkCount == 0) {
         Serial.println("No networks found");
+        startLocalWifi();
     } else {
         Serial.printf("%d networks found:\n", networkCount);
         for (int i = 0; i < networkCount; i++) {
             Serial.printf("%d: %s (RSSI: %d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), 
-                            WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
+                WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
         }
         for (auto &cred : settings.wifiCredentials) {
             for (int i = 0; i < networkCount; i++) {
@@ -157,7 +171,7 @@ void wifiScan() {
                     unsigned long startAttemptTime = millis();
                     while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
                         Serial.print(".");
-                        delay(500);
+                        delay(250);
                     }
                     Serial.println();
 
@@ -170,7 +184,7 @@ void wifiScan() {
             }
         }
         Serial.println("No known networks available.");
-        wifiConnecting = false;
+        startLocalWifi();
     }
     WiFi.scanDelete();
 }

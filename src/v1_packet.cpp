@@ -531,26 +531,30 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         std::string auxByte0 = packet.substr(packet.length() - 10, 2);
         std::string auxByte1 = packet.substr(packet.length() - 8, 2);
         std::string auxByte2 = packet.substr(packet.length() - 6, 2);
-        if (!auxByte1.empty() && globalConfig.mode == nullptr) {
-            int auxByte1Int = std::stoi(auxByte1, nullptr, 16);
+        if (!auxByte1.empty()) {
+            try {
+                int auxByte1Int = std::stoi(auxByte1, nullptr, 16);
 
-            int modeBit0 = (auxByte1Int & 0b00000100) ? 1 : 0;
-            int modeBit1 = (auxByte1Int & 0b00001000) ? 2 : 0;
-            int mode = modeBit0 + modeBit1;
+                int modeBit0 = (auxByte1Int & 0b00000100) ? 1 : 0;
+                int modeBit1 = (auxByte1Int & 0b00001000) ? 2 : 0;
+                int mode = modeBit0 + modeBit1;
 
-            switch(mode) {
-                case 0:
-                    globalConfig.mode = "Invalid Mode";
-                    break;
-                case 1:
-                    globalConfig.mode = "ALL BOGEYS";
-                    break;
-                case 2:
-                    globalConfig.mode = "LOGIC";
-                    break;
-                case 3:
-                    globalConfig.mode = "ADV LOGIC";
-                    break;
+                switch(mode) {
+                    case 0:
+                        globalConfig.mode = "Invalid Mode";
+                        break;
+                    case 1:
+                        globalConfig.mode = "ALL BOGEYS";
+                        break;
+                    case 2:
+                        globalConfig.mode = "LOGIC";
+                        break;
+                    case 3:
+                        globalConfig.mode = "ADV LOGIC";
+                        break;
+                }
+            } catch (const std::exception& e) {
+                // anything to be done here?
             }
         }
         //Serial.printf("infDisplayData loop time: %lu\n", millis() - startTimeMillis);

@@ -1,7 +1,7 @@
 #ifndef V1_CONFIG_H
 #define V1_CONFIG_H
 
-#include "NimBLEDevice.h"
+#include <NimBLEDevice.h>
 #include <Preferences.h>
 #include <ESPAsyncWebServer.h>
 #include "LilyGo_AMOLED.h"

@@ -61,6 +61,14 @@ void checkProximityForMute(double currentLat, double currentLon) {
     }
 }
 
+extern "C" void disconnectCurrentDevice() {
+    if (pClient && pClient->isConnected()) {
+        LV_LOG_INFO("Disconnecting current device...");
+        pClient->disconnect();
+        pClient = nullptr;
+    }
+}
+
 extern "C" void main_press_handler(lv_event_t * e) {
 
     static bool long_press_detected = false;

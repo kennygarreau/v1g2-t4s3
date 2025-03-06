@@ -33,6 +33,7 @@ uint8_t get_var_brightness();
 int getBluetoothSignalStrength();
 int getWifiRSSI();
 extern unsigned long getMillis();
+void disconnectCurrentDevice();
 
 void set_var_prioBars(int value);
 int get_var_prioBars();
