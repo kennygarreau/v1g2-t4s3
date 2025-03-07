@@ -427,11 +427,11 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             frontStrengthVal = mapXToBars(frontStrength);
             rearStrengthVal = mapXToBars(rearStrength);
         } 
-        else if (bandValue == "K") {
+        else if (bandValue == "K" || bandValue == "Ku") {
             frontStrengthVal = mapKToBars(frontStrength);
             rearStrengthVal = mapKToBars(rearStrength);
         }
-        else if (bandValue == "KA") {
+        else if (bandValue == "Ka") {
             frontStrengthVal = mapKaToBars(frontStrength);
             rearStrengthVal = mapKaToBars(rearStrength);        
         }
@@ -507,8 +507,10 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     std::string packetID = packet.substr(6, 2);
 
     if (packetID == "31") {
-        /* infDisplayData - this should draw the main arrow(s) instead of the respAlertData 
-           this will allow the incorporation of blinking arrow for prio alert on multiple alerts
+        /*  
+            infDisplayData
+            Packet length: 28
+            Control main arrow paint and blink
         */
        std::string payload = packet.substr(10, 16);
 
@@ -562,7 +564,11 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     }
     }
     else if (packetID == "43") {
-        /* respAlertData - should only be responsible for the alert table and priority alert frequency */
+        /*  
+            respAlertData
+            Packet length: 26
+            Alert table, priority frequency & bars
+        */
         std::string payload = packet.substr(10, packet.length() - 12);
         std::string alertC = payload.substr(0, 2);
         
@@ -593,6 +599,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             } else {
                 Serial.println("Warning: alertIndexStr is empty!");
             }
+            // TODO: add vortex suggestion here for restricting prio alert from table
 
             alertTable.push_back(payload);
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
@@ -611,6 +618,45 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             }
             
         //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
+        }
+    }
+    else if (packetID == "02"){
+        try {
+            std::string versionID = hexToAscii(packet.substr(10, 2));
+            std::string majorVersion = hexToAscii(packet.substr(12, 2));
+            std::string minorVersion = hexToAscii(packet.substr(16, 2));
+            std::string revisionDigitOne = hexToAscii(packet.substr(18, 2));
+            std::string revisionDigitTwo = hexToAscii(packet.substr(20, 2));
+            std::string controlNumber = hexToAscii(packet.substr(22, 2));
+
+            if (versionID == "V") {
+                std::string versionString = majorVersion + "." + minorVersion + revisionDigitOne + revisionDigitTwo + controlNumber;
+                Serial.printf("Version from reqVersion: %s\n", versionString.c_str());
+            } else {
+                Serial.printf("Found component: %s", versionID);
+            }
+        } catch (const std::exception& e) {
+            // anything to be done here?
+        }
+    }
+    else if (packetID == "04"){
+        try {
+            std::string serialNum1 = hexToAscii(packet.substr(10, 2));
+            std::string serialNum2 = hexToAscii(packet.substr(12, 2));
+            std::string serialNum3 = hexToAscii(packet.substr(14, 2));
+            std::string serialNum4 = hexToAscii(packet.substr(16, 2));
+            std::string serialNum5 = hexToAscii(packet.substr(18, 2));
+            std::string serialNum6 = hexToAscii(packet.substr(20, 2));
+            std::string serialNum7 = hexToAscii(packet.substr(22, 2));
+            std::string serialNum8 = hexToAscii(packet.substr(24, 2));
+            std::string serialNum9 = hexToAscii(packet.substr(26, 2));
+            std::string serialNum10 = hexToAscii(packet.substr(28, 2));
+
+            std::string serialString = serialNum1 + serialNum2 + serialNum3 + serialNum4 + serialNum5 + serialNum6 + 
+                serialNum7 + serialNum8 + serialNum9 + serialNum10;
+            Serial.printf("Serial number from reqSerialNumber: %s\n", serialString.c_str());
+        } catch (const std::exception& e) {
+            // anything to be done here?
         }
     }
     else if (packetID == "12") {
@@ -716,7 +762,6 @@ uint8_t* Packet::reqStartAlertData() {
 uint8_t* Packet::reqVersion() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]); 
-    Serial.println("Sending reqVersion packet");   
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQVERSION, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 
@@ -730,7 +775,6 @@ uint8_t* Packet::reqSweepSections() {
 uint8_t* Packet::reqSerialNumber() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqSerialNumber packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQSERIALNUMBER, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 

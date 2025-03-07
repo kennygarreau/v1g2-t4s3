@@ -177,7 +177,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     Serial.printf("BLE Client Connected on core %d\n", xPortGetCoreID());
     bt_connected = true;
     bleInit = true;
-    std::vector<NimBLERemoteService*> services = pClient->getServices();
+    //std::vector<NimBLERemoteService*> services = pClient->getServices();
   }
   void onDisconnect(NimBLEClient* pClient, int reason) override {
     Serial.printf("%s Disconnected, reason = %d - Restarting scan in 2s\n", 
@@ -185,8 +185,13 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     Serial.printf("BLE Client disconnected on core %d\n", xPortGetCoreID());
 
     bt_connected = false;
-    delay(2000);
-    NimBLEDevice::getScan()->start(scanTimeMs);
+    //delay(2000);
+    //NimBLEDevice::getScan()->start(scanTimeMs);
+    xTaskCreate([](void*){
+      vTaskDelay(pdMS_TO_TICKS(2000));
+      NimBLEDevice::getScan()->start(scanTimeMs);
+      vTaskDelete(NULL);
+    }, "BLEScanRestart", 2048, NULL, 1, NULL);
   }
 } clientCallbacks;
 
@@ -194,19 +199,24 @@ class ScanCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
 
     if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(bmeServiceUUID)) {
-      std::string serviceUuid = advertisedDevice->getServiceUUID().toString(); // service uuid
+      //std::string serviceUuid = advertisedDevice->getServiceUUID().toString(); // service uuid
       std::string deviceName = advertisedDevice->getName(); // common name
       std::string deviceAddrStr = advertisedDevice->getAddress().toString(); // mac
 
+      if (deviceName.length() < 3) return;
+      std::string devicePrefix = deviceName.substr(0,3);
+
       bool doBLEConnect;
 
-      if (deviceName.substr(0,3) == "V1C") {
-        Serial.printf("%s found: %s | MAC: %s\n", deviceName.substr(0,3).c_str(), deviceName.c_str(), deviceAddrStr.c_str());
+      if (devicePrefix == "V1C") {
+        Serial.printf("%s found: %s | MAC: %s\n", devicePrefix.c_str(), deviceName.c_str(), deviceAddrStr.c_str());
         v1le = true;
         if (settings.useV1LE) {
           Serial.println("Attempting to connect to V1C LE");
           NimBLEDevice::getScan()->stop();
           doBLEConnect = true;
+
+          pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
             Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
@@ -215,12 +225,14 @@ class ScanCallbacks : public NimBLEScanCallbacks {
           Serial.println("use V1C LE set to false; skipping...");
         }
       }
-      else if (deviceName.substr(0,3) == "V1G") {
-        Serial.printf("%s found: %s | MAC: %s\n", deviceName.substr(0,3).c_str(), deviceName.c_str(), deviceAddrStr.c_str());
+      else if (devicePrefix == "V1G") {
+        Serial.printf("%s found: %s | MAC: %s\n", devicePrefix.c_str(), deviceName.c_str(), deviceAddrStr.c_str());
         if (!settings.useV1LE) {
           Serial.println("Attempting to connect to V1G");
           NimBLEDevice::getScan()->stop();
           doBLEConnect = true;
+
+          pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
             Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
@@ -231,6 +243,19 @@ class ScanCallbacks : public NimBLEScanCallbacks {
           }
         }
       }
+
+      /*
+      if (doBLEConnect) {
+        if (!pClient) {
+          Serial.println("No disconnected client available, creating new one...");
+          pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
+          if (!pClient) {
+            Serial.println("Failed to create client");
+            return;
+          }
+      }
+      */
+
       if (doBLEConnect && pClient) {
         if (!pClient->connect(true, true, false)) {
           Serial.println("Failed to connect, deleting client...");
@@ -459,6 +484,10 @@ void loop() {
 
         if (bt_connected) {
           Serial.print("Awaiting user settings...");
+          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSerialNumber(), 7, false);
+          delay(20);
+          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqVersion(), 7, false);
+          delay(20);
           clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
           delay(20);
           clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);

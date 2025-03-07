@@ -447,7 +447,7 @@ void tick_status_bar() {
 }
 
 void tick_screen_main() {
-    // Up Arrow
+    // Front Arrow
     {
         uint32_t now = lv_tick_get();
         bool should_blink = blink_enabled[BLINK_FRONT];
