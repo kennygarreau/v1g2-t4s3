@@ -220,7 +220,7 @@ void setup()
   gpsData.totalPsram = ESP.getPsramSize();
   gpsData.totalStorageKB = fileManager.getStorageTotal();
   gpsData.usedStorageKB = fileManager.getStorageUsed();
-  
+
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
 }
@@ -289,8 +289,6 @@ void loop() {
     }
     if (bt_connected && clientWriteCharacteristic) {
       gpsData.btStr = getBluetoothSignalStrength();
-      //clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
-      //clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
     }
     
     batteryCharging = amoled.isCharging();
@@ -344,10 +342,10 @@ void loop() {
     if (!sweepSectionsReceived) {
       requestSweepSections();
     }
-    if (!maxSweepIndexReceived) {
+    if (!maxSweepIndexReceived && sweepSectionsReceived) {
       requestMaxSweepIndex();
     }
-    if (!allSweepDefinitionsReceived) {
+    if (!allSweepDefinitionsReceived && maxSweepIndexReceived) {
       requestAllSweepDefinitions();
     }
 

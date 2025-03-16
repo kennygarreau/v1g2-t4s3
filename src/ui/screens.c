@@ -316,7 +316,7 @@ void create_screen_main() {
             //lv_label_set_text(obj, ".");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
             // alert_table
@@ -454,9 +454,11 @@ void tick_status_bar() {
         bool value = get_var_customFreqEnabled();
         if (value) {
             lv_label_set_text(objects.custom_freq_en, ".");
+            lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
         }
         else {
             lv_label_set_text(objects.custom_freq_en, "");
+            lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
         }
             
         LV_LOG_INFO("Updated Custom Frequency status");
@@ -716,6 +718,8 @@ void tick_screen_main() {
     //         tick_value_change_obj = NULL;
     //     }
     // }
+
+    // TODO: set boolean for enabled bands
     // K alert
     {
         bool new_val = get_var_kAlert(); // true if enabled

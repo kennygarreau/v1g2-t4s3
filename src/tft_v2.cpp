@@ -65,7 +65,7 @@ extern "C" bool get_var_useDefaultV1Mode() {
     return settings.useDefaultV1Mode;
 }
 extern "C" bool get_var_customFreqEnabled() {
-    return (!globalConfig.customFreqEnabled && settings.useDefaultV1Mode); // default state is disable for customFreqEnabled
+    return (!globalConfig.customFreqEnabled && settings.useDefaultV1Mode && bt_connected); // default state is disable for customFreqEnabled
 }
 
 extern "C" void disconnectCurrentDevice() {

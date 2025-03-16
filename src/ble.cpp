@@ -213,17 +213,13 @@ void queryDeviceInfo(NimBLEClient* pClient) {
   }
 
 void requestSerialNumber() {
-    //if (bt_connected && clientWriteCharacteristic) {
       clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSerialNumber(), 7, false);
       delay(15);
-    //}
   }
   
 void requestVersion() {
-  //if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqVersion(), 7, false);
     delay(15);
-  //}
 }
 
 void requestVolume() {
@@ -258,11 +254,15 @@ void requestAllSweepDefinitions() {
 }
 
 void reqBatteryVoltage() {
-  clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+  if (bt_connected && clientWriteCharacteristic) {
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+  }
 }
 
 void reqVolume() {
-  clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+  if (bt_connected && clientWriteCharacteristic) {
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+  }
 }
 
 void initBLE() {
