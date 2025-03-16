@@ -1,4 +1,4 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
@@ -7,6 +7,7 @@
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "web.h"
+#include "tft_v2.h"
 
 unsigned long rebootTime = 0;
 bool isRebootPending = false;
@@ -66,7 +67,6 @@ uint32_t hexToUint32(const String &hex) {
     return colorValue;
 }
 
-
 void setupWebServer()
 {
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { 
@@ -80,9 +80,13 @@ void setupWebServer()
     serveStaticFile(server, "/index.js", "application/javascript");
     serveStaticFile(server, "/settings.js", "application/javascript");
     serveStaticFile(server, "/update.js", "application/javascript");
+    serveStaticFile(server, "/lockouts.js", "application/javascript");
+    serveStaticFile(server, "/status.js", "application/javascript");
     serveStaticFile(server, "/index.html", "text/html");
     serveStaticFile(server, "/update.html", "text/html");
     serveStaticFile(server, "/settings.html", "text/html");
+    serveStaticFile(server, "/lockouts.html", "text/html");
+    serveStaticFile(server, "/status.html", "text/html");
     serveStaticFile(server, "/style.css", "text/css");
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
 
@@ -126,14 +130,31 @@ void setupWebServer()
         serializeJson(jsonDoc, jsonResponse);
         request->send(200, "application/json", jsonResponse); });
 
+    server.on("/lockout-settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+        JsonDocument jsonDoc;
+
+        jsonDoc["autoLockoutsEnabled"] = autoLockoutSettings.enable;
+        jsonDoc["lockoutRadius"] = autoLockoutSettings.radius;
+        jsonDoc["lockoutThreshold"] = autoLockoutSettings.minThreshold;
+        jsonDoc["lockoutLearnTime"] = autoLockoutSettings.learningTime;
+        jsonDoc["lockoutColor"] = autoLockoutSettings.lockoutColor;
+        jsonDoc["setLockoutColor"] = autoLockoutSettings.setLockoutColor;
+        jsonDoc["requiredAlertCount"] = autoLockoutSettings.requiredAlerts;
+        jsonDoc["inactiveTime"] = autoLockoutSettings.inactiveTime;
+
+        String jsonResponse;
+        serializeJson(jsonDoc, jsonResponse);
+        request->send(200, "application/json", jsonResponse); 
+    });
+
     server.on("/board-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
 
         jsonDoc["manufacturer"] = manufacturerName;
         jsonDoc["model"] = modelNumber;
         jsonDoc["serial"] = serialNumber;
-        jsonDoc["hardwareVersion"] = hardwareRevision;
-        jsonDoc["firmwareVersion"] = firmwareRevision;
+        //jsonDoc["hardwareVersion"] = hardwareRevision;
+        //jsonDoc["firmwareVersion"] = firmwareRevision;
         jsonDoc["softwareVersion"] = softwareRevision;
 
         // User Byte 0
@@ -152,7 +173,7 @@ void setupWebServer()
         configJson["Euro Mode"] = globalConfig.euro ? "Off" : "On";
         configJson["K-Verifier"] = globalConfig.kVerifier ? "On" : "Off";
         configJson["Rear Laser"] = globalConfig.rearLaser ? "On" : "Off";
-        configJson["Custom Frequencies"] = globalConfig.customFreqDisabled ? "Disabled" : "Enabled";
+        configJson["Custom Frequencies"] = globalConfig.customFreqEnabled ? "Disabled" : "Enabled";
         configJson["Ka Always Priority Alert"] = globalConfig.kaAlwaysPrio ? "Off" : "On";
         configJson["Fast Laser Detection"] = globalConfig.fastLaserDetection ? "On" : "Off";
         configJson["Ka Sensitivity"] = globalConfig.kaSensitivity;
@@ -166,6 +187,24 @@ void setupWebServer()
         configJson["Main Volume"] = globalConfig.mainVolume;
         configJson["Muted Volume"] = globalConfig.mutedVolume;
 
+        JsonObject sweepSettingsJson = jsonDoc.createNestedObject("sweepSettings");
+        // TODO: any use for this outside of the internal logic?
+        //sweepSettingsJson["maxSweepIndex"] = globalConfig.maxSweepIndex;
+        
+        JsonArray sectionArray = sweepSettingsJson.createNestedArray("sweepSections");
+        for (const auto& section : globalConfig.sections) {
+            JsonObject sectionObj = sectionArray.createNestedObject();
+            sectionObj["lowerBound"] = section.first;
+            sectionObj["upperBound"] = section.second;
+        }
+
+        JsonArray sweepsArray = sweepSettingsJson.createNestedArray("customSweeps");
+        for (const auto& section : globalConfig.sweeps) {
+            JsonObject sectionObj = sweepsArray.createNestedObject();
+            sectionObj["lowerBound"] = section.first;
+            sectionObj["upperBound"] = section.second;
+        }
+        
         JsonObject displaySettingsJson = jsonDoc.createNestedObject("displaySettings");
         displaySettingsJson["brightness"] = settings.brightness;
         displaySettingsJson["wifiMode"] = settings.wifiMode;
@@ -179,13 +218,13 @@ void setupWebServer()
         displaySettingsJson["lowSpeedThreshold"] = settings.lowSpeedThreshold;
         displaySettingsJson["displayOrientation"] = settings.displayOrientation;
         displaySettingsJson["isPortraitMode"] = settings.isPortraitMode;
+        displaySettingsJson["useDefaultV1Mode"] = settings.useDefaultV1Mode;
         displaySettingsJson["turnOffDisplay"] = settings.turnOffDisplay;
         displaySettingsJson["onlyDisplayBTIcon"] = settings.onlyDisplayBTIcon;
         displaySettingsJson["displayTest"] = settings.displayTest;
         displaySettingsJson["unitSystem"] = settings.unitSystem;
 
         JsonArray wifiArray = displaySettingsJson.createNestedArray("wifiCredentials");
-
         for (const auto& cred : settings.wifiCredentials) {
             JsonObject wifiObj = wifiArray.createNestedObject();
             wifiObj["ssid"] = cred.ssid;
@@ -250,6 +289,59 @@ void setupWebServer()
                 Update.printError(Serial);
             }
         }
+    });
+
+    server.on("/updateLockoutSettings", HTTP_POST, 
+        [](AsyncWebServerRequest *request){},
+        NULL,
+        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+        
+            String body = String((char*)data).substring(0, len);
+
+            DynamicJsonDocument doc(2048);
+            DeserializationError error = deserializeJson(doc, body);
+
+            if (error) {
+                Serial.println("Failed to parse JSON");
+                request->send(400, "application/json", "{\"error\": \"Failed to parse JSON\"}");
+                return;
+            }
+            preferences.begin("lockoutSettings", false);
+
+            Serial.println("Lockout settings updated:");
+            if (doc.containsKey("autoLockoutsEnabled")) {
+                autoLockoutSettings.enable = doc["autoLockoutsEnabled"].as<bool>();
+                Serial.println("autoLockoutsEnabled: " + String(autoLockoutSettings.enable));
+                preferences.putBool("enabled", autoLockoutSettings.enable);
+            }
+            if (doc.containsKey("setLockoutColor")) {
+                autoLockoutSettings.setLockoutColor = doc["setLockoutColor"].as<bool>();
+                Serial.println("setLockoutColor: " + String(autoLockoutSettings.setLockoutColor));
+                preferences.putBool("setLockoutColor", autoLockoutSettings.setLockoutColor);
+            }
+            if (doc.containsKey("requiredAlertCount")) {
+                autoLockoutSettings.requiredAlerts = doc["requiredAlertCount"].as<int>();
+                Serial.println("requiredAlertCount: " + String(autoLockoutSettings.requiredAlerts));
+                preferences.putInt("requiredAlerts", autoLockoutSettings.requiredAlerts);
+            }
+            if (doc.containsKey("lockoutLearnTime")) {
+                autoLockoutSettings.learningTime = doc["lockoutLearnTime"].as<int>();
+                Serial.println("lockoutLearnTime: " + String(autoLockoutSettings.learningTime));
+                preferences.putInt("learningTime", autoLockoutSettings.learningTime);
+            }
+            if (doc.containsKey("lockoutThreshold")) {
+                autoLockoutSettings.minThreshold = doc["lockoutThreshold"].as<int>();
+                Serial.println("lockoutThreshold: " + String(autoLockoutSettings.minThreshold));
+                preferences.putInt("minThreshold", autoLockoutSettings.minThreshold);
+            }
+            if (doc.containsKey("lockoutColor")) {
+                autoLockoutSettings.lockoutColor = hexToUint32(doc["lockoutColor"].as<String>());
+                Serial.println("lockoutColor: " + String(autoLockoutSettings.lockoutColor));
+                preferences.putUInt("lockoutColor", autoLockoutSettings.lockoutColor);
+            }
+            preferences.end();
+
+            request->send(200, "application/json", "{\"message\": \"Lockout settings updated successfully!\"}");
     });
 
     server.on("/updateSettings", HTTP_POST, 
@@ -327,7 +419,7 @@ void setupWebServer()
                 settings.useV1LE = doc["useV1LE"].as<bool>();
                 Serial.println("useV1LE: " + String(settings.useV1LE));
                 preferences.putBool("useV1LE", settings.useV1LE);
-                isRebootPending = true;
+                disconnectCurrentDevice();
             }
             if (doc.containsKey("enableGPS")) {
                 settings.enableGPS = doc["enableGPS"].as<bool>();
@@ -350,6 +442,13 @@ void setupWebServer()
                 settings.textColor = hexToUint32(doc["textColor"].as<String>());
                 Serial.println("textColor: " + String(settings.textColor));
                 preferences.putUInt("textColor", settings.textColor);
+            }
+            if (doc.containsKey("useDefaultV1Mode")) {
+                settings.useDefaultV1Mode = doc["useDefaultV1Mode"].as<bool>();
+                Serial.println("useDefaultV1Mode: " + String(settings.useDefaultV1Mode));
+                preferences.putBool("useDefMode", settings.useDefaultV1Mode);
+                // TODO: dynamically update without reboot
+                //isRebootPending = true;
             }
             if (doc.containsKey("displayTest")) {
                 settings.displayTest = doc["displayTest"].as<bool>();

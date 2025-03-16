@@ -97,35 +97,77 @@ async function populateBoardInfo() {
 
         const boardInfo = await response.json();
 
-        document.getElementById("manufacturer").textContent = boardInfo.manufacturer;
-        document.getElementById("model").textContent = boardInfo.model;
+        document.getElementById("manufacturer").textContent = boardInfo.manufacturer || "Valentine Research";
+        document.getElementById("model").textContent = boardInfo.model || "Valentine One";
         document.getElementById("serial").textContent = `Serial: ${boardInfo.serial}`;
-        document.getElementById("hardware-version").textContent = `HW Ver: ${boardInfo.hardwareVersion}`;
-        document.getElementById("firmware-version").textContent = `FW Ver: ${boardInfo.firmwareVersion}`;
+        //document.getElementById("hardware-version").textContent = `HW Ver: ${boardInfo.hardwareVersion}`;
+        //document.getElementById("firmware-version").textContent = `FW Ver: ${boardInfo.firmwareVersion}`;
         document.getElementById("software-version").textContent = `SW Ver: ${boardInfo.softwareVersion}`;
 
+        clearConfigTable();
         populateConfigTable(boardInfo.config);
+        populateConfigTable(boardInfo.sweepSettings);
     } catch (error) {
         console.error("Failed to fetch board info:", error);
     }
 }
 
-function populateConfigTable(config) {
+function clearConfigTable() {
     const tableBody = document.getElementById("config-table-body");
     tableBody.innerHTML = "";
+}
+
+function populateConfigTable(config) {
+    const tableBody = document.getElementById("config-table-body");
 
     for (const [key, value] of Object.entries(config)) {
-        const row = document.createElement("tr");
+        if (typeof value === 'object' && Array.isArray(value)) {
+            value.forEach((item, index) => {
+                if (typeof item === 'object' && 'lowerBound' in item && 'upperBound' in item) {
+                    const row = document.createElement("tr");
 
-        const keyCell = document.createElement("td");
-        keyCell.textContent = key;
+                    const keyCell = document.createElement("td");
+                    if (key === 'sweepSections') {
+                        keyCell.textContent = `Section ${index + 1}`;
+                    } else if (key === 'customSweeps') {
+                        keyCell.textContent = `Sweep ${index + 1}`;
+                    }
 
-        const valueCell = document.createElement("td");
-        valueCell.textContent = value;
+                    const valueCell = document.createElement("td");
+                    valueCell.textContent = `${(item.lowerBound / 1000).toFixed(3)} - ${(item.upperBound / 1000).toFixed(3)}`;
 
-        row.appendChild(keyCell);
-        row.appendChild(valueCell);
-        tableBody.appendChild(row);
+                    row.appendChild(keyCell);
+                    row.appendChild(valueCell);
+                    tableBody.appendChild(row);
+                }
+            });
+        } else if (typeof value === 'object') {
+            for (const [subKey, subValue] of Object.entries(value)) {
+                const row = document.createElement("tr");
+
+                const keyCell = document.createElement("td");
+                keyCell.textContent = `${key} → ${subKey}`;
+
+                const valueCell = document.createElement("td");
+                valueCell.textContent = subValue;
+
+                row.appendChild(keyCell);
+                row.appendChild(valueCell);
+                tableBody.appendChild(row);
+            }
+        } else {
+            const row = document.createElement("tr");
+
+            const keyCell = document.createElement("td");
+            keyCell.textContent = key;
+
+            const valueCell = document.createElement("td");
+            valueCell.textContent = value;
+
+            row.appendChild(keyCell);
+            row.appendChild(valueCell);
+            tableBody.appendChild(row);
+        }
     }
 }
 populateBoardInfo();

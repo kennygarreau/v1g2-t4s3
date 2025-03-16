@@ -518,7 +518,7 @@ bool LilyGo_AMOLED::begin()
     Wire.begin(6, 7);
     Wire.beginTransmission(SY6970_SLAVE_ADDRESS);
     if (Wire.endTransmission() == 0) {
-        return beginAMOLED_241();
+        return beginAMOLED_241(false, true);
     }
     log_e("Unable to detect 2.41-inch touch board model!");
 

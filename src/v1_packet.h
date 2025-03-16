@@ -15,6 +15,8 @@
 #define PACKET_ID_REQVERSION 0x01
 #define PACKET_ID_REQSERIALNUMBER 0x03
 #define PACKET_ID_REQUSERBYTES 0x11
+#define PACKET_ID_REQALLSWEEPDEFINITIONS 0x16
+#define PACKET_ID_REQMAXSWEEPINDEX 0x19
 #define PACKET_ID_REQSWEEPSECTIONS 0x22
 #define PACKET_ID_REQTURNOFFMAINDISPLAY 0x32
 #define PACKET_ID_REQTURNONMAINDISPLAY 0x33
@@ -55,7 +57,9 @@ public:
     static uint8_t* constructPacket(uint8_t destID, uint8_t sendID, uint8_t packetID, uint8_t *payloadData, uint8_t payloadLength, uint8_t *packet);
     static uint8_t* reqStartAlertData();
     static uint8_t* reqVersion();
+    static uint8_t* reqAllSweepDefinitions();
     static uint8_t* reqSweepSections();
+    static uint8_t* reqMaxSweepIndex();
     static uint8_t* reqSerialNumber();
     static uint8_t* reqTurnOffMainDisplay(uint8_t mode);
     static uint8_t* reqTurnOnMainDisplay();

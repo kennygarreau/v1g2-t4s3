@@ -1,3 +1,4 @@
+#include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
 #include "tft_v2.h"
@@ -16,7 +17,7 @@ static std::string dirValue, bandValue;
 static std::string lastPayload = "";
 static std::string lastinfPayload = "";
 int frontStrengthVal, rearStrengthVal;
-bool priority, junkAlert;
+bool priority, junkAlert, alertPresent, muted;
 static int alertCountValue, alertIndexValue;
 float freqGhz;
 alertsVector alertTable;
@@ -24,12 +25,10 @@ Config globalConfig;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];
 static int num_current_alerts = 0;
-bool alertPresent = false;
 uint8_t activeBands = 0;
 uint8_t lastReceivedBands = 0;
 
 extern void requestMute();
-bool muted = false;
 uint8_t packet[10];
 
 PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
@@ -106,7 +105,7 @@ void PacketDecoder::clearInfAlerts() {
 
 int mapXToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid X hex strength input");
+        //Serial.println("Invalid X hex strength input");
         return 0;
     }
 
@@ -121,7 +120,7 @@ int mapXToBars(const std::string& hex) {
 
 int mapKToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid K hex strength input");
+        //Serial.printf("Invalid K hex strength input: %s", hex.c_str());
         return 0;
     }
 
@@ -136,7 +135,7 @@ int mapKToBars(const std::string& hex) {
 
 int mapKaToBars(const std::string& hex) {
     if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        Serial.println("Invalid Ka hex strength input");
+        //Serial.println("Invalid Ka hex strength input");
         return 0;
     }
 
@@ -156,6 +155,18 @@ int combineMSBLSB(const std::string& msb, const std::string& lsb) {
         return 0;
     }
     return (msbDecimal * 256) + lsbDecimal;
+}
+
+void processSection(const std::string& packet, int offset) {
+    int sweepDefIndexNum = std::stoi(packet.substr(offset, 2), nullptr, 16);
+    int sectionCount = sweepDefIndexNum & 0b00001111;
+    int sectionIndex = (sweepDefIndexNum & 0b11110000) >> 4;
+
+    int upperBound = combineMSBLSB(packet.substr(offset + 2, 2), packet.substr(offset + 4, 2));
+    int lowerBound = combineMSBLSB(packet.substr(offset + 6, 2), packet.substr(offset + 8, 2));
+
+    Serial.printf("section %d: lower edge: %d, upper edge: %d\n", sectionIndex, lowerBound, upperBound);
+    globalConfig.sections.emplace_back(lowerBound, upperBound);
 }
 
 // User Bytes here are valid from V4.1018+
@@ -181,7 +192,7 @@ void decodeByteOne(const std::string& userByte) {
         globalConfig.euro = byteValue & 0b00000001;
         globalConfig.kVerifier = byteValue & 0b00000010;
         globalConfig.rearLaser = byteValue & 0b00000100;
-        globalConfig.customFreqDisabled = byteValue & 0b00001000;
+        globalConfig.customFreqEnabled = byteValue & 0b00001000;
         globalConfig.kaAlwaysPrio = byteValue & 0b00010000;
         globalConfig.fastLaserDetection = byteValue & 0b00100000;
         globalConfig.kaSensitivityBit0 = (byteValue & 0b01000000) ? 1 : 0;
@@ -230,6 +241,7 @@ void decodeByteTwo(const std::string& userByte) {
                 globalConfig.autoMute = "Off";
                 break;
         }
+        userBytesReceived = true;
     }
 }
 
@@ -544,15 +556,19 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 switch(mode) {
                     case 0:
                         globalConfig.mode = "Invalid Mode";
+                        globalConfig.defaultMode = "I";
                         break;
                     case 1:
                         globalConfig.mode = "ALL BOGEYS";
+                        globalConfig.defaultMode = "A";
                         break;
                     case 2:
                         globalConfig.mode = "LOGIC";
+                        globalConfig.defaultMode = "c";
                         break;
                     case 3:
                         globalConfig.mode = "ADV LOGIC";
+                        globalConfig.defaultMode = "L";
                         break;
                 }
             } catch (const std::exception& e) {
@@ -631,7 +647,9 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
 
             if (versionID == "V") {
                 std::string versionString = majorVersion + "." + minorVersion + revisionDigitOne + revisionDigitTwo + controlNumber;
-                Serial.printf("Version from reqVersion: %s\n", versionString.c_str());
+                softwareRevision = versionString;
+                Serial.printf("Software Version: %s\n", versionString.c_str());
+                versionReceived = true;
             } else {
                 Serial.printf("Found component: %s", versionID);
             }
@@ -654,7 +672,9 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
 
             std::string serialString = serialNum1 + serialNum2 + serialNum3 + serialNum4 + serialNum5 + serialNum6 + 
                 serialNum7 + serialNum8 + serialNum9 + serialNum10;
-            Serial.printf("Serial number from reqSerialNumber: %s\n", serialString.c_str());
+            serialNumber = serialString;
+            Serial.printf("Serial Number: %s\n", serialString.c_str());
+            serialReceived = true;
         } catch (const std::exception& e) {
             // anything to be done here?
         }
@@ -668,6 +688,88 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         decodeByteOne(userByteOne);
         decodeByteTwo(userByteTwo);
     }
+    else if (packetID == "17") {
+        // respSweepDefinition, in response to packet 16
+        bool k_rcvd, ka_rcvd;
+        std::string aux0 = packet.substr(10, 2);
+        std::string msbUpper = packet.substr(12, 2);
+        std::string lsbUpper = packet.substr(14, 2);
+        std::string msbLower = packet.substr(16, 2);
+        std::string lsbLower = packet.substr(18, 2);
+       
+        try {
+            int sweepIndex = std::stoi(aux0, nullptr, 16);
+            sweepIndex -= 128;
+            int upperBound = combineMSBLSB(msbUpper, lsbUpper);
+            int lowerBound = combineMSBLSB(msbLower, lsbLower);
+
+            if (lowerBound > 23800 && upperBound < 24300) {
+                Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
+                globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                k_rcvd = true;
+            }
+            if (lowerBound > 33300 && upperBound < 36100) {
+                Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
+                globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                ka_rcvd = true;
+            }
+        }
+        catch (const std::exception& e) {
+            Serial.printf("caught exception processing allSweepDefinitions: %s", e);
+        }
+
+        if (k_rcvd && ka_rcvd) { 
+            allSweepDefinitionsReceived = true; 
+        }
+    }
+    else if (packetID == "20") {
+        // respMaxSweepIndex, in response to packet 19
+        std::string maxSweepIndex = packet.substr(10, 2);
+        try {
+            int maxSweepIndexInt = std::stoi(maxSweepIndex, nullptr, 16);
+            globalConfig.maxSweepIndex = maxSweepIndexInt + 1;
+            maxSweepIndexReceived = true;
+        }
+        catch (const std::exception& e) {
+        } 
+    }
+    else if (packetID == "23") {
+        // respSweepSections, in response to packet 22
+        int value;
+        std::string numSections = packet.substr(8, 2);
+        
+        try {
+            int numSectionsInt = std::stoi(numSections, nullptr, 16);
+            switch (numSectionsInt) {
+                case 6: {
+                    value = 1;
+                    processSection(packet, 10);
+                    break;
+                }
+                case 11: {
+                    value = 2;
+                    processSection(packet, 10);
+                    processSection(packet, 20);
+                    break;
+                }
+                case 16: {
+                    value = 3;
+                    processSection(packet, 10);
+                    processSection(packet, 20);
+                    processSection(packet, 30);
+                    break;
+                }
+                default: {
+                    value = 0;
+                }
+            }
+            
+            globalConfig.sweepSections = value;
+            sweepSectionsReceived = true;
+        }
+        catch (const std::exception& e) {
+        } 
+    }
     else if (packetID == "38") {
         int mainVol = 0, mutedVol = 0;
         try {
@@ -679,6 +781,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 mutedVol = std::stoi(mutedV, nullptr, 16);
                 globalConfig.mainVolume = mainVol;
                 globalConfig.mutedVolume = mutedVol;
+                volumeReceived = true;
             }
         } catch (const std::exception& e) {
 
@@ -768,8 +871,19 @@ uint8_t* Packet::reqVersion() {
 uint8_t* Packet::reqSweepSections() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqSweepSections packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQSWEEPSECTIONS, const_cast<uint8_t*>(payloadData), payloadLength, packet);
+}
+
+uint8_t* Packet::reqMaxSweepIndex() {
+    uint8_t payloadData[] = {0x01};
+    uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
+    return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQMAXSWEEPINDEX, const_cast<uint8_t*>(payloadData), payloadLength, packet);
+}
+
+uint8_t* Packet::reqAllSweepDefinitions() {
+    uint8_t payloadData[] = {0x01};
+    uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
+    return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQALLSWEEPDEFINITIONS, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 
 uint8_t* Packet::reqSerialNumber() {
@@ -813,6 +927,5 @@ uint8_t* Packet::reqCurrentVolume() {
 uint8_t* Packet::reqUserBytes() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqUserBytes packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQUSERBYTES, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }

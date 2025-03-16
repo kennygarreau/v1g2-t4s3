@@ -61,6 +61,13 @@ void checkProximityForMute(double currentLat, double currentLon) {
     }
 }
 
+extern "C" bool get_var_useDefaultV1Mode() {
+    return settings.useDefaultV1Mode;
+}
+extern "C" bool get_var_customFreqEnabled() {
+    return (!globalConfig.customFreqEnabled && settings.useDefaultV1Mode); // default state is disable for customFreqEnabled
+}
+
 extern "C" void disconnectCurrentDevice() {
     if (pClient && pClient->isConnected()) {
         LV_LOG_INFO("Disconnecting current device...");
@@ -111,15 +118,14 @@ extern "C" void main_press_handler(lv_event_t * e) {
         long_press_detected = true;
 
         if (gpsAvailable) {
-            SPIFFSFileManager::LockoutEntry thisLockout;            
+            LockoutEntry thisLockout;            
             thisLockout.timestamp = gpsData.rawTime;
             thisLockout.latitude = gpsData.latitude;
             thisLockout.longitude = gpsData.longitude;
+            thisLockout.entryType = "manual";
 
             Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
             show_popup("Lockout Stored");
-            //SPIFFSFileManager fileManager;
-            //fileManager.writeLockoutEntryAsJson("/lockouts.json", thisLockout);
         }
     }
     else if(code == LV_EVENT_CLICKED && !long_press_detected) {
@@ -163,25 +169,16 @@ extern "C" int getWifiRSSI() {
 }
 
 extern "C" int getBluetoothSignalStrength() {
-    if (pClient == nullptr) {
-        LV_LOG_WARN("BLE Client is null, returning RSSI as 0");
-        return 0;
-    }
-
-    if (!pClient->isConnected()) {
-        LV_LOG_WARN("BLE Client is not connected, returning RSSI as 0");
+    if (!pClient || !pClient->isConnected()) {
+        LV_LOG_WARN("BLE Client is null or not connected, returning RSSI as 0");
         return 0;
     }
 
     int rssi = pClient->getRssi();
-
-    if (rssi == 0) {
-        LV_LOG_WARN("Received an invalid RSSI value");
-        return 0;
-    }
+    if (rssi == 0) LV_LOG_WARN("Received an invalid RSSI value");
 
     return rssi;
-  }
+}
 
 extern "C" bool get_var_wifiConnected() {
     return wifiConnected;
@@ -271,8 +268,8 @@ extern "C" void set_var_prioBars(int value) {
     prio_bars = value;
 }
 
-extern "C" const char *get_var_logicmode() {
-    return globalConfig.mode;
+extern "C" const char *get_var_logicmode(bool value) {
+    return value ? globalConfig.defaultMode : globalConfig.mode;
 }
 
 extern "C" const char *get_var_prio_alert_freq() {
@@ -412,3 +409,13 @@ extern "C" const char *get_var_lowspeedthreshold() {
 extern "C" bool get_var_gpsEnabled() {
     return settings.enableGPS && gpsAvailable;
 }
+
+/*
+void saveSelectedConstants(const DisplayConstants& constants) {
+  preferences.putBytes("selConstants", &constants, sizeof(DisplayConstants));
+}
+
+void loadSelectedConstants(DisplayConstants& constants) {
+  preferences.getBytes("selConstants", &constants, sizeof(DisplayConstants));
+}
+*/

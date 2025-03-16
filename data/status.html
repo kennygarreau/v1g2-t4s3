@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>v1g2.display resource monitor</title>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="stylesheet" href="style.css">
+      </head>
+      <body>
+        <script src="status.js"></script>
+        <nav>
+          <a href="/">Home</a>
+          <a href="settings.html">Configuration</a>
+          <a href="lockouts.html">Lockouts</a>
+          <a href="update.html">Update</a>
+        </nav>
+        <div class="container">
+    <body>
+        <div id="container">
+            <h1>Resource Monitor</h1>
+
+            <div class="info-box">
+                <strong>CPU Frequency:</strong> <span id="cpu-freq">- MHz</span>
+            </div>
+            <div class="info-box">
+                <strong>Uptime:</strong> <span id="uptime">- s</span>
+            </div>
+            <div class="info-box">
+                <strong>BLE Signal Strength:</strong> <span id="ble-rssi">- dBm</span>
+                <strong>Wi-Fi Signal Strength:</strong> <span id="wifi-rssi">- dBm</span>
+            </div>
+
+            <h2>Heap Usage</h2>
+            <div class="progress-bar">
+                <span id="heap-usage">0%</span>
+            </div>
+
+            <h2>PSRAM Usage</h2>
+            <div class="progress-bar">
+                <span id="psram-usage">0%</span>
+            </div>
+        </div>
+    </body>
+</html>

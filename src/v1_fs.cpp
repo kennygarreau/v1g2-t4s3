@@ -1,6 +1,10 @@
-#include "v1_fs.h"
 #include "v1_config.h"
+#include "v1_fs.h"
 #include <ArduinoJson.h>
+#include <sqlite3.h>
+
+sqlite3 *db;
+char *errMsg = 0;
 
 bool SPIFFSFileManager::init() {
     return SPIFFS.begin();
@@ -28,113 +32,158 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
     return usedKB;
 }
 
-void SPIFFSFileManager::writeLockoutEntryAsJson(const char* filePath, LockoutEntry entry) {
-    JsonDocument doc;
+void SPIFFSFileManager::createTable() {
+    const char *sql = "CREATE TABLE IF NOT EXISTS lockouts ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "active INTEGER, "
+                      "entryType INTEGER, "
+                      "timestamp INTEGER, "
+                      "lastSeen INTEGER, "
+                      "count INTEGER,"
+                      "latitude REAL, "
+                      "longitude REAL, "
+                      "band INTEGER, "
+                      "frequency REAL);";
 
-    doc["timestamp"] = entry.timestamp;
-    doc["latitude"] = entry.latitude;
-    doc["longitude"] = entry.longitude;
-    //doc["bands"] = entry.bands;
-
-    String jsonString;
-    serializeJson(doc, jsonString);
-
-    File file = SPIFFS.open(filePath, "a");
-
-    if (!file) {
-        Serial.println("Failed to open file for writing");
-        return;
+    if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+        Serial.printf("SQL error: %s\n", errMsg);
+        sqlite3_free(errMsg);
     }
-
-    file.println(jsonString);
-    file.close();
 }
 
-void SPIFFSFileManager::readLockoutEntriesFromJson(const char* filePath) {
-    File file = SPIFFS.open(filePath, "r");
+void SPIFFSFileManager::insertLockoutEntry(const LockoutEntry &entry) {
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO lockouts (active, entryType, timestamp, lastSeen, latitude, longitude, band, frequency) "
+                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
-    if (!file) {
-        Serial.println("Failed to open file for reading");
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        Serial.printf("SQL prepare failed: %s\n", sqlite3_errmsg(db));
         return;
     }
 
-    while (file.available()) {
-        String jsonString = file.readStringUntil('\n');
-        JsonDocument doc;
-        DeserializationError error = deserializeJson(doc, jsonString);
+    sqlite3_bind_int(stmt, 1, entry.active);
+    sqlite3_bind_int(stmt, 2, entry.entryType);
+    sqlite3_bind_int(stmt, 3, entry.timestamp);
+    sqlite3_bind_int(stmt, 4, entry.lastSeen);
+    sqlite3_bind_double(stmt, 5, entry.latitude);
+    sqlite3_bind_double(stmt, 6, entry.longitude);
+    sqlite3_bind_int(stmt, 7, entry.band);
+    sqlite3_bind_double(stmt, 8, entry.frequency);
 
-        if (error) {
-            Serial.println("Failed to parse JSON");
-            continue;
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        Serial.printf("Insert failed: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void SPIFFSFileManager::updateEntryType(uint32_t id, bool newType) {
+    char sql[128];
+    snprintf(sql, sizeof(sql), "UPDATE lockouts SET entryType=%d WHERE id=%u;", newType, id);
+
+    if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+        Serial.printf("Update failed: %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+}
+
+void SPIFFSFileManager::readLockouts() {
+    const char *sql = "SELECT active, entryType, timestamp, lastSeen, latitude, longitude, band, frequency FROM lockouts;";
+    sqlite3_stmt *stmt;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        Serial.printf("SQL prepare failed: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    Serial.println("---- Lockout Entries ----");
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        LockoutEntry entry;
+        entry.active = sqlite3_column_int(stmt, 0);
+        entry.entryType = sqlite3_column_int(stmt, 1);
+        entry.timestamp = sqlite3_column_int(stmt, 2);
+        entry.lastSeen = sqlite3_column_int(stmt, 3);
+        entry.latitude = sqlite3_column_double(stmt, 4);
+        entry.longitude = sqlite3_column_double(stmt, 5);
+        entry.band = static_cast<uint8_t>(sqlite3_column_int(stmt, 6)); // Convert back to uint8_t
+        entry.frequency = sqlite3_column_double(stmt, 7);
+
+        // Convert `band` from integer to string representation for printing
+        const char *bandStr;
+        switch (entry.band) {
+            case 0: bandStr = "X"; break;
+            case 1: bandStr = "K"; break;
+            case 2: bandStr = "Ka"; break;
+            default: bandStr = "Unknown"; break;
         }
 
-        uint32_t timestamp = doc["timestamp"];
-        double latitude = doc["latitude"];
-        double longitude = doc["longitude"];
-
-        Serial.print("Timestamp: ");
-        Serial.print(timestamp);
-        Serial.print(" Latitude: ");
-        Serial.print(latitude);
-        Serial.print(" Longitude: ");
-        Serial.println(longitude);
+        // Print lockout entry
+        Serial.printf("Active: %d | Type: %s | Timestamp: %u | Last Seen: %u | Lat: %.8f | Lon: %.8f | Band: %s | Freq: %.2f\n",
+                      entry.active, entry.entryType ? "Manual" : "Auto",
+                      entry.timestamp, entry.lastSeen,
+                      entry.latitude, entry.longitude,
+                      bandStr, entry.frequency);
     }
 
-    file.close();
+    sqlite3_finalize(stmt);
 }
 
-bool SPIFFSFileManager::removeLockoutEntryByTimestamp(const char* filePath, uint32_t timestampToRemove) {
-    File file = SPIFFS.open(filePath, "r");
-
-    if (!file) {
-        Serial.println("Failed to open file for reading");
-        return false;
-    }
-
-    File tempFile = SPIFFS.open("/temp_lockouts.dat", "w");
-
-    if (!tempFile) {
-        Serial.println("Failed to open temporary file for writing");
+bool SPIFFSFileManager::openDatabase() {
+    if (!SPIFFS.exists(DB_PATH)) {
+        Serial.println("Database file does not exist. Creating it...");
+        File file = SPIFFS.open(DB_PATH, FILE_WRITE);
+        if (!file) {
+            Serial.println("Failed to create database file");
+            return false;
+        }
         file.close();
+        Serial.println("Database file created");
+    }
+
+    int rc = sqlite3_open(DB_PATH, &db);
+    if (rc != SQLITE_OK) {
+        Serial.printf("Failed to open database: %d\n", rc);
         return false;
     }
 
-    bool entryFound = false;
-    
-    while (file.available()) {
-        String jsonString = file.readStringUntil('\n');
-        JsonDocument doc;
-        DeserializationError error = deserializeJson(doc, jsonString);
-
-        if (error) {
-            Serial.println("Failed to parse JSON");
-            continue;
-        }
-
-        uint32_t timestamp = doc["timestamp"];
-
-        if (timestamp == timestampToRemove) {
-            entryFound = true;
-            continue;
-        }
-
-        String newJsonString;
-        serializeJson(doc, newJsonString);
-        tempFile.println(newJsonString);
-    }
-
-    file.close();
-    tempFile.close();
-
-    if (!entryFound) {
-        Serial.println("Entry with specified timestamp not found");
-        SPIFFS.remove("/temp_lockouts.dat");
-        return false;
-    }
-
-    SPIFFS.remove(filePath);
-    SPIFFS.rename("/temp_lockouts.dat", filePath);
-
-    Serial.println("Entry removed successfully");
+    Serial.println("Database opened successfully");
     return true;
+}
+
+void SPIFFSFileManager::closeDatabase() {
+    if (db) {
+        sqlite3_close(db);
+        db = nullptr;
+        Serial.println("Database closed.");
+    }
+}
+
+void SPIFFSFileManager::flushToDB(const std::vector<LockoutEntry> &entries) {
+    if (!openDatabase()) return;
+
+    for (const auto &entry : entries) {
+        insertLockoutEntry(entry);
+    }
+
+    closeDatabase();
+}
+
+void SPIFFSFileManager::testWrite() {
+    File file = SPIFFS.open("/spiffs/test.txt", FILE_WRITE);
+    if (!file) {
+        Serial.println("Failed to create test file");
+    } else {
+        file.println("Test write");
+        file.close();
+        Serial.println("Test file created successfully");
+    }
+
+    if (SPIFFS.exists("/spiffs/test.txt")) {
+        if (SPIFFS.remove("/spiffs/test.txt")) {
+            Serial.println("Test file removed successfully");
+        } else {
+            Serial.println("Failed to remove test file");
+        }
+    }
 }

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1g2.display</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script defer src="lockouts.js"></script>
+    <script defer src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script defer>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleText = document.getElementById("toggleSettings");
+            const settingsContainer = document.getElementById("settingsContainer");
+            
+            settingsContainer.style.display = "none";
+            
+            toggleText.addEventListener("click", function() {
+                if (settingsContainer.style.display === "none") {
+                    settingsContainer.style.display = "block";
+                    toggleText.innerHTML = "Settings &#9650;"; // Up arrow
+                } else {
+                    settingsContainer.style.display = "none";
+                    toggleText.innerHTML = "Settings &#9660;"; // Down arrow
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <nav class="main-navbar">
+        <a href="index.html">Home</a>
+        <a href="settings.html">Configuration</a>
+        <a href="#">Lockouts</a>
+        <a href="update.html">Update</a>
+    </nav>
+
+    <!-- Toggle Text for Settings -->
+    <p id="toggleSettings" style="cursor: pointer; font-weight: bold;">Settings &#9660;</p>
+
+    <!-- Settings Table (Collapsible) -->
+    <div class="container" id="settingsContainer" style="display: none;">
+        <form id="settingsForm">
+          <table id="settingsTable">
+            <tbody>
+              <tr>
+                <td>Enable Auto Lockouts</td>
+                <td>
+                  <select id="enableLockouts" name="enableLockouts">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Minimum Bar Threshold</td>
+                <td>
+                  <select id="minBarThreshold" name="minBarThreshold">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Learning Time (hours)</td>
+                <td>
+                  <select id="learningTime" name="learningTime">
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="12">12</option>
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Inactive Time (months)</td>
+                  <td>
+                  <select id="inactiveTime" name="inactiveTime">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Required Alerts</td>
+                <td>
+                    <select id="requiredAlerts" name="requiredAlerts">
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                    </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Lockout Radius</td>
+                <td>
+                  <select id="radius" name="radius">
+                    <option value="200">200m (1/8 mile)</option>
+                    <option value="400">400m (1/4 mile)</option>
+                    <option value="600">600m (3/8 mile)</option>
+                    <option value="800">800m (1/2 mile)</option>
+                    <option value="1000">1000m (5/8 mile)</option>
+                    <option value="1200">1200m (3/4 mile)</option>                       
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Set Lockout Text Color</td>
+                <td>
+                  <select id="setLockoutColor" name="setLockoutColor">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Lockout Color</td>
+                <td>
+                  <label class="color-picker-label">
+                    Select a color:
+                    <input type="color" id="colorPicker" name="lockoutColor" value="#BFBBA9">
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <input type="submit" value="Update">
+        </form>
+    </div>
+
+    <!-- Lockout List Table (Bottom) -->
+    <div class="container" id="lockoutContainer">
+        <h2>Lockout History</h2>
+        <details>
+            <summary>Filter:</summary>
+            <label>
+                <input type="checkbox" id="filter-auto" checked> Auto Lockouts
+            </label>
+            <label>
+                <input type="checkbox" id="filter-manual" checked> Manual Lockouts
+            </label>
+            <label>
+                <input type="checkbox" id="filter-x" checked> X-band
+            </label>
+            <label>
+                <input type="checkbox" id="filter-k" checked> K-band
+            </label>
+            <label>
+                <input type="checkbox" id="filter-ka" checked> Ka-band
+            </label>
+        </details>
+        <table id="lockoutTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Type</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Band Type</th>
+                    <th>Frequency</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JavaScript will populate this -->
+            </tbody>
+        </table>
+        <button id="exportCSV">Export to CSV</button>
+    </div>
+</body>
+</html>

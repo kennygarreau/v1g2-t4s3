@@ -3,12 +3,12 @@
 
 #include <NimBLEDevice.h>
 #include <Preferences.h>
-#include <ESPAsyncWebServer.h>
+//#include <ESPAsyncWebServer.h>
 #include "LilyGo_AMOLED.h"
 #include "wifi.h"
-#include "v1_fs.h"
+#include <vector>
 
-#define FIRMWARE_VERSION "1.0.1g"
+#define FIRMWARE_VERSION "1.0.1j"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -18,35 +18,57 @@
 #define BLE_RETRY_INTERVAL 10000
 
 #define EARTH_RADIUS_KM 6371.0
-#define MUTING_RADIUS_KM 0.4
-#define LAT_OFFSET 0.004 // Roughly 0.4 km in degrees latitude (~400m)
+#define MUTING_RADIUS_KM 0.8
+#define LAT_OFFSET 0.008 // Roughly 0.8 km in degrees latitude (~800m)
 #define LON_OFFSET LAT_OFFSET
-#define MAX_LOCATIONS 5120
+#define MAX_LOCATIONS 50000
 
-struct LockoutEntry {
-    uint32_t timestamp;
-    float latitude;
-    float longitude;
-    std::array<float, 4> bands;
-};
-
-extern std::vector<LockoutEntry> savedLockoutLocations;
+#define KBLOCK1 24.199 // +/- .005 (5 MHz) Honda
+#define KBLOCK2 24.168 // +/- .002 (2 MHz) Honda / Acura
+#define KBLOCK3 24.123 // +/- .002 (2 MHz) Mazda
+#define KBLOCK4 24.072 // +/- .003 (3 MHz) GM
+#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
 
 extern NimBLEClient* pClient;
 extern NimBLERemoteCharacteristic* clientWriteCharacteristic;
 extern LilyGo_AMOLED amoled;
-extern bool bt_connected;
-extern bool muted;
-extern bool alertPresent;
-extern bool wifiConnecting;
-extern bool wifiConnected;
-extern unsigned long wifiStartTime;
-extern bool v1le;
+extern bool bt_connected, muted, alertPresent, v1le;
+extern bool wifiConnecting, wifiConnected, localWifiStarted;
+
+extern std::vector<std::pair<int, int>> sectionBounds;
+extern std::vector<std::pair<int, int>> sweepBounds;
 
 struct WiFiCredential {
     String ssid;
     String password;
 };
+
+struct LockoutEntry {
+    bool active; // 0: inactive, 1: active
+    bool entryType; // 0: auto 1: manual
+    uint32_t timestamp;
+    uint32_t lastSeen;
+    int counter;
+    double latitude;
+    double longitude;
+    uint8_t band; // 1 byte for band (0: X, 1: K, 2: Ka)
+    float frequency;
+};
+
+extern std::vector<LockoutEntry> savedLockoutLocations;
+
+struct lockoutSettings {
+    bool enable;
+    int minThreshold;
+    int learningTime;
+    int requiredAlerts;
+    int radius;
+    bool setLockoutColor;
+    uint32_t lockoutColor;
+    int inactiveTime;
+};
+
+extern lockoutSettings autoLockoutSettings;
 
 struct v1Settings {
   int displayOrientation;
@@ -65,6 +87,7 @@ struct v1Settings {
   bool displayTest;
   bool turnOffDisplay;
   bool onlyDisplayBTIcon;
+  bool useDefaultV1Mode;
   int lowSpeedThreshold;
   String timezone;
   int networkCount;
@@ -84,7 +107,7 @@ struct Config {
     bool euro;
     bool kVerifier;
     bool rearLaser;
-    bool customFreqDisabled;
+    bool customFreqEnabled;
     bool kaAlwaysPrio;
     bool fastLaserDetection;
     int kaSensitivityBit0;
@@ -97,8 +120,13 @@ struct Config {
     int autoMuteBit1;
     std::string autoMute;
     const char* mode;
+    const char* defaultMode;
     int mainVolume;
     int mutedVolume;
+    int sweepSections;
+    int maxSweepIndex;
+    std::vector<std::pair<int, int>> sections;
+    std::vector<std::pair<int, int>> sweeps;
 };
 
 extern Config globalConfig;
@@ -131,6 +159,7 @@ struct GPSData {
 extern GPSData gpsData;
 extern bool gpsAvailable;
 
+/*
 struct DisplayConstants {
     int MAX_X;
     int MAX_Y;
@@ -173,9 +202,11 @@ struct DisplayConstants {
     int H_BAR_WIDTH;
     int SPACING;
 };
+*/
 
 //extern DisplayConstants selectedConstants;
-extern std::string manufacturerName, modelNumber, serialNumber, hardwareRevision, firmwareRevision, softwareRevision;
+extern std::string manufacturerName, modelNumber, serialNumber, softwareRevision;
+//extern std::string hardwareRevision, firmwareRevision
 
 extern Preferences preferences;
 extern bool isVBusIn, batteryCharging, isPortraitMode;
@@ -190,20 +221,9 @@ struct AlertTableData {
     int freqCount;
 };
 
-// Custom UI color; should be modified to an acceptable TFT_COLOR
-// See https://github.com/Bodmer/TFT_eSPI/blob/master/TFT_eSPI.h for default enumerations
-//#define UI_COLOR TFT_RED
-
-//#define V1LE
-#ifdef V1LE
-    // to-do: discover Bluetooth LE dongle Service UUID
-    static BLEUUID v1leServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
-#else
-    static NimBLEUUID bmeServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
-#endif
-
 // Bluetooth service configurations
 static NimBLEUUID deviceInfoUUID("180A");
+static NimBLEUUID bmeServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
 
 // Device Information Service characteristics
 // static BLEUUID manufacturerUUID("2A29");
@@ -221,4 +241,4 @@ static NimBLEUUID clientWriteUUID("92A0B6D4-9E05-11E2-AA59-F23C91AEC05E"); // cl
 //static BLEUUID char4UUID("92A0B8D2-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in LONG
 //static BLEUUID char6UUID("92A0BAD4-9E05-11E2-AA59-F23C91AEC05E"); // write and write without response 
 
-#endif
+#endif // V1_CONFIG_H

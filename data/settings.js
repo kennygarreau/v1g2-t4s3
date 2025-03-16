@@ -52,6 +52,7 @@ async function populateBoardInfo() {
                 lowSpeedThreshold: boardInfo.displaySettings.lowSpeedThreshold || 35,
                 displayOrientation: boardInfo.displaySettings.displayOrientation || 0,
                 textColor: boardInfo.displaySettings.textColor || "#FF0000",
+                useDefaultV1Mode: boardInfo.displaySettings.useDefaultV1Mode || false,
                 turnOffDisplay: boardInfo.displaySettings.turnOffDisplay || false,
                 onlyDisplayBTIcon: boardInfo.displaySettings.onlyDisplayBTIcon || false,
                 displayTest: boardInfo.displaySettings.displayTest || false,
@@ -89,6 +90,7 @@ async function populateBoardInfo() {
             document.getElementById("lowSpeedThreshold").value = currentValues.lowSpeedThreshold;
             document.getElementById("displayOrientation").value = currentValues.displayOrientation;
             document.getElementById("colorPicker").value = currentValues.textColor;
+            document.getElementById("useDefaultV1Mode").value = currentValues.useDefaultV1Mode;
             document.getElementById("turnOffDisplay").value = currentValues.turnOffDisplay.toString();
             document.getElementById("onlyDisplayBTIcon").value = currentValues.onlyDisplayBTIcon.toString();
             document.getElementById("displayTest").value = currentValues.displayTest.toString();
@@ -142,6 +144,9 @@ document.getElementById("settingsForm").addEventListener("submit", function(even
         }
         if (formData.get("textColor") !== currentValues.textColor) {
             updatedSettings.textColor = formData.get("textColor");
+        }
+        if ((document.getElementById("useDefaultV1Mode").value === "true") !== currentValues.useDefaultV1Mode) {
+            updatedSettings.useDefaultV1Mode = document.getElementById("useDefaultV1Mode").value === "true";
         }
         if ((document.getElementById("turnOffDisplay").value === "true") !== currentValues.turnOffDisplay) {
             updatedSettings.turnOffDisplay = document.getElementById("turnOffDisplay").value === "true";

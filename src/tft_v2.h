@@ -14,6 +14,8 @@ extern uint8_t activeBands;
 
 double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 void main_press_handler(lv_event_t * e);
+bool get_var_useDefaultV1Mode();
+bool get_var_customFreqEnabled();
 void set_var_bt_connected(bool value);
 bool get_var_muted();
 void set_var_muted(bool value);

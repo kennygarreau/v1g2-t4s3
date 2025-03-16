@@ -1,7 +1,8 @@
 #ifndef WIFI_H
 #define WIFI_H
 
-#include <ESPAsyncWebServer.h>
+//#include <ESPAsyncWebServer.h>
+#include <WiFi.h>
 
 enum WiFiModeSetting {
     WIFI_SETTING_STA = 1,
@@ -12,10 +13,5 @@ enum WiFiModeSetting {
 void onWiFiEvent(WiFiEvent_t event);
 void wifiSetup();
 void wifiScan();
-
-/*
-void startWifiAsync();
-void handleWifi();
-*/
 
 #endif

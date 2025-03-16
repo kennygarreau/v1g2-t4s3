@@ -15,6 +15,9 @@ typedef struct _objects_t {
     lv_obj_t *prioalertfreq;
     lv_obj_t *bt_logo;
     lv_obj_t *mode_type;
+    lv_obj_t *default_mode;
+    lv_obj_t *overlay_mode;
+    lv_obj_t *custom_freq_en;
     lv_obj_t *mute_logo;
     lv_obj_t *alert_table;
     lv_obj_t *alert1freq;
@@ -29,7 +32,6 @@ typedef struct _objects_t {
     lv_obj_t *band_laser;
     lv_obj_t *band_k;
     lv_obj_t *band_x;
-    //lv_obj_t *obj0;
     lv_obj_t *wifi_logo;
     lv_obj_t *wifi_local_logo;
     lv_obj_t *front_arrow;

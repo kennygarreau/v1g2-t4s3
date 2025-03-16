@@ -68,6 +68,12 @@ void update_alert_rows(int num_alerts, const char* frequencies[]) {
         if (i < num_alerts) {
             lv_label_set_text(alert_rows[i], frequencies[i]);
             lv_obj_clear_flag(alert_rows[i], LV_OBJ_FLAG_HIDDEN);
+            if (get_var_muted()) {
+                lv_obj_set_style_text_color(alert_rows[i], lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+            } 
+            else {
+                lv_obj_set_style_text_color(alert_rows[i], lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
         } else {
             lv_obj_add_flag(alert_rows[i], LV_OBJ_FLAG_HIDDEN);
         }
@@ -126,6 +132,12 @@ void update_signal_bars(int num_visible) {
 
         if (i < num_visible) {
             lv_obj_clear_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
+            if (get_var_muted()) {
+                lv_obj_set_style_bg_color(signal_bars[i], lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
+            else {
+                lv_obj_set_style_bg_color(objects.prioalertfreq, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
         } else {
             lv_obj_add_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
         }
@@ -246,7 +258,6 @@ void create_screen_main() {
             // automutespeed
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.automutespeed = obj;
-            //lv_obj_set_pos(obj, 473, 18);
             lv_obj_set_pos(obj, 439, 18);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "");
@@ -258,7 +269,6 @@ void create_screen_main() {
             // mute_logo
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.mute_logo = obj;
-            //lv_obj_set_pos(obj, 420, 0);
             lv_obj_set_pos(obj, 386, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_mute_logo_small);
@@ -274,6 +284,39 @@ void create_screen_main() {
             lv_label_set_text(obj, "");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // default v1 mode
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.default_mode = obj;
+            lv_obj_set_pos(obj, 17, 341);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+
+            // Create the black "3" overlay
+            lv_obj_t *overlay = lv_label_create(parent_obj);
+            objects.overlay_mode = overlay;
+            lv_obj_set_pos(overlay, 17, 341); // Same position as default_mode
+            lv_obj_set_size(overlay, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(overlay, "");
+            lv_obj_set_style_text_font(overlay, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(overlay, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // custom freqs enabled
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.custom_freq_en = obj;
+            lv_obj_set_pos(obj, 60, 341);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            //lv_label_set_text(obj, ".");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
             // alert_table
@@ -327,17 +370,17 @@ void create_screen_main() {
         //     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
         //     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         // }
-        {
-            // band_laser
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.band_laser = obj;
-            lv_obj_set_pos(obj, 14, 108);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "L");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
+        // {
+        //     // band_laser
+        //     lv_obj_t *obj = lv_label_create(parent_obj);
+        //     objects.band_laser = obj;
+        //     lv_obj_set_pos(obj, 14, 108);
+        //     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        //     lv_label_set_text(obj, "L");
+        //     lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+        //     lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+        //     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        // }
         {
             // band_ka
             lv_obj_t *obj = lv_label_create(parent_obj);
@@ -406,21 +449,55 @@ void tick_status_bar() {
 
         LV_LOG_INFO("Updated WiFi status");
     }
+    // Custom Frequency Notification
+    {
+        bool value = get_var_customFreqEnabled();
+        if (value) {
+            lv_label_set_text(objects.custom_freq_en, ".");
+        }
+        else {
+            lv_label_set_text(objects.custom_freq_en, "");
+        }
+            
+        LV_LOG_INFO("Updated Custom Frequency status");
+    }
     // Logic Mode
     {
-        const char *new_val = get_var_logicmode();
-        const char *cur_val = (objects.mode_type) ? lv_label_get_text(objects.mode_type) : NULL;
-        if (new_val && cur_val && strcmp(new_val, cur_val) != 0) {
-            LV_LOG_INFO("update Logic Mode");
-            tick_value_change_obj = objects.mode_type;
-            lv_label_set_text(objects.mode_type, new_val);
-            tick_value_change_obj = NULL;
-        } else if (!new_val) {
-            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
-        } else if (!objects.mode_type) {
-            LV_LOG_ERROR("Error: objects.mode_type is NULL!");
+        bool useDefault = get_var_useDefaultV1Mode();
+        const char *new_val = get_var_logicmode(useDefault);
+        lv_obj_t *target = useDefault ? objects.default_mode : objects.mode_type;
+        lv_obj_t *target_old = useDefault ? objects.mode_type : objects.default_mode;
+        lv_obj_t *overlay = objects.overlay_mode;
+        
+        if (!target) {
+            LV_LOG_ERROR("Error: %s is NULL!", useDefault ? "objects.default_mode" : "objects.mode_type");
+            return;
         }
-    }
+    
+        if (!new_val) {
+            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
+            return;
+        }
+    
+        const char *cur_val = lv_label_get_text(target);
+        if (cur_val && strcmp(new_val, cur_val) != 0) {
+            LV_LOG_INFO("update Logic Mode");
+            tick_value_change_obj = target;
+            lv_label_set_text(target, new_val);
+            lv_label_set_text(target_old, "");
+
+    
+            lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
+
+            if (new_val == "c") {
+                lv_label_set_text(overlay, "q");
+                lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+            }
+    
+            tick_value_change_obj = NULL;
+        }
+    }    
     // GPS status
     {
         bool gps_enabled = get_var_gpsEnabled(); // true if enabled and connected
@@ -540,11 +617,17 @@ void tick_screen_main() {
             if (new_val) { 
                 LV_LOG_INFO("updating prioAlert freq");
                 lv_label_set_text(objects.prioalertfreq, new_val);
+                if (get_var_muted()) {
+                    lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                else {
+                    lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
             }
             tick_value_change_obj = NULL;
         } 
     }
-    // Update Priority Bars (TODO: shift to infDisplayData?)
+    // Update Priority Bars
     {
         int numBars = get_var_prioBars();
         if (numBars != cur_bars) {
@@ -604,6 +687,12 @@ void tick_screen_main() {
 
             if (new_val) {
                 lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
+                if (get_var_muted()) {
+                    lv_obj_set_style_text_color(objects.band_ka, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                else {
+                    lv_obj_set_style_text_color(objects.band_ka, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
             } else {
                 lv_obj_add_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
             }
@@ -612,21 +701,21 @@ void tick_screen_main() {
         }
     }
     // Laser alert
-    {
-        bool new_val = get_var_laserAlert(); // true if enabled
-        bool is_hidden = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        if (new_val == is_hidden) {
-            LV_LOG_INFO("paint laser");
-            tick_value_change_obj = objects.band_laser;
-            if (new_val) { 
-                lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-            }
-            else {
-                lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-            }
-            tick_value_change_obj = NULL;
-        }
-    }
+    // {
+    //     bool new_val = get_var_laserAlert(); // true if enabled
+    //     bool is_hidden = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
+    //     if (new_val == is_hidden) {
+    //         LV_LOG_INFO("paint laser");
+    //         tick_value_change_obj = objects.band_laser;
+    //         if (new_val) { 
+    //             lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
+    //         }
+    //         else {
+    //             lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
+    //         }
+    //         tick_value_change_obj = NULL;
+    //     }
+    // }
     // K alert
     {
         bool new_val = get_var_kAlert(); // true if enabled
@@ -636,6 +725,12 @@ void tick_screen_main() {
             tick_value_change_obj = objects.band_k;
             if (new_val) { 
                 lv_obj_clear_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
+                if (get_var_muted()) {
+                    lv_obj_set_style_text_color(objects.band_k, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                else {
+                    lv_obj_set_style_text_color(objects.band_k, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
             }
             else {
                 lv_obj_add_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
@@ -652,6 +747,12 @@ void tick_screen_main() {
             tick_value_change_obj = objects.band_x;
             if (new_val) { 
                 lv_obj_clear_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
+                if (get_var_muted()) {
+                    lv_obj_set_style_text_color(objects.band_x, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                else {
+                    lv_obj_set_style_text_color(objects.band_x, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
             }
             else { 
                 lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
@@ -923,6 +1024,7 @@ void tick_screen_settings() {
         bool switch_checked = lv_obj_has_state(objects.switch_v1cle, LV_STATE_CHECKED);
 
         if (!v1cle_present) {
+            // TODO: fix BLE scan timer to capture this in case v1g is found first
             //lv_obj_add_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
             //lv_obj_add_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
         }
