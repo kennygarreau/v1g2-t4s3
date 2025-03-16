@@ -300,12 +300,12 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         anyBandActive = true;
     }
 
-    if (arrow1.x != arrow2.x) {
+    if (arrow1.x != arrow2.x && globalConfig.xBand) {
         enable_blinking(BLINK_X);
         Serial.print("== blink x ");
         //updateActiveBands(0b00001000);
     }
-    if (!blink_enabled[BLINK_X] && arrow1.x) {
+    if (!blink_enabled[BLINK_X] && arrow1.x && globalConfig.xBand) {
         set_var_xAlert(arrow1.x);
         updateActiveBands(0b00001000);
         anyBandActive = true;
@@ -435,7 +435,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
         /* after this there should be no substring processing; we should only focus on painting the display */
         // paint the alert table arrows
-        if (bandValue == "X") {
+        if (bandValue == "X" && globalConfig.xBand) {
             frontStrengthVal = mapXToBars(frontStrength);
             rearStrengthVal = mapXToBars(rearStrength);
         } 
