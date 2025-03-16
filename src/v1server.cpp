@@ -28,6 +28,10 @@
 #include <FreeRTOS.h>
 #include <ezTime.h>
 #include "gps.h"
+#include <Ticker.h>
+
+Ticker writeBatteryVoltageTicker;
+Ticker writeVolumeTicker;
 
 AsyncWebServer server(80);
 static SemaphoreHandle_t xWiFiLock = NULL;
@@ -212,7 +216,13 @@ void setup()
   if (scr) {
     lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
   }
-
+  gpsData.totalHeap = ESP.getHeapSize();
+  gpsData.totalPsram = ESP.getPsramSize();
+  gpsData.totalStorageKB = fileManager.getStorageTotal();
+  gpsData.usedStorageKB = fileManager.getStorageUsed();
+  
+  writeVolumeTicker.attach(61, reqVolume);
+  writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
 }
 
 void loop() {  
@@ -279,8 +289,8 @@ void loop() {
     }
     if (bt_connected && clientWriteCharacteristic) {
       gpsData.btStr = getBluetoothSignalStrength();
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false); 
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+      //clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+      //clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
     }
     
     batteryCharging = amoled.isCharging();
@@ -288,16 +298,14 @@ void loop() {
     voltageInMv = espVoltage; // cast this to float
     batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
     batteryPercentage = constrain(batteryPercentage, 0, 100);
+    uint32_t cpuIdle = lv_timer_get_idle();  
+    gpsData.cpuBusy = 100 - cpuIdle;
+    gpsData.freeHeap = ESP.getFreeHeap();
+    gpsData.freePsram = ESP.getFreePsram();
 
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
-      gpsData.totalHeap = ESP.getHeapSize();
-      gpsData.totalPsram = ESP.getPsramSize();
-      gpsData.totalStorageKB = fileManager.getStorageTotal();
-      gpsData.usedStorageKB = fileManager.getStorageUsed();
-
       if (bt_connected && clientWriteCharacteristic) {
-        //Serial.println("Requesting user settings...");
         if (!serialReceived) {
           Serial.println("Awaiting Serial Number...");
           requestSerialNumber();
@@ -316,10 +324,6 @@ void loop() {
         }
       }
     }
-    uint32_t cpuIdle = lv_timer_get_idle();  
-    gpsData.cpuBusy = 100 - cpuIdle;
-    gpsData.freeHeap = ESP.getFreeHeap();
-    gpsData.freePsram = ESP.getFreePsram();
 
     if (serialReceived && versionReceived && volumeReceived && userBytesReceived) {
       Serial.println("All device information received!");

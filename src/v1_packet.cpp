@@ -518,6 +518,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
 
     std::string packetID = packet.substr(6, 2);
 
+    // infDisplayData
     if (packetID == "31") {
         /*  
             infDisplayData
@@ -579,6 +580,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         lastinfPayload = payload;
     }
     }
+    // respAlertData
     else if (packetID == "43") {
         /*  
             respAlertData
@@ -636,6 +638,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
         }
     }
+    // respVersion
     else if (packetID == "02"){
         try {
             std::string versionID = hexToAscii(packet.substr(10, 2));
@@ -657,6 +660,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // anything to be done here?
         }
     }
+    // respSerialNumber
     else if (packetID == "04"){
         try {
             std::string serialNum1 = hexToAscii(packet.substr(10, 2));
@@ -679,6 +683,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // anything to be done here?
         }
     }
+    // respUserBytes
     else if (packetID == "12") {
         std::string userByteZero = packet.substr(10, 2);
         std::string userByteOne = packet.substr(12, 2);
@@ -688,9 +693,9 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         decodeByteOne(userByteOne);
         decodeByteTwo(userByteTwo);
     }
+    // respSweepDefinition
     else if (packetID == "17") {
-        // respSweepDefinition, in response to packet 16
-        bool k_rcvd, ka_rcvd;
+        bool k_rcvd, ka_rcvd, zero_rcvd;
         std::string aux0 = packet.substr(10, 2);
         std::string msbUpper = packet.substr(12, 2);
         std::string lsbUpper = packet.substr(14, 2);
@@ -703,27 +708,28 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             int upperBound = combineMSBLSB(msbUpper, lsbUpper);
             int lowerBound = combineMSBLSB(msbLower, lsbLower);
 
-            if (lowerBound > 23800 && upperBound < 24300) {
-                Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
-                globalConfig.sweeps.emplace_back(lowerBound, upperBound);
-                k_rcvd = true;
-            }
-            if (lowerBound > 33300 && upperBound < 36100) {
-                Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
-                globalConfig.sweeps.emplace_back(lowerBound, upperBound);
-                ka_rcvd = true;
+            Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
+
+            if ((lowerBound > 23800 && upperBound < 24300) || (lowerBound > 33300 && upperBound < 36100) || (lowerBound == 0 && upperBound == 0)) {
+                if (lowerBound > 23800 && upperBound < 24300) {
+                    globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                    k_rcvd = true;
+                } else if (lowerBound > 33300 && upperBound < 36100) {
+                    globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                    ka_rcvd = true;
+                } else if (lowerBound == 0 && upperBound == 0) {
+                    zero_rcvd = true;
+                }
             }
         }
         catch (const std::exception& e) {
-            Serial.printf("caught exception processing allSweepDefinitions: %s", e);
+            Serial.printf("caught exception processing allSweepDefinitions: %s\n", e.what());
         }
 
-        if (k_rcvd && ka_rcvd) { 
-            allSweepDefinitionsReceived = true; 
-        }
+        allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
     }
+    // respMaxSweepIndex
     else if (packetID == "20") {
-        // respMaxSweepIndex, in response to packet 19
         std::string maxSweepIndex = packet.substr(10, 2);
         try {
             int maxSweepIndexInt = std::stoi(maxSweepIndex, nullptr, 16);
@@ -733,8 +739,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         catch (const std::exception& e) {
         } 
     }
+    // respSweepSections
     else if (packetID == "23") {
-        // respSweepSections, in response to packet 22
         int value;
         std::string numSections = packet.substr(8, 2);
         
@@ -770,6 +776,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         catch (const std::exception& e) {
         } 
     }
+    // respCurrentVolume
     else if (packetID == "38") {
         int mainVol = 0, mutedVol = 0;
         try {
@@ -787,6 +794,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
 
         }
     }
+    // respBatteryVoltage
     else if (packetID == "63") {
         int voltageInt = 0, voltageDec = 0;
         try {
@@ -801,12 +809,26 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         } catch (const std::exception& e) {
         }
     }
+    // respUnsupportedPacket
     else if (packetID == "64") {
         Serial.println("respUnsupportedPacket");
     }
-    else if (packetID == "66") {
-        //infV1Busy
+    // respRequestNotProcessed
+    else if (packetID == "65") {
+        Serial.println("respRequestNotProcessed");
     }
+    // infV1Busy
+    else if (packetID == "66") {
+        std::string pl = packet.substr(8, 2);
+        try {
+            int plInt = std::stoi(pl, nullptr, 10) - 1;
+            std::string pendingPacket = packet.substr(10, 2);
+            Serial.printf("infV1Busy; pending packets: %d, first packet ID: %s\n", plInt, pendingPacket.c_str());
+        }
+        catch (const std::exception& e) {
+        }   
+    }
+    // respDataError
     else if (packetID == "67") {
         Serial.println("respDataError encountered");
     }

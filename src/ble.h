@@ -16,6 +16,8 @@ void requestUserBytes();
 void requestSweepSections();
 void requestMaxSweepIndex();
 void requestAllSweepDefinitions();
+void reqVolume();
+void reqBatteryVoltage();
 void queryDeviceInfo(NimBLEClient* pClient);
 void displayReader(NimBLEClient* pClient);
 

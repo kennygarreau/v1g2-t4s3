@@ -213,45 +213,56 @@ void queryDeviceInfo(NimBLEClient* pClient) {
   }
 
 void requestSerialNumber() {
-    if (bt_connected && clientWriteCharacteristic) {
+    //if (bt_connected && clientWriteCharacteristic) {
       clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSerialNumber(), 7, false);
-    }
+      delay(15);
+    //}
   }
   
 void requestVersion() {
-  if (bt_connected && clientWriteCharacteristic) {
+  //if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqVersion(), 7, false);
-  }
+    delay(15);
+  //}
 }
 
 void requestVolume() {
-  if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-  }
+    delay(15);
 }
 
 void requestUserBytes() {
-  if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
-  }
+    delay(15);
 }
 
 void requestSweepSections() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSweepSections(), 7, false);
+    delay(20);
   }
 }
 
 void requestMaxSweepIndex() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMaxSweepIndex(), 7, false);
+    delay(20);
   }
 }
 
 void requestAllSweepDefinitions() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqAllSweepDefinitions(), 7, false);
+    delay(20);
   }
+}
+
+void reqBatteryVoltage() {
+  clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+}
+
+void reqVolume() {
+  clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
 }
 
 void initBLE() {
