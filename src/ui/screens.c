@@ -455,6 +455,12 @@ void tick_status_bar() {
         if (value) {
             lv_label_set_text(objects.custom_freq_en, ".");
             lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+            if (get_var_muted()) {
+                lv_obj_set_style_text_color(objects.custom_freq_en, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
+            else {
+                lv_obj_set_style_text_color(objects.custom_freq_en, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
         }
         else {
             lv_label_set_text(objects.custom_freq_en, "");
@@ -487,10 +493,16 @@ void tick_status_bar() {
             tick_value_change_obj = target;
             lv_label_set_text(target, new_val);
             lv_label_set_text(target_old, "");
-
     
             lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
+
+            if (get_var_muted()) {
+                lv_obj_set_style_text_color(target, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
+            else {
+                lv_obj_set_style_text_color(target, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
 
             if (new_val == "c") {
                 lv_label_set_text(overlay, "q");
@@ -718,8 +730,6 @@ void tick_screen_main() {
     //         tick_value_change_obj = NULL;
     //     }
     // }
-
-    // TODO: set boolean for enabled bands
     // K alert
     {
         bool new_val = get_var_kAlert(); // true if enabled
