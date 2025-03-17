@@ -111,6 +111,7 @@ void start_band_update_timer() {
 
 static void clear_inactive_bands_timer(lv_timer_t * timer) {
     activeBands = 0;
+    lv_timer_del(timer);
 }
 
 void start_clear_inactive_bands_timer() {

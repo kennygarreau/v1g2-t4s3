@@ -62,6 +62,7 @@ Preferences preferences;
 Timezone tz;
 
 int loopCounter = 0;
+unsigned long bootMillis = 0;
 unsigned long lastMillis = 0;
 const unsigned long uiTickInterval = 5;
 
@@ -147,6 +148,7 @@ void loadSettings() {
 
 void setup()
 {
+  bootMillis = millis();
   Serial.begin();
   analogReadResolution(12);
   delay(500);
@@ -204,8 +206,8 @@ void setup()
     initBLE();
   }
 
-  xWiFiLock =  xSemaphoreCreateBinary();
-  xSemaphoreGive( xWiFiLock );
+  // xWiFiLock =  xSemaphoreCreateBinary();
+  // xSemaphoreGive( xWiFiLock );
 
   wifiSetup();
   setupWebServer();
@@ -274,7 +276,8 @@ void loop() {
   unsigned long currentMillis = millis();
 
   if (currentMillis - lastMillis >= 2000) {
-    //Serial.println("Loops executed: " + String(loopCounter)); // uncomment for loop profiling
+    unsigned long uptime = (millis() - bootMillis) / 1000;
+    Serial.printf("Uptime: %u | Loops executed: %d\n", uptime, loopCounter); // uncomment for loop profiling
     ui_tick_statusBar();
 
     if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
@@ -325,7 +328,6 @@ void loop() {
 
     if (serialReceived && versionReceived && volumeReceived && userBytesReceived) {
       Serial.println("All device information received!");
-
       configHasRun = true;
       set_var_prio_alert_freq("");
 
@@ -339,7 +341,7 @@ void loop() {
       userBytesReceived = false;
     }
     
-    if (!sweepSectionsReceived) {
+    if (!sweepSectionsReceived && !manufacturerName.empty()) {
       requestSweepSections();
     }
     if (!maxSweepIndexReceived && sweepSectionsReceived) {
