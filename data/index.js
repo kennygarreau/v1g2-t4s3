@@ -100,8 +100,6 @@ async function populateBoardInfo() {
         document.getElementById("manufacturer").textContent = boardInfo.manufacturer || "Valentine Research";
         document.getElementById("model").textContent = boardInfo.model || "Valentine One";
         document.getElementById("serial").textContent = `Serial: ${boardInfo.serial}`;
-        //document.getElementById("hardware-version").textContent = `HW Ver: ${boardInfo.hardwareVersion}`;
-        //document.getElementById("firmware-version").textContent = `FW Ver: ${boardInfo.firmwareVersion}`;
         document.getElementById("software-version").textContent = `SW Ver: ${boardInfo.softwareVersion}`;
 
         clearConfigTable();

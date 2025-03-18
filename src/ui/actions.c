@@ -151,3 +151,13 @@ void show_popup(const char * message) {
     lv_obj_add_event_cb(mbox, delete_popup, LV_EVENT_DELETE, NULL);
     lv_obj_del_delayed(mbox, 1500);
 }
+
+void convert_to_fixed_gray(uint16_t *img_data, uint32_t width, uint32_t height) {
+    // Convert #636363 to RGB565 (little-endian)
+    uint16_t gray565 = ((12 & 0x1F) << 11) | ((24 & 0x3F) << 5) | (12 & 0x1F);
+    gray565 = (gray565 >> 8) | (gray565 << 8); // Handle endianness
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        img_data[i] = gray565;
+    }
+}

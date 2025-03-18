@@ -9,6 +9,52 @@
 #include "web.h"
 #include "tft_v2.h"
 
+extern const char *lockoutFieldNames[] = {
+    "active",
+    "entryType",
+    "timestamp",
+    "lastSeen",
+    "counter",
+    "latitude",
+    "longitude",
+    "speed",
+    "course",
+    "strength",
+    "direction",
+    "frequency"
+};
+
+LockoutEntry savedLockoutLocations[] = {
+    {
+        .active = true,
+        .entryType = false, // Auto
+        .timestamp = 1710700000,
+        .lastSeen = 1710705000,
+        .counter = 3,
+        .latitude = 37.7749,
+        .longitude = -122.4194,
+        .speed = 45,
+        .course = 270,
+        .strength = 75,
+        .direction = false, // Front
+        .frequency = 24125
+    },
+    {
+        .active = false,
+        .entryType = true, // Manual
+        .timestamp = 1710600000,
+        .lastSeen = 1710650000,
+        .counter = 5,
+        .latitude = 34.0522,
+        .longitude = -118.2437,
+        .speed = 60,
+        .course = 90,
+        .strength = 80,
+        .direction = true, // Rear
+        .frequency = 24150
+    }
+};
+
 unsigned long rebootTime = 0;
 bool isRebootPending = false;
 
@@ -89,6 +135,36 @@ void setupWebServer()
     serveStaticFile(server, "/status.html", "text/html");
     serveStaticFile(server, "/style.css", "text/css");
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
+
+    server.on("/lockouts", HTTP_GET, [](AsyncWebServerRequest *request) {
+        JsonDocument jsonDoc;
+        JsonArray lockoutArray = jsonDoc.createNestedArray("lockouts");
+    
+        for (const auto &lockout : savedLockoutLocations) {
+            JsonObject sectionObj = lockoutArray.createNestedObject();
+    
+            for (int i = 0; i < LOCKOUT_FIELD_COUNT; i++) {
+                switch (i) {
+                    case ACTIVE:      sectionObj[lockoutFieldNames[i]] = lockout.active; break;
+                    case ENTRY_TYPE:  sectionObj[lockoutFieldNames[i]] = lockout.entryType; break;
+                    case TIMESTAMP:   sectionObj[lockoutFieldNames[i]] = lockout.timestamp; break;
+                    case LAST_SEEN:   sectionObj[lockoutFieldNames[i]] = lockout.lastSeen; break;
+                    case COUNTER:     sectionObj[lockoutFieldNames[i]] = lockout.counter; break;
+                    case LATITUDE:    sectionObj[lockoutFieldNames[i]] = lockout.latitude; break;
+                    case LONGITUDE:   sectionObj[lockoutFieldNames[i]] = lockout.longitude; break;
+                    case SPEED:       sectionObj[lockoutFieldNames[i]] = lockout.speed; break;
+                    case COURSE:      sectionObj[lockoutFieldNames[i]] = lockout.course; break;
+                    case STRENGTH:    sectionObj[lockoutFieldNames[i]] = lockout.strength; break;
+                    case DIRECTION:   sectionObj[lockoutFieldNames[i]] = lockout.direction; break;
+                    case FREQUENCY:   sectionObj[lockoutFieldNames[i]] = lockout.frequency; break;
+                }
+            }
+        }
+    
+        String response;
+        serializeJson(jsonDoc, response);
+        request->send(200, "application/json", response);
+    });    
 
     server.on("/gps-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;

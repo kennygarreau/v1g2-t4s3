@@ -43,6 +43,24 @@ struct WiFiCredential {
     String password;
 };
 
+enum LockoutField {
+    ACTIVE,
+    ENTRY_TYPE,
+    TIMESTAMP,
+    LAST_SEEN,
+    COUNTER,
+    LATITUDE,
+    LONGITUDE,
+    SPEED,
+    COURSE,
+    STRENGTH,
+    DIRECTION,
+    FREQUENCY,
+    LOCKOUT_FIELD_COUNT // Total number of fields
+};
+
+extern const char *lockoutFieldNames[];
+
 struct LockoutEntry {
     bool active; // 0: inactive, 1: active
     bool entryType; // 0: auto 1: manual
@@ -51,11 +69,14 @@ struct LockoutEntry {
     int counter;
     double latitude;
     double longitude;
-    uint8_t band; // 1 byte for band (0: X, 1: K, 2: Ka)
-    float frequency;
+    int speed;
+    int course;
+    int strength;
+    bool direction; // 0: front, 1: rear
+    int frequency;
 };
 
-extern std::vector<LockoutEntry> savedLockoutLocations;
+//extern std::vector<LockoutEntry> savedLockoutLocations;
 
 struct lockoutSettings {
     bool enable;

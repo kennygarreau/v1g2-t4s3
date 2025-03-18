@@ -455,11 +455,9 @@ void tick_status_bar() {
         if (value) {
             lv_label_set_text(objects.custom_freq_en, ".");
             lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_text_color(objects.custom_freq_en, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             if (get_var_muted()) {
                 lv_obj_set_style_text_color(objects.custom_freq_en, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
-            else {
-                lv_obj_set_style_text_color(objects.custom_freq_en, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             }
         }
         else {
@@ -495,14 +493,8 @@ void tick_status_bar() {
             lv_label_set_text(target_old, "");
     
             lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_text_color(target, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
-
-            if (get_var_muted()) {
-                lv_obj_set_style_text_color(target, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
-            else {
-                lv_obj_set_style_text_color(target, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
 
             if (new_val == "c") {
                 lv_label_set_text(overlay, "q");
@@ -510,6 +502,10 @@ void tick_status_bar() {
             }
     
             tick_value_change_obj = NULL;
+        }
+        
+        if (get_var_muted()) {
+            lv_obj_set_style_text_color(target, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     }    
     // GPS status
@@ -560,7 +556,20 @@ void tick_screen_main() {
             if (new_val == cur_val) {
                 LV_LOG_INFO("paint front solid");
                 tick_value_change_obj = objects.front_arrow;
-                if (new_val) lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                if (new_val) {
+                    lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                    /* TODO: move this to an actual object instead of dynamically creating
+                    if (get_var_muted()) {
+                        lv_img_dsc_t *img_copy = lv_mem_alloc(sizeof(lv_img_dsc_t));
+                        memcpy(img_copy, &img_arrow_front, sizeof(lv_img_dsc_t));
+                        img_copy->data = lv_mem_alloc(img_arrow_front.data_size);
+                        memcpy((void *)img_copy->data, img_arrow_front.data, img_arrow_front.data_size);
+
+                        convert_to_fixed_gray((uint16_t *)img_copy->data, img_copy->header.w, img_copy->header.h);
+                        lv_img_set_src(objects.front_arrow, img_copy);
+                    }
+                    */
+                }
                 else lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
                 tick_value_change_obj = NULL;
             }
@@ -631,11 +640,9 @@ void tick_screen_main() {
             if (new_val) { 
                 LV_LOG_INFO("updating prioAlert freq");
                 lv_label_set_text(objects.prioalertfreq, new_val);
+                lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
                 if (get_var_muted()) {
                     lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
-                }
-                else {
-                    lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
             }
             tick_value_change_obj = NULL;

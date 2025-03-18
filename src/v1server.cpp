@@ -277,7 +277,7 @@ void loop() {
 
   if (currentMillis - lastMillis >= 2000) {
     unsigned long uptime = (millis() - bootMillis) / 1000;
-    Serial.printf("Uptime: %u | Loops executed: %d\n", uptime, loopCounter); // uncomment for loop profiling
+    //Serial.printf("Uptime: %u | Loops executed: %d\n", uptime, loopCounter); // uncomment for loop profiling
     ui_tick_statusBar();
 
     if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {

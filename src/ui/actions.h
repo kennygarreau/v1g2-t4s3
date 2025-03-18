@@ -31,6 +31,7 @@ void wifi_switch_event_handler(lv_event_t * e);
 void gesture_event_handler(lv_event_t * e);
 void slider_brightness_event_handler(lv_event_t * e);
 void show_popup(const char * message);
+void convert_to_fixed_gray(uint16_t *img_data, uint32_t width, uint32_t height);
 
 #ifdef __cplusplus
 }

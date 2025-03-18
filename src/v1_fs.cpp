@@ -39,22 +39,31 @@ void SPIFFSFileManager::createTable() {
                       "entryType INTEGER, "
                       "timestamp INTEGER, "
                       "lastSeen INTEGER, "
-                      "count INTEGER,"
+                      "counter INTEGER, "
                       "latitude REAL, "
                       "longitude REAL, "
-                      "band INTEGER, "
-                      "frequency REAL);";
+                      "speed INTEGER, "
+                      "course INTEGER, "
+                      "strength INTEGER, "
+                      "direction INTEGER, "
+                      "frequency INTEGER);";
 
+    char *errMsg;
     if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
-        Serial.printf("SQL error: %s\n", errMsg);
+        Serial.printf("Create table failed: %s\n", errMsg);
         sqlite3_free(errMsg);
+    } else {
+        Serial.println("Table created or already exists.");
     }
 }
 
 void SPIFFSFileManager::insertLockoutEntry(const LockoutEntry &entry) {
     sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO lockouts (active, entryType, timestamp, lastSeen, latitude, longitude, band, frequency) "
-                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+    const char *sql = "INSERT INTO lockouts ("
+                      "active, entryType, timestamp, lastSeen, counter, "
+                      "latitude, longitude, speed, course, strength, "
+                      "direction, frequency) "
+                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
         Serial.printf("SQL prepare failed: %s\n", sqlite3_errmsg(db));
@@ -65,10 +74,14 @@ void SPIFFSFileManager::insertLockoutEntry(const LockoutEntry &entry) {
     sqlite3_bind_int(stmt, 2, entry.entryType);
     sqlite3_bind_int(stmt, 3, entry.timestamp);
     sqlite3_bind_int(stmt, 4, entry.lastSeen);
-    sqlite3_bind_double(stmt, 5, entry.latitude);
-    sqlite3_bind_double(stmt, 6, entry.longitude);
-    sqlite3_bind_int(stmt, 7, entry.band);
-    sqlite3_bind_double(stmt, 8, entry.frequency);
+    sqlite3_bind_int(stmt, 5, entry.counter);
+    sqlite3_bind_double(stmt, 6, entry.latitude);
+    sqlite3_bind_double(stmt, 7, entry.longitude);
+    sqlite3_bind_int(stmt, 8, entry.speed);
+    sqlite3_bind_int(stmt, 9, entry.course);
+    sqlite3_bind_int(stmt, 10, entry.strength);
+    sqlite3_bind_int(stmt, 11, entry.direction);
+    sqlite3_bind_int(stmt, 12, entry.frequency);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         Serial.printf("Insert failed: %s\n", sqlite3_errmsg(db));
@@ -88,7 +101,8 @@ void SPIFFSFileManager::updateEntryType(uint32_t id, bool newType) {
 }
 
 void SPIFFSFileManager::readLockouts() {
-    const char *sql = "SELECT active, entryType, timestamp, lastSeen, latitude, longitude, band, frequency FROM lockouts;";
+    const char *sql = "SELECT active, entryType, timestamp, lastSeen, counter, latitude, longitude, "
+                      "speed, course, strength, direction, frequency FROM lockouts;";
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
@@ -104,26 +118,27 @@ void SPIFFSFileManager::readLockouts() {
         entry.entryType = sqlite3_column_int(stmt, 1);
         entry.timestamp = sqlite3_column_int(stmt, 2);
         entry.lastSeen = sqlite3_column_int(stmt, 3);
-        entry.latitude = sqlite3_column_double(stmt, 4);
-        entry.longitude = sqlite3_column_double(stmt, 5);
-        entry.band = static_cast<uint8_t>(sqlite3_column_int(stmt, 6)); // Convert back to uint8_t
-        entry.frequency = sqlite3_column_double(stmt, 7);
+        entry.counter = sqlite3_column_int(stmt, 4);
+        entry.latitude = sqlite3_column_double(stmt, 5);
+        entry.longitude = sqlite3_column_double(stmt, 6);
+        entry.speed = sqlite3_column_int(stmt, 7);
+        entry.course = sqlite3_column_int(stmt, 8);
+        entry.strength = sqlite3_column_int(stmt, 9);
+        entry.direction = sqlite3_column_int(stmt, 10);
+        entry.frequency = sqlite3_column_int(stmt, 11);
 
-        // Convert `band` from integer to string representation for printing
-        const char *bandStr;
-        switch (entry.band) {
-            case 0: bandStr = "X"; break;
-            case 1: bandStr = "K"; break;
-            case 2: bandStr = "Ka"; break;
-            default: bandStr = "Unknown"; break;
-        }
+        // Convert direction to a string
+        const char *directionStr = entry.direction ? "Rear" : "Front";
 
         // Print lockout entry
-        Serial.printf("Active: %d | Type: %s | Timestamp: %u | Last Seen: %u | Lat: %.8f | Lon: %.8f | Band: %s | Freq: %.2f\n",
+        Serial.printf("Active: %d | Type: %s | Timestamp: %u | Last Seen: %u | Counter: %d | "
+                      "Lat: %.8f | Lon: %.8f | Speed: %d | Course: %d | Strength: %d | "
+                      "Direction: %s | Freq: %d\n",
                       entry.active, entry.entryType ? "Manual" : "Auto",
-                      entry.timestamp, entry.lastSeen,
+                      entry.timestamp, entry.lastSeen, entry.counter,
                       entry.latitude, entry.longitude,
-                      bandStr, entry.frequency);
+                      entry.speed, entry.course, entry.strength,
+                      directionStr, entry.frequency);
     }
 
     sqlite3_finalize(stmt);
