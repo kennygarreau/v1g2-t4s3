@@ -28,6 +28,10 @@ static int num_current_alerts = 0;
 uint8_t activeBands = 0;
 uint8_t lastReceivedBands = 0;
 
+static bool k_rcvd = false;
+static bool ka_rcvd = false;
+static bool zero_rcvd = false;
+
 extern void requestMute();
 uint8_t packet[10];
 
@@ -695,39 +699,48 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     }
     // respSweepDefinition
     else if (packetID == "17") {
-        bool k_rcvd, ka_rcvd, zero_rcvd;
         std::string aux0 = packet.substr(10, 2);
         std::string msbUpper = packet.substr(12, 2);
         std::string lsbUpper = packet.substr(14, 2);
         std::string msbLower = packet.substr(16, 2);
         std::string lsbLower = packet.substr(18, 2);
-       
+    
         try {
             int sweepIndex = std::stoi(aux0, nullptr, 16);
             sweepIndex -= 128;
             int upperBound = combineMSBLSB(msbUpper, lsbUpper);
             int lowerBound = combineMSBLSB(msbLower, lsbLower);
-
+    
             Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
-
-            if ((lowerBound > 23800 && upperBound < 24300) || (lowerBound > 33300 && upperBound < 36100) || (lowerBound == 0 && upperBound == 0)) {
-                if (lowerBound > 23800 && upperBound < 24300) {
+    
+            auto exists = std::any_of(globalConfig.sweeps.begin(), globalConfig.sweeps.end(),
+                [&](const std::pair<int, int>& sweep) {
+                    return sweep.first == lowerBound && sweep.second == upperBound;
+                });
+    
+            if (!exists) { // Add only if it doesn't already exist
+                if ((lowerBound > 23800 && upperBound < 24300) || 
+                    (lowerBound > 33300 && upperBound < 36100) || 
+                    (lowerBound == 0 && upperBound == 0)) {
+    
                     globalConfig.sweeps.emplace_back(lowerBound, upperBound);
-                    k_rcvd = true;
-                } else if (lowerBound > 33300 && upperBound < 36100) {
-                    globalConfig.sweeps.emplace_back(lowerBound, upperBound);
-                    ka_rcvd = true;
-                } else if (lowerBound == 0 && upperBound == 0) {
-                    zero_rcvd = true;
+    
+                    if (lowerBound > 23800 && upperBound < 24300) {
+                        k_rcvd = true;
+                    } else if (lowerBound > 33300 && upperBound < 36100) {
+                        ka_rcvd = true;
+                    } else if (lowerBound == 0 && upperBound == 0) {
+                        zero_rcvd = true;
+                    }
                 }
             }
         }
         catch (const std::exception& e) {
             Serial.printf("caught exception processing allSweepDefinitions: %s\n", e.what());
         }
-
+    
         allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
-    }
+    }    
     // respMaxSweepIndex
     else if (packetID == "20") {
         std::string maxSweepIndex = packet.substr(10, 2);
