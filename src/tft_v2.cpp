@@ -38,6 +38,7 @@ double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
     return distance; // this is in km
 }
 
+/*
 void checkProximityForMute(double currentLat, double currentLon) {
     if (locationCount == 0) return;
 
@@ -60,6 +61,7 @@ void checkProximityForMute(double currentLat, double currentLon) {
         }
     }
 }
+*/
 
 extern "C" bool get_var_useDefaultV1Mode() {
     return settings.useDefaultV1Mode;
@@ -142,7 +144,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
         else {
             LV_LOG_INFO("requesting mute via short press");
             Serial.println("requesting mute via short press");
-            if (clientWriteCharacteristic) {
+            if (clientWriteCharacteristic && bt_connected) {
                 clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
                 delay(20);
                 show_popup("V1 Muted");
@@ -353,7 +355,7 @@ extern "C" bool get_var_arrowPrioRear() {
 }
 
 extern "C" bool get_var_muted() {
-    return muted;
+    return (globalConfig.mainVolume > 0) &&  muted;
 }
 
 extern "C" void set_var_muted(bool value) {
