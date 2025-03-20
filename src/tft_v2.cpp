@@ -355,7 +355,7 @@ extern "C" bool get_var_arrowPrioRear() {
 }
 
 extern "C" bool get_var_muted() {
-    return (globalConfig.mainVolume > 0) &&  muted;
+    return muted;
 }
 
 extern "C" void set_var_muted(bool value) {
@@ -410,6 +410,20 @@ extern "C" const char *get_var_lowspeedthreshold() {
 
 extern "C" bool get_var_gpsEnabled() {
     return settings.enableGPS && gpsAvailable;
+}
+
+void displayTest() {
+    // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
+    std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
+    //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
+
+    for (const std::string& packet : packets) {
+      //unsigned long decodeLoopStart = millis();
+      PacketDecoder decoder(packet); 
+      decoder.decode(settings.lowSpeedThreshold, 20);
+      //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
+      delay(50);
+    }
 }
 
 /*

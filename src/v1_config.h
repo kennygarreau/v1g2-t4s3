@@ -35,6 +35,8 @@ extern LilyGo_AMOLED amoled;
 extern bool bt_connected, muted, alertPresent, v1le;
 extern bool wifiConnecting, wifiConnected, localWifiStarted;
 
+extern SemaphoreHandle_t xWiFiLock;
+
 extern std::vector<std::pair<int, int>> sectionBounds;
 extern std::vector<std::pair<int, int>> sweepBounds;
 

@@ -32,9 +32,10 @@
 
 Ticker writeBatteryVoltageTicker;
 Ticker writeVolumeTicker;
+Ticker statusBarTicker;
 
 AsyncWebServer server(80);
-static SemaphoreHandle_t xWiFiLock = NULL;
+SemaphoreHandle_t xWiFiLock = NULL;
 
 static bool laserAlert = false;
 static std::string bogeyValue, barValue, bandValue, directionValue;
@@ -101,7 +102,7 @@ void loadSettings() {
   settings.disableBLE = preferences.getBool("disableBLE", false);
   settings.useV1LE = preferences.getBool("useV1LE", false);
   settings.displayTest = preferences.getBool("displayTest", false);
-  settings.enableGPS = preferences.getBool("enableGPS", true);
+  settings.enableGPS = preferences.getBool("enableGPS", false);
   settings.enableWifi = preferences.getBool("enableWifi", true);
   settings.lowSpeedThreshold = preferences.getInt("lowSpeedThres", 35);
   settings.unitSystem = preferences.getString("unitSystem", "Imperial");
@@ -206,8 +207,8 @@ void setup()
     initBLE();
   }
 
-  // xWiFiLock =  xSemaphoreCreateBinary();
-  // xSemaphoreGive( xWiFiLock );
+  xWiFiLock =  xSemaphoreCreateBinary();
+  xSemaphoreGive( xWiFiLock );
 
   wifiSetup();
   setupWebServer();
@@ -225,6 +226,7 @@ void setup()
 
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
+  statusBarTicker.attach(1, ui_tick_statusBar);
 }
 
 void loop() {  
@@ -233,7 +235,7 @@ void loop() {
   static unsigned long lastWifiReconnect = 0;
   static unsigned long lastTick = 0;
   unsigned long gpsMillis = millis();
-
+  
   if (bt_connected && bleInit) {
     displayReader(pClient);
     bleInit = false;
@@ -278,7 +280,7 @@ void loop() {
   if (currentMillis - lastMillis >= 2000) {
     unsigned long uptime = (millis() - bootMillis) / 1000;
     //Serial.printf("Uptime: %u | Loops executed: %d\n", uptime, loopCounter); // uncomment for loop profiling
-    ui_tick_statusBar();
+    //ui_tick_statusBar();
 
     if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
       gpsData.connectedClients = 0;
@@ -360,9 +362,9 @@ void loop() {
     lastGPSUpdate = currentMillis; 
 
     while (gpsSerial.available() > 0) {
-        char c = gpsSerial.read();
-        //Serial.print(c);
-        gps.encode(c);
+      char c = gpsSerial.read();
+      //Serial.print(c);
+      gps.encode(c);
     }
     if (gps.location.isUpdated() && gps.location.isValid()) {
       gpsData.latitude = gps.location.lat();

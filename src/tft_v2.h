@@ -79,6 +79,8 @@ bool get_var_arrowPrioRear();
 #ifdef __cplusplus
 }
 void set_var_frequencies(const std::vector<AlertTableData>& alertDataList);
+void displayTest();
+
 #endif
 
 #endif // TFT_WRAPPER_H
