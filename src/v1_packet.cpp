@@ -534,8 +534,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
        if (settings.displayTest || payload != lastinfPayload) {
         std::string bandArrow1 = (payload.length() >= 8) ? payload.substr(6, 2) : "";
         std::string bandArrow2 = (payload.length() >= 10) ? payload.substr(8, 2) : "";
-        //Serial.printf("bandArrow1: %s | bandArrow 2: %s\n", bandArrow1.c_str(), bandArrow2.c_str());
-        
+
         if (!bandArrow1.empty() && !bandArrow2.empty()) {
             BandArrowData arrow1Data = processBandArrow(bandArrow1);
             BandArrowData arrow2Data = processBandArrow(bandArrow2);
@@ -557,6 +556,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 int modeBit0 = (auxByte1Int & 0b00000100) ? 1 : 0;
                 int modeBit1 = (auxByte1Int & 0b00001000) ? 2 : 0;
                 int mode = modeBit0 + modeBit1;
+                int mutedReason = (auxByte1Int & 0b00010000) ? 1 : 0;
+                //Serial.printf("Muted reason: %d\n", mutedReason);
 
                 switch(mode) {
                     case 0:
@@ -718,12 +719,14 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                     return sweep.first == lowerBound && sweep.second == upperBound;
                 });
     
-            if (!exists) { // Add only if it doesn't already exist
+            if (!exists) {
                 if ((lowerBound > 23800 && upperBound < 24300) || 
                     (lowerBound > 33300 && upperBound < 36100) || 
                     (lowerBound == 0 && upperBound == 0)) {
-    
-                    globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                    
+                    if (!lowerBound == 0 || !upperBound == 0) {
+                        globalConfig.sweeps.emplace_back(lowerBound, upperBound);
+                    }
     
                     if (lowerBound > 23800 && upperBound < 24300) {
                         k_rcvd = true;
