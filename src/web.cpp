@@ -9,19 +9,19 @@
 #include "web.h"
 #include "tft_v2.h"
 
-extern const char *lockoutFieldNames[] = {
-    "active",
-    "entryType",
-    "timestamp",
-    "lastSeen",
-    "counter",
-    "latitude",
-    "longitude",
-    "speed",
+const char *lockoutFieldNames[] = {
+    "act",
+    "type",
+    "ts",
+    "last",
+    "cnt",
+    "lat",
+    "lon",
+    "spd",
     "course",
-    "strength",
-    "direction",
-    "frequency"
+    "str",
+    "dir",
+    "freq"
 };
 
 LockoutEntry savedLockoutLocations[] = {
@@ -58,7 +58,7 @@ LockoutEntry savedLockoutLocations[] = {
 unsigned long rebootTime = 0;
 bool isRebootPending = false;
 
-std::string manufacturerName, modelNumber, serialNumber, hardwareRevision, firmwareRevision, softwareRevision;
+std::string manufacturerName, modelNumber, serialNumber, softwareRevision;
 
 String readFileFromSPIFFS(const char *path)
 {
@@ -229,8 +229,6 @@ void setupWebServer()
         jsonDoc["manufacturer"] = manufacturerName;
         jsonDoc["model"] = modelNumber;
         jsonDoc["serial"] = serialNumber;
-        //jsonDoc["hardwareVersion"] = hardwareRevision;
-        //jsonDoc["firmwareVersion"] = firmwareRevision;
         jsonDoc["softwareVersion"] = softwareRevision;
 
         // User Byte 0
