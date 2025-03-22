@@ -48,9 +48,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.lockouts && Array.isArray(data.lockouts)) {
                 lockoutData = lockoutData = data.lockouts.map(entry => ({
                     ...entry,
-                    band: getBandFromFrequency(entry.frequency)
+                    band: getBandFromFrequency(entry.freq)
                 }));
-                populateLockoutTable(data.lockouts);
+                populateLockoutTable(lockoutData);
                 addRowClickHandlers();
             } else {
                 console.error("Invalid JSON structure: 'lockouts' field missing or not an array");
@@ -62,9 +62,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getBandFromFrequency(freq) {
+        freq = Number(freq);
+
         if (freq >= 10000 && freq <= 11000) return "X";
         if (freq >= 24000 && freq <= 25000) return "K";
         if (freq >= 33000 && freq <= 36000) return "Ka";
+
+        console.warn(`Unknown frequency: ${freq}`);
         return "Unknown";
     }
 
@@ -75,24 +79,24 @@ document.addEventListener("DOMContentLoaded", function () {
         lockoutData.forEach(entry => {
             const row = document.createElement("tr");
             
-            row.setAttribute("data-lat", entry.latitude.toFixed(6));
-            row.setAttribute("data-lng", entry.longitude.toFixed(6));
-            row.classList.add(entry.entryType ? "manual" : "auto");
-            row.classList.add(entry.frequency ? `band-${entry.frequency}` : "unknown-band");
+            row.setAttribute("data-lat", entry.lat.toFixed(6));
+            row.setAttribute("data-lng", entry.lon.toFixed(6));
+            row.classList.add(entry.type ? "manual" : "auto");
+            row.classList.add(entry.band ? entry.band : "Unknown");
             
             row.innerHTML = `
-                <td>${new Date(entry.timestamp * 1000).toLocaleString()}</td>
-                <td>${entry.entryType ? "Manual" : "Auto"}</td>
-                <td>${entry.latitude.toFixed(6)}</td>
-                <td>${entry.longitude.toFixed(6)}</td>
-                <td>${entry.direction ? "Rear" : "Front"}</td>
+                <td>${new Date(entry.ts * 1000).toLocaleString()}</td>
+                <td>${entry.type ? "Manual" : "Auto"}</td>
+                <td>${entry.lat.toFixed(6)}</td>
+                <td>${entry.lon.toFixed(6)}</td>
+                <td>${entry.dir ? "Rear" : "Front"}</td>
                 <td>${entry.band}</td>
-                <td>${entry.frequency || "N/A"}</td>
-                <td>${entry.speed ? `${entry.speed} mph` : "N/A"}</td>
-                <td>${entry.strength ? `${entry.strength} dB` : "N/A"}</td>
-                <td>${entry.counter}</td>
+                <td>${entry.freq || "N/A"}</td>
+                <td>${entry.spd ? `${entry.spd} mph` : "N/A"}</td>
+                <td>${entry.str ? `${entry.str} dB` : "N/A"}</td>
+                <td>${entry.cnt}</td>
                 <td>${entry.course ? `${entry.course}°` : "N/A"}</td>
-                <td>${entry.active ? "Active" : "Inactive"}</td>
+                <td>${entry.act ? "Active" : "Inactive"}</td>
             `;
     
             tableBody.appendChild(row);
@@ -112,18 +116,18 @@ document.addEventListener("DOMContentLoaded", function () {
     
         lockoutData.forEach(entry => {
             const row = [
-                entry.timestamp ? new Date(entry.timestamp * 1000).toLocaleString() : "N/A",
-                entry.latitude?.toFixed(6) || "N/A",
-                entry.longitude?.toFixed(6) || "N/A",
-                entry.entryType ? "Manual" : "Auto",
+                entry.ts ? new Date(entry.ts * 1000).toLocaleString() : "N/A",
+                entry.lat?.toFixed(6) || "N/A",
+                entry.lon?.toFixed(6) || "N/A",
+                entry.type ? "Manual" : "Auto",
                 entry.band || "N/A",
-                entry.frequency || "N/A",
-                entry.direction ? "Rear" : "Front",
-                entry.speed ? `${entry.speed} mph` : "N/A",
-                entry.strength ? `${entry.strength} dB` : "N/A",
-                entry.counter,
+                entry.freq || "N/A",
+                entry.dir ? "Rear" : "Front",
+                entry.spd ? `${entry.spd} mph` : "N/A",
+                entry.str ? `${entry.str} dB` : "N/A",
+                entry.cnt,
                 entry.course ? `${entry.course}°` : "N/A",
-                entry.active ? "Active" : "Inactive"
+                entry.act ? "Active" : "Inactive"
             ].join(",");
             
             csvContent += row + "\n";
