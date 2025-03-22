@@ -112,13 +112,14 @@ nav a:hover {
 }
 
 .side-navbar table {
+    font-size: 10px;
     width: 90%;
     border-collapse: collapse;
 }
 
 .side-navbar th, .side-navbar td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 6px;
     text-align: left;
 }
 

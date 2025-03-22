@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
             mapRow.appendChild(mapCell);
             row.parentNode.insertBefore(mapRow, row.nextSibling);
             
-            const map = L.map(mapContainer).setView([lat, lng], 15);
+            const map = L.map(mapContainer).setView([lat, lng], 17);
     
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -189,22 +189,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 color: "red",
                 fillColor: "red",
                 fillOpacity: 0.2,
-                radius: 200
+                radius: 100
             }).addTo(map);
-            circle200.bindTooltip("200m", { permanent: true, direction: "center" });
+            circle200.bindTooltip("100m", { permanent: true, direction: "center" });
     
             const circle400 = L.circle([lat, lng], {
                 color: "orange",
                 fillColor: "orange",
                 fillOpacity: 0.15,
-                radius: 400
+                radius: 200
             }).addTo(map);
     
             const circle800 = L.circle([lat, lng], {
                 color: "yellow",
                 fillColor: "yellow",
                 fillOpacity: 0.1,
-                radius: 800
+                radius: 400
             }).addTo(map);
     
             setTimeout(() => {
