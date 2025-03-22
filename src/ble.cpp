@@ -265,6 +265,18 @@ void reqVolume() {
   }
 }
 
+void requestMute() {
+  if (!settings.displayTest && clientWriteCharacteristic) {
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
+  }
+}
+
+void reqMuteOff() {
+  if (!settings.displayTest && clientWriteCharacteristic) {
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOff(), 7, false);
+  }
+}
+
 void initBLE() {
     NimBLEDevice::init("Async Client");
     NimBLEDevice::setPower(3);
