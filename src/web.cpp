@@ -204,6 +204,7 @@ void setupWebServer()
 
     server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request) {
         int frequency = getCpuFrequencyMhz();
+        stats.wifiRSSI = getWifiRSSI();
         JsonDocument jsonDoc;
 
         jsonDoc["uptime"] = stats.uptime;
@@ -217,6 +218,7 @@ void setupWebServer()
         jsonDoc["usedStorage"] = stats.usedStorageKB;
         jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
         jsonDoc["bluetoothRSSI"] = stats.btStr;
+        jsonDoc["wifiRSSI"] = stats.wifiRSSI;
         jsonDoc["batteryPercent"] = batteryPercentage;
         jsonDoc["espVoltage"] = voltageInMv;
         if (isVBusIn) {

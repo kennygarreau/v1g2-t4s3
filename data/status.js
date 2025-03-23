@@ -6,7 +6,7 @@ async function fetchStats() {
     document.getElementById('cpu-freq').textContent = `${data.frequency} MHz`;
     document.getElementById('uptime').textContent = `${data.uptime} s`;
     document.getElementById('ble-rssi').textContent = `${data.bluetoothRSSI} dBm`;
-    //document.getElementById('wifi-rssi').textContent = `${data.wifi-rssi} dBm`;
+    document.getElementById('wifi-rssi').textContent = `${data.wifiRSSI} dBm`;
 
     const heapUsage = (1 - data.freeHeapInKB / data.totalHeap) * 100;
     const heapBar = document.getElementById('heap-usage');
