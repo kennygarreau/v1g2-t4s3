@@ -55,6 +55,8 @@ bool get_var_xAlert();
 void set_var_xAlert(bool value);
 bool get_var_laserAlert();
 void set_var_laserAlert(bool value);
+bool get_var_alertPresent();
+bool get_var_muteToGray();
 
 void set_var_arrowPrioFront(bool value);
 bool get_var_arrowPrioFront();

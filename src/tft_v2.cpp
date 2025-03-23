@@ -63,6 +63,10 @@ void checkProximityForMute(double currentLat, double currentLon) {
 }
 */
 
+extern "C" bool get_var_muteToGray() {
+    return settings.muteToGray;
+}
+
 extern "C" bool get_var_useDefaultV1Mode() {
     return settings.useDefaultV1Mode;
 }
@@ -156,6 +160,10 @@ extern "C" void main_press_handler(lv_event_t * e) {
     else if(code == LV_EVENT_RELEASED) {
         long_press_detected = false;
     }
+}
+
+extern "C" bool get_var_alertPresent() {
+    return alertPresent;
 }
 
 extern "C" unsigned long getMillis() {
@@ -296,16 +304,20 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
 
     int index = 0;
     for (const auto& alertData : alertDataList) {
-        for (int i = 0; i < alertData.freqCount && index < MAX_ALERTS; i++) {
+        constexpr int MAX_FREQ_COUNT = 4;
+
+        for (int i = 0; i < alertData.freqCount && i < MAX_FREQ_COUNT && index < MAX_ALERTS; i++) {
             snprintf(alert_frequencies[index], sizeof(alert_frequencies[index]), "%.3f", alertData.frequencies[i]);
             frequency_ptrs[index] = alert_frequencies[index];
-            snprintf(alert_directions[index], sizeof(alert_directions[index]), "%s", alertData.direction[i].c_str());
+
+            strncpy(alert_directions[index], alertData.direction[i].c_str(), sizeof(alert_directions[index]) - 1);
+            alert_directions[index][sizeof(alert_directions[index]) - 1] = '\0';
             direction_ptrs[index] = alert_directions[index];
 
             index++;
         }
     }
-    
+
     if (index < MAX_ALERTS) {
         frequency_ptrs[index] = nullptr;
         direction_ptrs[index] = nullptr;
