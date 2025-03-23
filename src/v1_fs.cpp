@@ -54,7 +54,7 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
 
 void SPIFFSFileManager::createTable() {
     Serial.println("Creating DB table...");
-    const char *sql = "CREATE TABLE IF NOT EXISTS lockouts ("
+    const char *sql = "CREATE TABLE lockouts ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                       "active INTEGER, "
                       "entryType INTEGER, "

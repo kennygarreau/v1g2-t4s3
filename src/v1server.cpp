@@ -193,7 +193,7 @@ void setup()
   Serial.println("Lockout list allocated in PSRAM.");
 
   if (!fileManager.openDatabase()) return;
-  //fileManager.createTable();
+  fileManager.createTable();
   //fileManager.readLockouts();
 
  if (!settings.disableBLE && !settings.displayTest) {

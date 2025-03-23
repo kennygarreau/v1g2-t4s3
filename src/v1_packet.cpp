@@ -6,6 +6,7 @@
 #include "ui/actions.h"
 #include <vector>
 #include <LilyGo_AMOLED.h>
+#include <set>
 
 struct BandDirection {
     const char* band;
@@ -717,6 +718,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         std::string lsbUpper = packet.substr(14, 2);
         std::string msbLower = packet.substr(16, 2);
         std::string lsbLower = packet.substr(18, 2);
+        std::set<int> receivedSweeps; 
+        static int zeroes = 0;
     
         try {
             int sweepIndex = std::stoi(aux0, nullptr, 16);
@@ -745,6 +748,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                     } else if (lowerBound > 33300 && upperBound < 36100) {
                         ka_rcvd = true;
                     } else if (lowerBound == 0 && upperBound == 0) {
+                        zeroes++;
                         zero_rcvd = true;
                     }
                 }
@@ -753,8 +757,12 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         catch (const std::exception& e) {
             Serial.printf("caught exception processing allSweepDefinitions: %s\n", e.what());
         }
-    
-        allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
+
+        if (globalConfig.sweeps.size() < globalConfig.maxSweepIndex - zeroes) {
+            //Serial.printf("Not all sweeps received (%d/%d), retrying...\n", globalConfig.sweeps.size(), globalConfig.maxSweepIndex + 1);
+        } else {
+            allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
+        }     
     }    
     // respMaxSweepIndex
     else if (packetID == "20") {
