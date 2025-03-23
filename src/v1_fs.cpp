@@ -54,20 +54,22 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
 
 void SPIFFSFileManager::createTable() {
     Serial.println("Creating DB table...");
+
     const char *sql = "CREATE TABLE lockouts ("
-                      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                      "active INTEGER, "
-                      "entryType INTEGER, "
-                      "timestamp INTEGER, "
-                      "lastSeen INTEGER, "
-                      "counter INTEGER, "
-                      "latitude REAL, "
-                      "longitude REAL, "
-                      "speed INTEGER, "
-                      "course INTEGER, "
-                      "strength INTEGER, "
-                      "direction INTEGER, "
-                      "frequency INTEGER);";
+        "id INTEGER PRIMARY KEY, "
+        "active INTEGER, "
+        "entryType INTEGER, "
+        "timestamp INTEGER, "
+        "lastSeen INTEGER, "
+        "counter INTEGER, "
+        "latitude REAL, "
+        "longitude REAL, "
+        "speed INTEGER, "
+        "course INTEGER, "
+        "strength INTEGER, "
+        "direction INTEGER, "
+        "frequency INTEGER"
+        ");";
     
     char *errMsg;
     if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
@@ -149,10 +151,8 @@ void SPIFFSFileManager::readLockouts() {
         entry.direction = sqlite3_column_int(stmt, 10);
         entry.frequency = sqlite3_column_int(stmt, 11);
 
-        // Convert direction to a string
         const char *directionStr = entry.direction ? "Rear" : "Front";
 
-        // Print lockout entry
         Serial.printf("Active: %d | Type: %s | Timestamp: %u | Last Seen: %u | Counter: %d | "
                       "Lat: %.8f | Lon: %.8f | Speed: %d | Course: %d | Strength: %d | "
                       "Direction: %s | Freq: %d\n",
@@ -167,8 +167,6 @@ void SPIFFSFileManager::readLockouts() {
 }
 
 bool SPIFFSFileManager::openDatabase() {
-    sqlite3_initialize();
-
     if (!psramBuffer) {
         psramBuffer = (uint8_t *)heap_caps_malloc(SQLITE_PSRAM_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
         if (!psramBuffer) {
@@ -178,7 +176,7 @@ bool SPIFFSFileManager::openDatabase() {
         sqlite3_config(SQLITE_CONFIG_HEAP, psramBuffer, SQLITE_PSRAM_BUFFER_SIZE, 64);
         Serial.println("SQLite memory allocated in PSRAM");
     }
-    //listSPIFFSFiles();
+    listSPIFFSFiles();
 
     File file = SPIFFS.open(DB_PATH, FILE_WRITE);
     if (!file) {
@@ -187,13 +185,6 @@ bool SPIFFSFileManager::openDatabase() {
     }
     file.close();
     Serial.println("New database file created");
-
-    /*
-    int rc = sqlite3_open(DB_PATH, &db);
-    if (rc != SQLITE_OK) {
-        Serial.printf("Failed to open database: %d\n", rc);
-        return false;
-    } */
 
     int rc = sqlite3_open(DB_PATH, &db);
     if (rc != SQLITE_OK) {

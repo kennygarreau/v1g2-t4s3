@@ -194,7 +194,7 @@ void setup()
 
   if (!fileManager.openDatabase()) return;
   fileManager.createTable();
-  //fileManager.readLockouts();
+  fileManager.readLockouts();
 
  if (!settings.disableBLE && !settings.displayTest) {
     initBLE();
