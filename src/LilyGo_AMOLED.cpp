@@ -524,10 +524,8 @@ bool LilyGo_AMOLED::begin()
 
     Wire.end();
 
-
-    log_e("Begin 1.91-inch no touch board model");
-
-    return beginAMOLED_191(false);
+    log_e("Begin 2.41-inch touch board model");
+    return beginAMOLED_241(false, true);
 }
 
 

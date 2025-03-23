@@ -8,7 +8,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.0.1j"
+#define FIRMWARE_VERSION "1.0.1k"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -32,9 +32,10 @@
 extern NimBLEClient* pClient;
 extern NimBLERemoteCharacteristic* clientWriteCharacteristic;
 extern LilyGo_AMOLED amoled;
-extern bool bt_connected, muted, alertPresent, v1le;
+extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiConnecting, wifiConnected, localWifiStarted;
 
+extern int currentSpeed;
 extern SemaphoreHandle_t xWiFiLock;
 
 extern std::vector<std::pair<int, int>> sectionBounds;
@@ -112,6 +113,7 @@ struct v1Settings {
   bool onlyDisplayBTIcon;
   bool useDefaultV1Mode;
   int lowSpeedThreshold;
+  bool muteToGray;
   String timezone;
   int networkCount;
 };
@@ -167,20 +169,27 @@ struct GPSData {
   String date;
   String localtime;
   uint32_t rawTime;
-  uint32_t cpuBusy;
-  uint32_t freeHeap;
-  uint32_t freePsram;
-  uint32_t totalHeap;
-  uint32_t totalPsram;
-  uint32_t totalStorageKB;
-  uint32_t usedStorageKB;
-  int connectedClients;
-  int btStr;
   float voltage;
 };
 
 extern GPSData gpsData;
 extern bool gpsAvailable;
+
+struct Stats {
+    unsigned long uptime;
+    uint32_t cpuBusy;
+    uint32_t freeHeap;
+    uint32_t freePsram;
+    uint32_t totalHeap;
+    uint32_t totalPsram;
+    uint32_t totalStorageKB;
+    uint32_t usedStorageKB;
+    int connectedWifiClients;
+    int btStr;
+    int wifiRSSI;
+};
+
+extern Stats stats;
 
 /*
 struct DisplayConstants {

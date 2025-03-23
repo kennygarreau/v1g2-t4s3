@@ -16,6 +16,8 @@ std::string lastPacket = "";
 static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
+bool newDataAvailable = false;
+std::string latestHexData;
 
 NimBLERemoteService* dataRemoteService = nullptr;
 NimBLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
@@ -121,23 +123,26 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 
 // TODO: remove the conversion dependency
 static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    unsigned long bleCallbackStart = millis();
-    hexData = "";
-    if (pData) {
-      for (size_t i = 0; i < length; i++) {
-        char hexBuffer[3];
-        sprintf(hexBuffer, "%02X", pData[i]);
-        hexData += hexBuffer;
-      }
-      if (hexData != previousHexData) {
-        // uncomment below for debug before entry into the payload calls
-        //Serial.printf("HEX decode: %s", hexData.c_str());
-        previousHexData = hexData;
-      }
-    }
-    unsigned long bleCallbackLength = millis() - bleCallbackStart;
-    //Serial.printf("HEX decode time: %d", bleCallbackLength);
+  if (!pData) return;
+
+  unsigned long bleCallbackStart = millis();
+  std::string tempHexData;
+
+  for (size_t i = 0; i < length; i++) {
+      char hexBuffer[3];
+      sprintf(hexBuffer, "%02X", pData[i]);
+      tempHexData += hexBuffer;
   }
+
+  if (tempHexData != previousHexData) {
+      previousHexData = tempHexData;
+      latestHexData = tempHexData;
+      newDataAvailable = true;
+  }
+
+  unsigned long bleCallbackLength = millis() - bleCallbackStart;
+  //Serial.printf("HEX decode time: %d ms\n", bleCallbackLength);
+}
 
 void displayReader(NimBLEClient* pClient) {
 
@@ -255,13 +260,17 @@ void requestAllSweepDefinitions() {
 
 void reqBatteryVoltage() {
   if (bt_connected && clientWriteCharacteristic) {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+    if (clientWriteCharacteristic->canWrite()) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+    }
   }
 }
 
 void reqVolume() {
   if (bt_connected && clientWriteCharacteristic) {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+    if (clientWriteCharacteristic->canWrite()) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+    }
   }
 }
 

@@ -17,7 +17,7 @@ static std::string dirValue, bandValue;
 static std::string lastPayload = "";
 static std::string lastinfPayload = "";
 int frontStrengthVal, rearStrengthVal;
-bool priority, junkAlert, alertPresent, muted;
+bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
 static int alertCountValue, alertIndexValue;
 float freqGhz;
 alertsVector alertTable;
@@ -105,6 +105,9 @@ void PacketDecoder::clearInfAlerts() {
     set_var_arrowPrioRear(false);
     set_var_arrowPrioSide(false);
     std::fill(std::begin(blink_enabled), std::end(blink_enabled), false);
+
+    ui_tick();
+    lv_task_handler();
 }
 
 int mapXToBars(const std::string& hex) {
@@ -337,9 +340,14 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     }
         
     if (arrow1.laser) {
+        // TODO: this might need a logic change if a laser alert comes in while there's a mute (gray) condition
+        if (muted) {
+            set_var_muted(false);
+            reqMuteOff();
+        }
         enable_blinking(BLINK_LASER);
         set_var_prio_alert_freq("LASER");
-        set_var_prioBars(6);
+        set_var_prioBars(7);
         updateActiveBands(0b00000001);
         anyBandActive = true;
         Serial.print("== blink laser == ");
@@ -484,20 +492,20 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
         unsigned long elapsedTimeMillis = millis() - startTimeMillis;
         //Serial.printf("decode time: %lu\n", elapsedTimeMillis);
-
-        // enable below for debugging
-        std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
-                                    " TOTL:" + std::to_string(alertCountValue) +
-                                    " FREQ:" + std::to_string(freqGhz) +
-                                    " FSTR:" + std::to_string(frontStrengthVal) +
-                                    " RSTR:" + std::to_string(rearStrengthVal) +
-                                    " BAND:" + bandValue +
-                                    " BDIR:" + dirValue +
-                                    " PRIO:" + std::to_string(priority) +
-                                    " JUNK:" + std::to_string(junkAlert) +
-                                    " SPEED: " + std::to_string(gpsData.speed);
-                                    //+ " decodeAlert(ms): " + std::to_string(elapsedTimeMillis);
-        Serial.println(("respAlertData: " + decodedPayload).c_str());
+        if (freqGhz > 0) {
+            std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
+                                        " TOTL:" + std::to_string(alertCountValue) +
+                                        " FREQ:" + std::to_string(freqGhz) +
+                                        " FSTR:" + std::to_string(frontStrengthVal) +
+                                        " RSTR:" + std::to_string(rearStrengthVal) +
+                                        " BAND:" + bandValue +
+                                        " BDIR:" + dirValue +
+                                        " PRIO:" + std::to_string(priority) +
+                                        " JUNK:" + std::to_string(junkAlert) +
+                                        " SPEED: " + std::to_string(gpsData.speed);
+                                        //+ " decodeAlert(ms): " + std::to_string(elapsedTimeMillis);
+            Serial.println(("respAlertData: " + decodedPayload).c_str());
+        }
     }
     set_var_alertCount(alertCountValue);
     set_var_frequencies(alertDataList);
@@ -542,8 +550,10 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             compareBandArrows(arrow1Data, arrow2Data);
         }
         else {
-            clearInfAlerts();
-            clearTableAlerts();
+            Serial.println("DEBUG: bandArrow empty");
+            //clearInfAlerts();
+            //clearTableAlerts();
+            //alertPresent = false;
         }
 
         std::string auxByte0 = packet.substr(packet.length() - 10, 2);
@@ -595,11 +605,9 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         std::string payload = packet.substr(10, packet.length() - 12);
         std::string alertC = payload.substr(0, 2);
         
-        if (payload == lastPayload && alertC == "00") {
-            // this shouldn't be necessary if inf is clearing the table anyway?
-
+        if (alertC == "00") {
             if (alertPresent) {
-                //Serial.println("duplicate empty payload with alertPresent TRUE; setting to false");
+                Serial.println("alertC 00 && alertPresent, clearing alerts");
                 clearInfAlerts();
                 clearTableAlerts();
                 alertPresent = false;
@@ -658,6 +666,10 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 softwareRevision = versionString;
                 Serial.printf("Software Version: %s\n", versionString.c_str());
                 versionReceived = true;
+            } else if (versionID == "R") {
+                remoteAudio = true;
+            } else if (versionID == "S") {
+                savvy = true;
             } else {
                 Serial.printf("Found component: %s", versionID);
             }
@@ -946,7 +958,6 @@ uint8_t* Packet::reqMuteOn() {
 uint8_t* Packet::reqMuteOff() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
-    Serial.println("Sending reqMuteOff packet");
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQMUTEOFF, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 

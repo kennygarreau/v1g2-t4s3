@@ -5,7 +5,8 @@
 
 extern bool serialReceived, versionReceived, volumeReceived, userBytesReceived, 
             sweepSectionsReceived, maxSweepIndexReceived, allSweepDefinitionsReceived;
-extern bool bleInit;
+extern bool bleInit, newDataAvailable;
+extern std::string latestHexData;
 extern std::string hexData, lastPacket;
 
 void initBLE();

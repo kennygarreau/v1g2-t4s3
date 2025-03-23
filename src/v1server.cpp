@@ -61,6 +61,7 @@ v1Settings settings;
 lockoutSettings autoLockoutSettings;
 Preferences preferences;
 Timezone tz;
+Stats stats;
 
 int loopCounter = 0;
 unsigned long bootMillis = 0;
@@ -68,12 +69,6 @@ unsigned long lastMillis = 0;
 const unsigned long uiTickInterval = 5;
 
 SPIFFSFileManager fileManager;
-
-void requestMute() {
-  if (!settings.displayTest && clientWriteCharacteristic) {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
-  }
-}
 
 void loadLockoutSettings() {
   preferences.begin("lockoutSettings", false);
@@ -108,6 +103,7 @@ void loadSettings() {
   settings.unitSystem = preferences.getString("unitSystem", "Imperial");
   settings.displayOrientation = preferences.getInt("displayOrient", 0);
   settings.timezone = preferences.getString("timezone", "UTC");
+  settings.muteToGray = preferences.getBool("muteToGray", false);
 
   if (settings.displayOrientation == 0 || settings.displayOrientation == 2) {
     settings.isPortraitMode = true;
@@ -152,7 +148,6 @@ void setup()
   bootMillis = millis();
   Serial.begin();
   analogReadResolution(12);
-  delay(500);
 
   Serial.println("Reading initial settings...");
   loadSettings();
@@ -172,16 +167,11 @@ void setup()
   }
 
   beginLvglHelper(amoled);
-
-  lockoutList = (std::vector<LockoutEntry> *)ps_malloc(sizeof(std::vector<LockoutEntry>));
-  if (!lockoutList) {
-    Serial.println("Failed to allocate lockoutList in PSRAM");
-    return;
-  }
-
-  new (lockoutList) std::vector<LockoutEntry>();
-  Serial.println("Lockout list allocated in PSRAM.");
   Serial.printf("Setup running on core %d\n", xPortGetCoreID());
+
+  ui_init();
+  ui_tick();
+  lv_task_handler();
 
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
@@ -193,15 +183,18 @@ void setup()
     return;
   }
 
-  //fileManager.testWrite();
+  lockoutList = (std::vector<LockoutEntry> *)ps_malloc(sizeof(std::vector<LockoutEntry>));
+  if (!lockoutList) {
+    Serial.println("Failed to allocate lockoutList in PSRAM");
+    return;
+  }
+
+  new (lockoutList) std::vector<LockoutEntry>();
+  Serial.println("Lockout list allocated in PSRAM.");
 
   if (!fileManager.openDatabase()) return;
-  fileManager.createTable();
-  fileManager.readLockouts();
-
-  ui_init();
-  ui_tick();
-  lv_task_handler();
+  //fileManager.createTable();
+  //fileManager.readLockouts();
 
  if (!settings.disableBLE && !settings.displayTest) {
     initBLE();
@@ -219,14 +212,18 @@ void setup()
   if (scr) {
     lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
   }
-  gpsData.totalHeap = ESP.getHeapSize();
-  gpsData.totalPsram = ESP.getPsramSize();
-  gpsData.totalStorageKB = fileManager.getStorageTotal();
-  gpsData.usedStorageKB = fileManager.getStorageUsed();
+  stats.totalHeap = ESP.getHeapSize();
+  stats.totalPsram = ESP.getPsramSize();
+  stats.totalStorageKB = fileManager.getStorageTotal();
+  stats.usedStorageKB = fileManager.getStorageUsed();
 
+  // TODO: should we check for BLE connectivity before invoking? should this be moved to loop?
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
+
+  unsigned long elapsedMillis = millis() - bootMillis;
+  Serial.printf("setup finished in %.2f seconds\n", elapsedMillis / 1000.0);
 }
 
 void loop() {  
@@ -252,40 +249,26 @@ void loop() {
   }
   */
 
-  if (settings.displayTest) {
+  if (newDataAvailable) {
+    newDataAvailable = false;
 
-    // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
-    std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
-    //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
-
-    for (const std::string& packet : packets) {
-      //unsigned long decodeLoopStart = millis();
-      PacketDecoder decoder(packet); 
-      decoder.decode(settings.lowSpeedThreshold, currentSpeed);
-      //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
-      delay(50);
-    }
+    PacketDecoder decoder(latestHexData);
+    std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
   }
 
-  // decode loop takes ~2ms; could this be moved to a callback?
-  std::string packet = hexData.c_str();
-  if (packet != lastPacket) {
-    PacketDecoder decoder(packet);
-    std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
-    lastPacket = packet;
-  } 
+  if (settings.displayTest) {
+    displayTest();
+  }
   
   unsigned long currentMillis = millis();
-
   if (currentMillis - lastMillis >= 2000) {
-    unsigned long uptime = (millis() - bootMillis) / 1000;
-    //Serial.printf("Uptime: %u | Loops executed: %d\n", uptime, loopCounter); // uncomment for loop profiling
-    //ui_tick_statusBar();
+    stats.uptime = (millis() - bootMillis) / 1000;
+    //Serial.printf("Uptime: %u | Loops executed: %d\n", stats.uptime, loopCounter); // uncomment for loop profiling
 
     if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
-      gpsData.connectedClients = 0;
+      stats.connectedWifiClients = 0;
     } else {
-      gpsData.connectedClients = WiFi.softAPgetStationNum();
+      stats.connectedWifiClients = WiFi.softAPgetStationNum();
     }
 
     isVBusIn = amoled.isVbusIn();
@@ -293,7 +276,7 @@ void loop() {
       vBusVoltage = amoled.getVbusVoltage();
     }
     if (bt_connected && clientWriteCharacteristic) {
-      gpsData.btStr = getBluetoothSignalStrength();
+      stats.btStr = getBluetoothSignalStrength();
     }
     
     batteryCharging = amoled.isCharging();
@@ -302,9 +285,9 @@ void loop() {
     batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
     batteryPercentage = constrain(batteryPercentage, 0, 100);
     uint32_t cpuIdle = lv_timer_get_idle();  
-    gpsData.cpuBusy = 100 - cpuIdle;
-    gpsData.freeHeap = ESP.getFreeHeap();
-    gpsData.freePsram = ESP.getFreePsram();
+    stats.cpuBusy = 100 - cpuIdle;
+    stats.freeHeap = ESP.getFreeHeap();
+    stats.freePsram = ESP.getFreePsram();
 
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
@@ -331,6 +314,7 @@ void loop() {
     if (serialReceived && versionReceived && volumeReceived && userBytesReceived) {
       Serial.println("All device information received!");
       configHasRun = true;
+      //alertPresent = true;
       set_var_prio_alert_freq("");
 
       if (!v1le) {

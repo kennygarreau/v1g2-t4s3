@@ -1,5 +1,6 @@
 #include "actions.h"
 #include "fonts.h"
+#include "images.h"
 #include "../tft_v2.h"
 #include "screens.h"
 #include "ui.h"
@@ -152,12 +153,23 @@ void show_popup(const char * message) {
     lv_obj_del_delayed(mbox, 1500);
 }
 
-void convert_to_fixed_gray(uint16_t *img_data, uint32_t width, uint32_t height) {
-    // Convert #636363 to RGB565 (little-endian)
-    uint16_t gray565 = ((12 & 0x1F) << 11) | ((24 & 0x3F) << 5) | (12 & 0x1F);
-    gray565 = (gray565 >> 8) | (gray565 << 8); // Handle endianness
+void update_alert_display(bool muted) {
+    static bool last_muted_state = false;
+    if (muted == last_muted_state) return;
 
-    for (uint32_t i = 0; i < width * height; i++) {
-        img_data[i] = gray565;
-    }
+    lv_color_t text_color = muted ? lv_color_hex(0xff363636) : lv_color_hex(0xffff0000);
+    const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
+    const void* side_arrow_src = muted ? &img_arrow_side_gray : &img_arrow_side;
+    const void* rear_arrow_src = muted ? &img_arrow_rear_gray : &img_arrow_rear;
+
+    //lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT); // use if testing
+    lv_obj_set_style_text_color(objects.prioalertfreq, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.band_k, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.band_ka, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.band_x, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_img_set_src(objects.front_arrow, front_arrow_src);
+    lv_img_set_src(objects.side_arrow, side_arrow_src);
+    lv_img_set_src(objects.rear_arrow, rear_arrow_src);
+
+    last_muted_state = muted;
 }

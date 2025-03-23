@@ -5,6 +5,26 @@
 
 sqlite3 *db;
 char *errMsg = 0;
+static uint8_t *psramBuffer = NULL;
+
+
+void listSPIFFSFiles() {
+    Serial.println("Listing SPIFFS files...");
+
+    File root = SPIFFS.open("/");
+    if (!root) {
+        Serial.println("Failed to open SPIFFS root directory");
+        return;
+    }
+
+    File file = root.openNextFile();
+    while (file) {
+        Serial.printf("FILE: %s - %d bytes\n", file.name(), file.size());
+        file = root.openNextFile();
+    }
+
+    Serial.println("Finished listing files.");
+}
 
 bool SPIFFSFileManager::init() {
     return SPIFFS.begin();
@@ -33,6 +53,7 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
 }
 
 void SPIFFSFileManager::createTable() {
+    Serial.println("Creating DB table...");
     const char *sql = "CREATE TABLE IF NOT EXISTS lockouts ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                       "active INTEGER, "
@@ -47,11 +68,12 @@ void SPIFFSFileManager::createTable() {
                       "strength INTEGER, "
                       "direction INTEGER, "
                       "frequency INTEGER);";
-
+    
     char *errMsg;
     if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
         Serial.printf("Create table failed: %s\n", errMsg);
         sqlite3_free(errMsg);
+        
     } else {
         Serial.println("Table created or already exists.");
     }
@@ -145,26 +167,64 @@ void SPIFFSFileManager::readLockouts() {
 }
 
 bool SPIFFSFileManager::openDatabase() {
-    if (!SPIFFS.exists(DB_PATH)) {
-        Serial.println("Database file does not exist. Creating it...");
-        File file = SPIFFS.open(DB_PATH, FILE_WRITE);
-        if (!file) {
-            Serial.println("Failed to create database file");
+    sqlite3_initialize();
+
+    if (!psramBuffer) {
+        psramBuffer = (uint8_t *)heap_caps_malloc(SQLITE_PSRAM_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
+        if (!psramBuffer) {
+            Serial.println("Failed to allocate PSRAM for SQLite");
             return false;
         }
-        file.close();
-        Serial.println("Database file created");
+        sqlite3_config(SQLITE_CONFIG_HEAP, psramBuffer, SQLITE_PSRAM_BUFFER_SIZE, 64);
+        Serial.println("SQLite memory allocated in PSRAM");
     }
+    //listSPIFFSFiles();
 
+    File file = SPIFFS.open(DB_PATH, FILE_WRITE);
+    if (!file) {
+        Serial.println("Failed to create new database file");
+        return false;
+    }
+    file.close();
+    Serial.println("New database file created");
+
+    /*
     int rc = sqlite3_open(DB_PATH, &db);
     if (rc != SQLITE_OK) {
         Serial.printf("Failed to open database: %d\n", rc);
         return false;
+    } */
+
+    int rc = sqlite3_open(DB_PATH, &db);
+    if (rc != SQLITE_OK) {
+        Serial.printf("Failed to open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }    
+
+    Serial.println("Setting PRAGMA synchronous");
+    sqlite3_exec(db, "PRAGMA synchronous = OFF;", NULL, NULL, &errMsg);
+    if (errMsg) {
+        Serial.printf("PRAGMA synchronous failed: %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+
+    Serial.println("Setting PRAGMA journal_mode");
+    sqlite3_exec(db, "PRAGMA journal_mode = MEMORY;", NULL, NULL, &errMsg);
+    if (errMsg) {
+        Serial.printf("PRAGMA journal_mode failed: %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+
+    Serial.println("Setting PRAGMA temp_store");
+    sqlite3_exec(db, "PRAGMA temp_store = MEMORY;", NULL, NULL, &errMsg);
+    if (errMsg) {
+        Serial.printf("PRAGMA temp_store failed: %s\n", errMsg);
+        sqlite3_free(errMsg);
     }
 
     Serial.println("Database opened successfully");
     return true;
-}
+} 
 
 void SPIFFSFileManager::closeDatabase() {
     if (db) {

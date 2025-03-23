@@ -6,6 +6,7 @@
 
 #define DB_PATH "/spiffs/lockouts.db"
 #define CACHE_SIZE 4
+#define SQLITE_PSRAM_BUFFER_SIZE (512 * 1024)
 
 class SPIFFSFileManager {
 private:
