@@ -73,7 +73,7 @@ SPIFFSFileManager fileManager;
 void loadLockoutSettings() {
   preferences.begin("lockoutSettings", false);
   autoLockoutSettings.minThreshold = preferences.getInt("minThreshold", 3);
-  autoLockoutSettings.enable = preferences.getBool("enable", true);
+  autoLockoutSettings.enable = preferences.getBool("enable", false);
   autoLockoutSettings.learningTime = preferences.getInt("learningTime", 24);
   autoLockoutSettings.lockoutColor = preferences.getUInt("lockoutColor", 0xBFBBA9);
   autoLockoutSettings.setLockoutColor = preferences.getBool("setLockoutColor", true);
