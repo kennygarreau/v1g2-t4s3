@@ -25,6 +25,8 @@
 #define PACKET_ID_REQCURRENTVOLUME 0x37
 #define PACKET_ID_REQSTARTALERTDATA 0x41
 #define PACKET_ID_REQBATTERYVOLTAGE 0x62
+#define PACKET_ID_REQSAVVYSTATUS 0x71
+#define PACKET_ID_REQVEHICLESPEED 0x73
 
 struct BandArrowData {
     bool laser;
@@ -68,6 +70,8 @@ public:
     static uint8_t* reqMuteOn();
     static uint8_t* reqCurrentVolume();
     static uint8_t* reqUserBytes();
+    static uint8_t* reqSavvyStatus();
+    static uint8_t* reqVehicleSpeed();
 };
 
 #endif // PACKETDECODER_H

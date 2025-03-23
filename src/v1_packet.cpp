@@ -868,6 +868,14 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     else if (packetID == "67") {
         Serial.println("respDataError encountered");
     }
+    // respSavvyStatus
+    else if (packetID == "72") {
+        Serial.println("respSavvyStatus encountered");
+    }
+    // respVehicleSpeed
+    else if (packetID == "74") {
+        Serial.println("respVehicleSpeed encountered");
+    }
     return "";
 }
 
@@ -985,4 +993,16 @@ uint8_t* Packet::reqUserBytes() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQUSERBYTES, const_cast<uint8_t*>(payloadData), payloadLength, packet);
+}
+
+uint8_t* Packet::reqSavvyStatus() {
+    uint8_t payloadData[] = {0x01};
+    uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
+    return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQSAVVYSTATUS, const_cast<uint8_t*>(payloadData), payloadLength, packet);
+}
+
+uint8_t* Packet::reqVehicleSpeed() {
+    uint8_t payloadData[] = {0x01};
+    uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
+    return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQVEHICLESPEED, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
