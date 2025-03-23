@@ -57,6 +57,7 @@ async function populateBoardInfo() {
                 onlyDisplayBTIcon: boardInfo.displaySettings.onlyDisplayBTIcon || false,
                 displayTest: boardInfo.displaySettings.displayTest || false,
                 unitSystem: boardInfo.displaySettings.unitSystem || "Imperial",
+                muteToGray: boardInfo.displaySettings.muteToGray || false,
                 wifiCredentials: boardInfo.displaySettings.wifiCredentials || [],
             };
 
@@ -95,6 +96,7 @@ async function populateBoardInfo() {
             document.getElementById("onlyDisplayBTIcon").value = currentValues.onlyDisplayBTIcon.toString();
             document.getElementById("displayTest").value = currentValues.displayTest.toString();
             document.getElementById("unitSystem").value = currentValues.unitSystem;
+            document.getElementById("muteToGray").value = currentValues.muteToGray;
 
             const wifiContainer = document.getElementById("wifiCredentialsContainer");
             wifiContainer.innerHTML = "";
@@ -156,6 +158,9 @@ document.getElementById("settingsForm").addEventListener("submit", function(even
         }
         if ((document.getElementById("displayTest").value === "true") !== currentValues.displayTest) {
             updatedSettings.displayTest = document.getElementById("displayTest").value === "true";
+        }
+        if ((document.getElementById("muteToGray").value === "true") !== currentValues.muteToGray) {
+            updatedSettings.muteToGray = document.getElementById("muteToGray").value === "true";
         }
         if (formData.get("unitSystem") !== currentValues.unitSystem) {
             updatedSettings.unitSystem = formData.get("unitSystem");
