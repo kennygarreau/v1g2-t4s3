@@ -1,6 +1,5 @@
 #include "v1_config.h"
-#include <WiFi.h>
-//#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWebServer.h>
 #include "wifi.h"
 
 IPAddress local_ip(192, 168, 242, 1);
@@ -10,62 +9,56 @@ IPAddress subnet(255, 255, 255, 0);
 bool localWifiStarted = false;
 
 void reconnectTask(void *param) {
-    if (xSemaphoreTake(xWiFiLock, pdMS_TO_TICKS(100)) == pdTRUE) {
-        Serial.println("Reconnecting to WiFi...");
-        wifiScan();
-        xSemaphoreGive(xWiFiLock);
-    }
+    Serial.println("Reconnecting to WiFi...");
+    wifiScan();
     vTaskDelete(NULL);
 }
 
 void onWiFiEvent(WiFiEvent_t event) {
-    if (xSemaphoreTake(xWiFiLock, pdMS_TO_TICKS(100)) == pdTRUE) {
-        wifi_mode_t currentMode = WiFi.getMode();
+    wifi_mode_t currentMode = WiFi.getMode();
 
-        if (currentMode == WIFI_MODE_STA) {
-            switch (event) {
-                case WIFI_EVENT_STA_START:
-                    Serial.println("WiFi starting...");
-                    break;
-                case WIFI_EVENT_STA_STOP:
-                    Serial.println("WiFi stopping...");
-                    break;
-                case WIFI_EVENT_STA_DISCONNECTED:
-                    wifiConnected = false;
-                    Serial.println("WiFi disconnected. Attempting reconnect...");
-                    if (!wifiConnecting) {
-                        xTaskCreate(reconnectTask, "reconnectTask", 4096, NULL, 1, NULL);
-                    }
-                    break;
-                case SYSTEM_EVENT_STA_GOT_IP:
-                    wifiConnected = true;
-                    wifiConnecting = false;
-                    Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
-                    break;
-                default:
-                    Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
-                    break;
-            }
-        } else if (currentMode == WIFI_MODE_AP) {
-            switch (event) {
-                case WIFI_EVENT_AP_START:
-                    Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
-                    break;
-                case WIFI_EVENT_AP_STOP:
-                    Serial.println("Access Point stopped.");
-                    break;
-                case SYSTEM_EVENT_AP_STACONNECTED:
-                    Serial.println("A device connected to the AP.");
-                    break;
-                case SYSTEM_EVENT_AP_STADISCONNECTED:
-                    Serial.println("A device disconnected from the AP.");
-                    break;
-                default:
-                    Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
+    if (currentMode == WIFI_MODE_STA) {
+        switch (event) {
+            case WIFI_EVENT_STA_START:
+                Serial.println("WiFi starting...");
                 break;
-            }
+            case WIFI_EVENT_STA_STOP:
+                Serial.println("WiFi stopping...");
+                break;
+            case WIFI_EVENT_STA_DISCONNECTED:
+                wifiConnected = false;
+                Serial.println("WiFi disconnected. Attempting reconnect...");
+                if (!wifiConnecting) {
+                    xTaskCreate(reconnectTask, "reconnectTask", 4096, NULL, 1, NULL);
+                }
+                break;
+            case SYSTEM_EVENT_STA_GOT_IP:
+                wifiConnected = true;
+                wifiConnecting = false;
+                Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+                break;
+            default:
+                Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
+                break;
         }
-    xSemaphoreGive(xWiFiLock);
+    } else if (currentMode == WIFI_MODE_AP) {
+        switch (event) {
+            case WIFI_EVENT_AP_START:
+                Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
+                break;
+            case WIFI_EVENT_AP_STOP:
+                Serial.println("Access Point stopped.");
+                break;
+            case SYSTEM_EVENT_AP_STACONNECTED:
+                Serial.println("A device connected to the AP.");
+                break;
+            case SYSTEM_EVENT_AP_STADISCONNECTED:
+                Serial.println("A device disconnected from the AP.");
+                break;
+            default:
+                Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
+            break;
+        }
     }
 }
 
@@ -86,18 +79,14 @@ void onWiFiEvent(WiFiEvent_t event) {
 }
 
 void wifiSetup() {
-    if (xSemaphoreTake(xWiFiLock, portMAX_DELAY) == pdTRUE) {
-        WiFi.mode(static_cast<wifi_mode_t>(settings.wifiMode));
-        WiFi.disconnect();
-        WiFi.onEvent(onWiFiEvent);
-        if (settings.wifiMode == WIFI_SETTING_STA) {
-            wifiScan();
-        } else 
-        {
-            startLocalWifi();
-        }
-        
-        xSemaphoreGive(xWiFiLock);
+    WiFi.mode(static_cast<wifi_mode_t>(settings.wifiMode));
+    WiFi.disconnect();
+    WiFi.onEvent(onWiFiEvent);
+    if (settings.wifiMode == WIFI_SETTING_STA) {
+        wifiScan();
+    } else 
+    {
+        startLocalWifi();
     }
 }
 
