@@ -219,6 +219,34 @@ input[type="color"] {
     cursor: pointer;
 }
 
+.gauge-container {
+    width: 200px;
+    height: 100px;
+    background: #eee;
+    border-top-left-radius: 100px;
+    border-top-right-radius: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gauge {
+    width: 50%;
+    height: 50%;
+    background: #4caf50; /* Green color for the gauge */
+    position: absolute;
+    bottom: 0;
+    transform-origin: bottom center;
+    transform: rotate(-90deg); /* Start from the left side */
+    transition: transform 0.3s ease;
+}
+
+.gauge-label {
+    text-align: left;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
 @media screen and (max-width: 768px) {
     .container {
         margin: 10px auto;

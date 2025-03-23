@@ -1,4 +1,3 @@
-//#include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
@@ -169,7 +168,6 @@ void setupWebServer()
     server.on("/gps-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
 
-        // GPS Data
         jsonDoc["latitude"] = gpsData.latitude;
         jsonDoc["longitude"] = gpsData.longitude;
         jsonDoc["speed"] = gpsData.speed;
@@ -181,26 +179,7 @@ void setupWebServer()
         jsonDoc["satelliteCount"] = gpsData.satelliteCount;
         jsonDoc["signalQuality"] = gpsData.signalQuality;
         jsonDoc["timezone"] = settings.timezone;
-        jsonDoc["bluetoothRSSI"] = gpsData.btStr;
-        jsonDoc["connectedClients"] = gpsData.connectedClients;
-
-        // Hardware data
         jsonDoc["carVoltage"] = gpsData.voltage;
-        jsonDoc["batteryPercent"] = batteryPercentage;
-        jsonDoc["espVoltage"] = voltageInMv;
-        jsonDoc["cpu"] = gpsData.cpuBusy;
-        jsonDoc["totalHeap"] = gpsData.totalHeap / 1024;
-        jsonDoc["freeHeapInKB"] = gpsData.freeHeap / 1024;
-        jsonDoc["totalPsram"] = gpsData.totalPsram / 1024;
-        jsonDoc["freePsramInKB"] = gpsData.freePsram / 1024;
-        jsonDoc["totalStorage"] = gpsData.totalStorageKB;
-        jsonDoc["usedStorage"] = gpsData.usedStorageKB;
-        if (isVBusIn) {
-            jsonDoc["vBusVoltage"] = vBusVoltage;
-        }
-        if (batteryCharging) {
-            jsonDoc["batteryCharging"] = "(charging)";
-        }
 
         String jsonResponse;
         serializeJson(jsonDoc, jsonResponse);
@@ -217,6 +196,35 @@ void setupWebServer()
         jsonDoc["setLockoutColor"] = autoLockoutSettings.setLockoutColor;
         jsonDoc["requiredAlertCount"] = autoLockoutSettings.requiredAlerts;
         jsonDoc["inactiveTime"] = autoLockoutSettings.inactiveTime;
+
+        String jsonResponse;
+        serializeJson(jsonDoc, jsonResponse);
+        request->send(200, "application/json", jsonResponse); 
+    });
+
+    server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request) {
+        int frequency = getCpuFrequencyMhz();
+        JsonDocument jsonDoc;
+
+        jsonDoc["uptime"] = stats.uptime;
+        jsonDoc["frequency"] = frequency;
+        jsonDoc["cpuBusy"] = stats.cpuBusy;
+        jsonDoc["totalHeap"] = stats.totalHeap / 1024;
+        jsonDoc["freeHeapInKB"] = stats.freeHeap / 1024;
+        jsonDoc["totalPsram"] = stats.totalPsram / 1024;
+        jsonDoc["freePsramInKB"] = stats.freePsram / 1024;
+        jsonDoc["totalStorage"] = stats.totalStorageKB;
+        jsonDoc["usedStorage"] = stats.usedStorageKB;
+        jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
+        jsonDoc["bluetoothRSSI"] = stats.btStr;
+        jsonDoc["batteryPercent"] = batteryPercentage;
+        jsonDoc["espVoltage"] = voltageInMv;
+        if (isVBusIn) {
+            jsonDoc["vBusVoltage"] = vBusVoltage;
+        }
+        if (batteryCharging) {
+            jsonDoc["batteryCharging"] = "(charging)";
+        }
 
         String jsonResponse;
         serializeJson(jsonDoc, jsonResponse);

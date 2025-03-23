@@ -66,15 +66,6 @@ async function fetchLocation() {
         const gpsInfo = await response.json();
         console.log("Received GPS data:", gpsInfo);
 
-        if (gpsInfo.batteryPercent) {
-            const batteryPercent = Math.floor(gpsInfo.batteryPercent); 
-            document.getElementById("battery-percentage").textContent = `Battery: ${batteryPercent}%`;
-            document.getElementById("isBatteryCharging").textContent = `${gpsInfo.batteryCharging || ''}`;
-        }
-        if (gpsInfo.cpu) {
-            const cpuPercent = Math.floor(gpsInfo.cpu);
-            document.getElementById("cpu").textContent = `CPU: ${cpuPercent}%`;
-        }
         if (gpsInfo.latitude && gpsInfo.longitude) {
             updateMap(gpsInfo.latitude, gpsInfo.longitude, gpsInfo.hdop);
         } else {
