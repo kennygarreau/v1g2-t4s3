@@ -428,6 +428,10 @@ extern "C" bool get_var_gpsEnabled() {
     return settings.enableGPS && gpsAvailable;
 }
 
+extern "C" bool get_var_gpsAvailable() {
+    return gpsAvailable;
+}
+
 void displayTest() {
     // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};

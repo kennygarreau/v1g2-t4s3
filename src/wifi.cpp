@@ -15,7 +15,7 @@ void wifiScanTask(void *parameter) {
 
 void reconnectTask(void *param) {
     Serial.println("Reconnecting to WiFi...");
-    xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
+    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
     vTaskDelete(NULL);
 }
 
@@ -93,7 +93,7 @@ void wifiSetup() {
     WiFi.disconnect();
     WiFi.onEvent(onWiFiEvent);
     if (settings.wifiMode == WIFI_SETTING_STA) {
-        xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
+        xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
     } else 
     {
         startLocalWifi();
@@ -122,7 +122,7 @@ void wifiScan() {
                     unsigned long startAttemptTime = millis();
                     while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
                         Serial.print(".");
-                        delay(250);
+                        vTaskDelay(pdMS_TO_TICKS(50));
                     }
                     Serial.println();
 
@@ -131,6 +131,7 @@ void wifiScan() {
                     } else {
                         Serial.printf("Failed to connect to %s\n", cred.ssid.c_str());
                     }
+                    vTaskDelay(pdMS_TO_TICKS(100)); 
                 }
             }
         }
@@ -140,4 +141,5 @@ void wifiScan() {
         }
     }
     WiFi.scanDelete();
+    vTaskDelay(pdMS_TO_TICKS(100)); 
 }

@@ -20,6 +20,7 @@ void set_var_bt_connected(bool value);
 bool get_var_muted();
 void set_var_muted(bool value);
 bool get_var_gpsEnabled();
+bool get_var_gpsAvailable();
 const char *get_var_lowspeedthreshold();
 const char *get_var_ssid();
 const char *get_var_password();

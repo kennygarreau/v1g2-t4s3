@@ -560,6 +560,15 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         std::string auxByte0 = packet.substr(packet.length() - 10, 2);
         std::string auxByte1 = packet.substr(packet.length() - 8, 2);
         std::string auxByte2 = packet.substr(packet.length() - 6, 2);
+        if (!auxByte0.empty()) {
+            try {
+                int auxByte0Int = std::stoi(auxByte0, nullptr, 16);
+                bool softMute = (auxByte0Int & 0b00000001) ? 1 : 0;
+                if (softMute) {
+                    Serial.printf("soft mute status: %d", softMute);
+                }
+            } catch (const std::exception& e) {}
+        }
         if (!auxByte1.empty()) {
             try {
                 int auxByte1Int = std::stoi(auxByte1, nullptr, 16);
@@ -588,9 +597,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                         globalConfig.defaultMode = "L";
                         break;
                 }
-            } catch (const std::exception& e) {
-                // anything to be done here?
-            }
+            } catch (const std::exception& e) {}
         }
         //Serial.printf("infDisplayData loop time: %lu\n", millis() - startTimeMillis);
         lastinfPayload = payload;
@@ -625,9 +632,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         
                     alertCountValue = alertIndex & 0b00001111;
                     alertIndexValue = (alertIndex & 0b11110000) >> 4;
-                } catch (const std::exception& e) {
-                    // anything to be done?
-                }
+                } catch (const std::exception& e) {}
             } else {
                 Serial.println("Warning: alertIndexStr is empty!");
             }
@@ -674,9 +679,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             } else {
                 Serial.printf("Found component: %s", versionID);
             }
-        } catch (const std::exception& e) {
-            // anything to be done here?
-        }
+        } catch (const std::exception& e) {}
     }
     // respSerialNumber
     else if (packetID == "04"){

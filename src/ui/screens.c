@@ -67,14 +67,14 @@ void update_alert_rows(int num_alerts, const char* frequencies[]) {
 
     for (int i = 0; i < MAX_ALERT_ROWS; i++) {
         if (i < num_alerts) {
-            lv_label_set_text(alert_rows[i], frequencies[i]);
-            lv_obj_clear_flag(alert_rows[i], LV_OBJ_FLAG_HIDDEN);
             if (muted && muteToGray) {
                 lv_obj_set_style_text_color(alert_rows[i], lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
             } 
             else {
                 lv_obj_set_style_text_color(alert_rows[i], lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             }
+            lv_label_set_text(alert_rows[i], frequencies[i]);
+            lv_obj_clear_flag(alert_rows[i], LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(alert_rows[i], LV_OBJ_FLAG_HIDDEN);
         }
@@ -135,13 +135,13 @@ void update_signal_bars(int num_visible) {
         }
 
         if (i < num_visible) {
-            lv_obj_clear_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
             if (muted && muteToGray) {
                 lv_obj_set_style_bg_color(signal_bars[i], lv_color_hex(0xff636363), LV_PART_MAIN | LV_STATE_DEFAULT);
             }
             else {
                 lv_obj_set_style_bg_color(objects.prioalertfreq, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             }
+            lv_obj_clear_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
         }
@@ -217,12 +217,13 @@ void create_screen_main() {
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_bt_logo_small);
             lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
             // nav_logo_enabled
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.nav_logo_enabled = obj;
-            lv_obj_set_pos(obj, 502, 0);
+            lv_obj_set_pos(obj, 466, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_location_red);
             lv_img_set_zoom(obj, 128);
@@ -232,7 +233,7 @@ void create_screen_main() {
             // nav_logo_disabled
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.nav_logo_disabled = obj;
-            lv_obj_set_pos(obj, 502, 0);
+            lv_obj_set_pos(obj, 466, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_location_disabled);
             lv_img_set_zoom(obj, 128);
@@ -242,7 +243,7 @@ void create_screen_main() {
             // wifi
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.wifi_logo = obj;
-            lv_obj_set_pos(obj, 466, 0);
+            lv_obj_set_pos(obj, 502, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_wifi);
             lv_img_set_zoom(obj, 128);
@@ -252,7 +253,7 @@ void create_screen_main() {
             // wifi_local
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.wifi_local_logo = obj;
-            lv_obj_set_pos(obj, 466, 0);
+            lv_obj_set_pos(obj, 502, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_wifi_local);
             lv_img_set_zoom(obj, 128);
@@ -434,6 +435,8 @@ void create_screen_main() {
 
 void tick_status_bar() {
     bool alertPresent = get_var_alertPresent();
+    bool gps_enabled = get_var_gpsEnabled();
+
     // Bluetooth status
     {
         bool bt_connected = get_var_bt_connected(); // true when connected
@@ -461,9 +464,11 @@ void tick_status_bar() {
         } 
         else if (wifi_connected) {
             lv_obj_clear_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
         }
         else if (local_wifi) {
             lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
         }
 
         LV_LOG_INFO("Updated WiFi status");
@@ -529,7 +534,7 @@ void tick_status_bar() {
     }    
     // GPS status
     {
-        bool gps_enabled = get_var_gpsEnabled(); // true if enabled and connected
+        bool gps_available = get_var_gpsAvailable(); // true if connected
     
         lv_obj_clear_flag(objects.nav_logo_enabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
         lv_obj_add_flag(objects.nav_logo_enabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
@@ -540,14 +545,16 @@ void tick_status_bar() {
     }
     // SilentRide threshold
     {
-        const char *new_val = get_var_lowspeedthreshold();
-        const char *cur_val = lv_label_get_text(objects.automutespeed);
-        if (strcmp(new_val, cur_val) != 0) {
-            LV_LOG_INFO("update silentride");
-            tick_value_change_obj = objects.automutespeed;
-            lv_obj_clear_flag(objects.automutespeed, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(objects.automutespeed, new_val); 
-            tick_value_change_obj = NULL;
+        if (gps_enabled) {
+            const char *new_val = get_var_lowspeedthreshold();
+            const char *cur_val = lv_label_get_text(objects.automutespeed);
+            if (strcmp(new_val, cur_val) != 0) {
+                LV_LOG_INFO("update silentride");
+                tick_value_change_obj = objects.automutespeed;
+                lv_obj_clear_flag(objects.automutespeed, LV_OBJ_FLAG_HIDDEN);
+                lv_label_set_text(objects.automutespeed, new_val); 
+                tick_value_change_obj = NULL;
+            }
         }
     }
 }
