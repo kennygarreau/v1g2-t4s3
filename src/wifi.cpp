@@ -13,11 +13,13 @@ void wifiScanTask(void *parameter) {
     vTaskDelete(NULL);
 }
 
+/*
 void reconnectTask(void *param) {
     Serial.println("Reconnecting to WiFi...");
     xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
     vTaskDelete(NULL);
 }
+*/
 
 void onWiFiEvent(WiFiEvent_t event) {
     wifi_mode_t currentMode = WiFi.getMode();
@@ -35,7 +37,7 @@ void onWiFiEvent(WiFiEvent_t event) {
                 wifiConnected = false;
                 Serial.println("WiFi disconnected. Attempting reconnect...");
                 if (!wifiConnecting) {
-                    xTaskCreate(reconnectTask, "reconnectTask", 4096, NULL, 1, NULL);
+                    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
                 }
                 break;
             case SYSTEM_EVENT_STA_GOT_IP:

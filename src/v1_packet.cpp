@@ -565,7 +565,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 int auxByte0Int = std::stoi(auxByte0, nullptr, 16);
                 bool softMute = (auxByte0Int & 0b00000001) ? 1 : 0;
                 if (softMute) {
-                    Serial.printf("soft mute status: %d", softMute);
+                    Serial.printf("soft mute status: %d | muted set to: %d\n", softMute, muted);
                 }
             } catch (const std::exception& e) {}
         }
@@ -640,12 +640,13 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
 
             alertTable.push_back(payload);
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
-            if (alertTable.size() >= alertCountValue) {
+            if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS) {
                 alertPresent = true;
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
-                set_var_showAlertTable(alertCountValue > 1);
+            set_var_showAlertTable(alertCountValue > 1);
                 alertTable.clear();
-            } else {
+            } 
+            /* else {
                 if (alertCountValue == 0) {
                     // this doesn't ever seem to trigger
                     Serial.println("caught alertCountValue of 0 in ID43");
@@ -653,6 +654,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 }
                 // is there anything to be done here?
             }
+            */
             
         //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
         }
