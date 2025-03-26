@@ -256,7 +256,7 @@ void create_screen_main() {
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_set_src(obj, &img_wifi_local);
             lv_img_set_zoom(obj, 128);
-            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
             // automutespeed
@@ -445,12 +445,26 @@ void tick_status_bar() {
     // Wifi status
     {
         bool wifi_connected = get_var_wifiConnected(); // true when connected
+        bool local_wifi = get_var_localWifi(); // true when local wifi started
     
+        /*
         lv_obj_clear_flag(objects.wifi_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
         lv_obj_add_flag(objects.wifi_local_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
         
         lv_obj_add_flag(objects.wifi_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(objects.wifi_local_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+        */
+
+        if (!wifi_connected && !local_wifi) {
+            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+        } 
+        else if (wifi_connected) {
+            lv_obj_clear_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+        }
+        else if (local_wifi) {
+            lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+        }
 
         LV_LOG_INFO("Updated WiFi status");
     }

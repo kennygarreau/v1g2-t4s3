@@ -203,6 +203,10 @@ extern "C" void set_var_brightness(uint8_t value) {
     amoled.setBrightness(value);
 }
 
+extern "C" bool get_var_localWifi() {
+    return localWifiStarted;
+}
+
 extern "C" bool get_var_wifiEnabled() {
     return settings.enableWifi;
 }

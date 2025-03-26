@@ -460,6 +460,7 @@ void setupWebServer()
                     settings.wifiMode = static_cast<WiFiModeSetting>(mode);
                     Serial.println("wifiMode: " + String(mode));
                     preferences.putInt("wifiMode", mode);
+                    isRebootPending = true;
                 } else {
                     Serial.println("Invalid wifiMode received!");
                 }

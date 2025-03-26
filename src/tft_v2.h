@@ -30,6 +30,7 @@ bool get_var_v1clePresent();
 bool get_var_wifiConnected();
 bool get_var_wifiEnabled();
 void set_var_wifiEnabled(bool enable);
+bool get_var_localWifi();
 void set_var_brightness(uint8_t value);
 uint8_t get_var_brightness();
 int getBluetoothSignalStrength();

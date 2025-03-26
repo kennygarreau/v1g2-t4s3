@@ -24,6 +24,7 @@ void onWiFiEvent(WiFiEvent_t event) {
                 break;
             case WIFI_EVENT_STA_STOP:
                 Serial.println("WiFi stopping...");
+                wifiConnected = false;
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
                 wifiConnected = false;
@@ -59,6 +60,10 @@ void onWiFiEvent(WiFiEvent_t event) {
                 Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
             break;
         }
+    }
+    else if (currentMode == WIFI_MODE_NULL) {
+        wifiConnected = false;
+        localWifiStarted = false;
     }
 }
 
