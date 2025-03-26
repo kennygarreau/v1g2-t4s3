@@ -8,9 +8,14 @@ IPAddress subnet(255, 255, 255, 0);
 
 bool localWifiStarted = false;
 
+void wifiScanTask(void *parameter) {
+    wifiScan();
+    vTaskDelete(NULL);
+}
+
 void reconnectTask(void *param) {
     Serial.println("Reconnecting to WiFi...");
-    wifiScan();
+    xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
     vTaskDelete(NULL);
 }
 
@@ -88,7 +93,7 @@ void wifiSetup() {
     WiFi.disconnect();
     WiFi.onEvent(onWiFiEvent);
     if (settings.wifiMode == WIFI_SETTING_STA) {
-        wifiScan();
+        xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
     } else 
     {
         startLocalWifi();

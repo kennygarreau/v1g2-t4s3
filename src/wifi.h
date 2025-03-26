@@ -13,5 +13,6 @@ enum WiFiModeSetting {
 void onWiFiEvent(WiFiEvent_t event);
 void wifiSetup();
 void wifiScan();
+void wifiScanTask(void* parameter);
 
 #endif

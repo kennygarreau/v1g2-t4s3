@@ -215,7 +215,7 @@ extern "C" void set_var_wifiEnabled(bool enable) {
     if (enable) {
         settings.enableWifi = true;
         Serial.println("WiFi enabled and attempting to connect...");
-        wifiScan();
+        xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
     } else {
         settings.enableWifi = false;
         Serial.println("Disabling WiFi...");
