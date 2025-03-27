@@ -8,6 +8,7 @@
 #include <LilyGo_AMOLED.h>
 #include <set>
 
+
 struct BandDirection {
     const char* band;
     const char* direction; };
@@ -519,13 +520,11 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     unsigned long startTimeMillis = millis();
 
-    std::string sof = packet.substr(0, 2);
-    if (sof != "AA") {
+    if (packet.compare(0, 2, "AA") != 0) {
         return "err SOF";
     }
-
-    std::string endOfFrame = packet.substr(packet.length() - 2);
-    if (endOfFrame != "AB") {
+    
+    if (packet.compare(packet.size() - 2, 2, "AB") != 0) {
         return "err EOF";
     }
 
@@ -629,7 +628,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             if (!alertIndexStr.empty()) {
                 try {
                     int alertIndex = std::stoi(alertIndexStr, nullptr, 16);
-        
+
                     alertCountValue = alertIndex & 0b00001111;
                     alertIndexValue = (alertIndex & 0b11110000) >> 4;
                 } catch (const std::exception& e) {}
@@ -637,13 +636,13 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 Serial.println("Warning: alertIndexStr is empty!");
             }
             // TODO: add vortex suggestion here for restricting prio alert from table
-
             alertTable.push_back(payload);
+
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
             if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS) {
                 alertPresent = true;
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
-            set_var_showAlertTable(alertCountValue > 1);
+                set_var_showAlertTable(alertCountValue > 1);
                 alertTable.clear();
             } 
             /* else {

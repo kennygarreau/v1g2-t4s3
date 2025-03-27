@@ -436,6 +436,8 @@ void create_screen_main() {
 void tick_status_bar() {
     bool alertPresent = get_var_alertPresent();
     bool gps_enabled = get_var_gpsEnabled();
+    int alertCount = get_var_alertCount();
+    bool showBogeys = get_var_showBogeys();
 
     // Bluetooth status
     {
@@ -526,7 +528,10 @@ void tick_status_bar() {
             tick_value_change_obj = NULL;
         }
 
-        if (alertPresent) {
+        if (alertPresent && showBogeys) {
+            lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
+        }
+        else if (alertPresent) {
             lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);

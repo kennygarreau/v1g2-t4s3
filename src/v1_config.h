@@ -112,6 +112,7 @@ struct v1Settings {
   bool turnOffDisplay;
   bool onlyDisplayBTIcon;
   bool useDefaultV1Mode;
+  bool showBogeyCount;
   int lowSpeedThreshold;
   bool muteToGray;
   String timezone;

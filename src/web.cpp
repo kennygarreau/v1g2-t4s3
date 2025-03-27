@@ -308,6 +308,7 @@ void setupWebServer()
         displaySettingsJson["displayTest"] = settings.displayTest;
         displaySettingsJson["unitSystem"] = settings.unitSystem;
         displaySettingsJson["muteToGray"] = settings.muteToGray;
+        displaySettingsJson["showBogeys"] = settings.showBogeyCount;
 
         JsonArray wifiArray = displaySettingsJson.createNestedArray("wifiCredentials");
         for (const auto& cred : settings.wifiCredentials) {
@@ -563,6 +564,11 @@ void setupWebServer()
                 settings.muteToGray = doc["muteToGray"].as<bool>();
                 Serial.println("muteToGray: " + String(settings.muteToGray));
                 preferences.putBool("muteToGray", settings.muteToGray);
+            }
+            if (doc.containsKey("showBogeys")) {
+                settings.showBogeyCount = doc["showBogeys"].as<bool>();
+                Serial.println("showBogeys: " + String(settings.showBogeyCount));
+                preferences.putBool("showBogeys", settings.showBogeyCount);
             }
             if (doc.containsKey("timezone")) {
                 settings.timezone = doc["timezone"].as<String>();

@@ -374,6 +374,10 @@ extern "C" bool get_var_muted() {
     return muted;
 }
 
+extern "C" bool get_var_showBogeys() {
+    return settings.showBogeyCount;
+}
+
 extern "C" void set_var_muted(bool value) {
     muted = value;
 }

@@ -38,6 +38,7 @@ int getBluetoothSignalStrength();
 int getWifiRSSI();
 extern unsigned long getMillis();
 void disconnectCurrentDevice();
+bool get_var_showBogeys();
 
 void set_var_prioBars(int value);
 int get_var_prioBars();
