@@ -237,6 +237,9 @@ void loop() {
   if (bt_connected && bleInit) {
     displayReader(pClient);
     bleInit = false;
+
+    unsigned long elapsedMillis = millis() - bootMillis;
+    Serial.printf("processing packets at: %.2f seconds\n", elapsedMillis / 1000.0);
   }
 
   // in case we get disconnected for a while - this will disconnect the AP client so we should not do this frequently
@@ -316,9 +319,6 @@ void loop() {
       Serial.println("All device information received!");
       configHasRun = true;
       set_var_prio_alert_freq("");
-
-      unsigned long elapsedMillis = millis() - bootMillis;
-      Serial.printf("full boot finished: %.2f seconds\n", elapsedMillis / 1000.0);
 
       if (!v1le) {
         queryDeviceInfo(pClient);

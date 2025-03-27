@@ -637,11 +637,10 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             } else {
                 Serial.println("Warning: alertIndexStr is empty!");
             }
-            // TODO: add vortex suggestion here for restricting prio alert from table
             alertTable.push_back(payload);
 
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
-            if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS) {
+            if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS + 1) {
                 alertPresent = true;
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 set_var_showAlertTable(alertCountValue > 1);
@@ -768,6 +767,11 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             //Serial.printf("Not all sweeps received (%d/%d), retrying...\n", globalConfig.sweeps.size(), globalConfig.maxSweepIndex + 1);
         } else {
             allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
+
+            if (allSweepDefinitionsReceived) {
+                unsigned long elapsedMillis = millis() - bootMillis;
+                Serial.printf("informational boot complete: %.2f seconds\n", elapsedMillis / 1000.0);
+            }
         }     
     }    
     // respMaxSweepIndex

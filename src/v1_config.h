@@ -245,11 +245,12 @@ extern Preferences preferences;
 extern bool isVBusIn, batteryCharging, isPortraitMode;
 extern uint16_t vBusVoltage, batteryVoltage;
 extern float voltageInMv, batteryPercentage;
+extern unsigned long bootMillis;
 
 struct AlertTableData {
     int alertCount;
-    float frequencies[MAX_ALERTS];
-    std::string direction[MAX_ALERTS];
+    float frequencies[MAX_ALERTS + 1];
+    std::string direction[MAX_ALERTS + 1];
     int barCount;
     int freqCount;
 };
