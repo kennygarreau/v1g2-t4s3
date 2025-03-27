@@ -19,11 +19,11 @@
       "mcu": "esp32s3",
       "variant": "esp32s3"
     },
-    "connectivity": ["wifi"],
+    "connectivity": ["bluetooth", "wifi"],
     "debug": {
       "default_tool": "esp-builtin",
       "onboard_tools": ["esp-builtin"],
-      "openocd_target": "esp32s3.cfg"
+      "openocd_target": "esp32s3-builtin.cfg"
     },
     "frameworks": ["arduino", "espidf"],
     "name": "LilyGo T-Display AMOLED Series (16M Flash 8M OPI PSRAM )",

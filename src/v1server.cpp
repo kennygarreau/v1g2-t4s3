@@ -224,7 +224,7 @@ void setup()
   statusBarTicker.attach(1, ui_tick_statusBar);
 
   unsigned long elapsedMillis = millis() - bootMillis;
-  Serial.printf("setup finished in %.2f seconds\n", elapsedMillis / 1000.0);
+  Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);
 }
 
 void loop() {  
@@ -315,8 +315,10 @@ void loop() {
     if (serialReceived && versionReceived && volumeReceived && userBytesReceived) {
       Serial.println("All device information received!");
       configHasRun = true;
-      //alertPresent = true;
       set_var_prio_alert_freq("");
+
+      unsigned long elapsedMillis = millis() - bootMillis;
+      Serial.printf("full boot finished: %.2f seconds\n", elapsedMillis / 1000.0);
 
       if (!v1le) {
         queryDeviceInfo(pClient);

@@ -322,21 +322,21 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.front != arrow2.front) {
         enable_blinking(BLINK_FRONT);
-        Serial.print("== blink front == ");
+        Serial.printf("== blink front == \n");
     } else if (!blink_enabled[BLINK_FRONT]) {
         set_var_arrowPrioFront(arrow1.front);
     }
 
     if (arrow1.side != arrow2.side) {
         enable_blinking(BLINK_SIDE);
-        Serial.print("== blink side == ");
+        Serial.printf("== blink side == \n");
     } else if (!blink_enabled[BLINK_SIDE]) {
         set_var_arrowPrioSide(arrow1.side);
     }
 
     if (arrow1.rear != arrow2.rear) {
         enable_blinking(BLINK_REAR);
-        Serial.print("== blink rear == ");
+        Serial.printf("== blink rear == \n");
     } else if (!blink_enabled[BLINK_REAR]) {
         set_var_arrowPrioRear(arrow1.rear);
     }
@@ -352,7 +352,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         set_var_prioBars(7);
         updateActiveBands(0b00000001);
         anyBandActive = true;
-        Serial.print("== blink laser == ");
+        Serial.println("== blink laser == ");
         set_var_laserAlert(arrow1.laser);
 
         if (arrow1.front || arrow1.rear) {
@@ -438,15 +438,6 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         priority = (auxByte == "80");
         junkAlert = (auxByte == "40");
 
-        bool found = false;
-        for (auto& alertData : alertDataList) {
-            if (alertData.alertCount == alertCountValue) {
-                alertData.frequencies[alertData.freqCount++] = freqGhz;  // Store display-relevant data and increment counter
-                found = true;
-                break;
-            }
-        }
-
         /* after this there should be no substring processing; we should only focus on painting the display */
         // paint the alert table arrows
         if (bandValue == "X" && globalConfig.xBand) {
@@ -486,10 +477,21 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             }
         }
 
-        int barCount = get_var_prioBars();
-        if (!found) {
-            AlertTableData newAlertData = {alertCountValue, {freqGhz}, {dirValue}, barCount, 1};
-            alertDataList.push_back(newAlertData);
+        if (!priority) {
+            bool found = false;
+            for (auto& alertData : alertDataList) {
+                if (alertData.alertCount == alertCountValue) {
+                    alertData.frequencies[alertData.freqCount++] = freqGhz;  // Store display-relevant data and increment counter
+                    found = true;
+                    break;
+                }
+            }
+    
+            int barCount = get_var_prioBars();
+            if (!found) {
+                AlertTableData newAlertData = {alertCountValue, {freqGhz}, {dirValue}, barCount, 1};
+                alertDataList.push_back(newAlertData);
+            }
         }
 
         unsigned long elapsedTimeMillis = millis() - startTimeMillis;
