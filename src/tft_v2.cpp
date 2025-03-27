@@ -18,6 +18,7 @@ const char* direction_ptrs[MAX_ALERTS];
 int alertCount = 0;
 int prio_bars = 0;
 int locationCount = 0;
+int alertTableSize = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
 double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -283,7 +284,9 @@ extern "C" void set_var_prioBars(int value) {
 }
 
 extern "C" const char *get_var_logicmode(bool value) {
-    return value ? globalConfig.defaultMode : globalConfig.mode;
+    //return value ? globalConfig.defaultMode : globalConfig.mode;
+    const char* result = value ? globalConfig.defaultMode : globalConfig.mode;
+    return result ? result : "U";
 }
 
 extern "C" const char *get_var_prio_alert_freq() {
@@ -292,6 +295,14 @@ extern "C" const char *get_var_prio_alert_freq() {
 
 extern "C" void set_var_prio_alert_freq(const char *value) {
     prioAlertFreq = value;
+}
+
+extern "C" void set_var_alertTableSize(int value) {
+    alertTableSize = value;
+}
+
+extern "C" int get_var_alertTableSize() {
+    return alertTableSize;
 }
 
 extern "C" void set_var_alertCount(int value) {

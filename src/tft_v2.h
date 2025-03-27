@@ -39,6 +39,7 @@ int getWifiRSSI();
 extern unsigned long getMillis();
 void disconnectCurrentDevice();
 bool get_var_showBogeys();
+const char *get_var_logicmode(bool value);
 
 void set_var_prioBars(int value);
 int get_var_prioBars();
@@ -47,6 +48,8 @@ bool get_showAlertTable();
 void set_var_showAlertTable(bool value);
 void set_var_alertCount(int value);
 int get_var_alertCount();
+void set_var_alertTableSize(int value);
+int get_var_alertTableSize();
 const char** get_var_frequencies();
 const char** get_var_directions();
 

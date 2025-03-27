@@ -82,8 +82,12 @@ void update_alert_rows(int num_alerts, const char* frequencies[]) {
 }
 
 void update_alert_arrows(int num_alerts, const char* directions[]) {
+    if (directions == NULL) {
+        return;
+    }
+
     for (int i = 0; i < MAX_ALERT_ROWS; i++) {
-        if (i < num_alerts) {
+        if (i < num_alerts && directions[i] != NULL) {
             if (strcmp(directions[i], "FRONT") == 0) {
                 lv_img_set_src(alert_directions[i], &img_small_arrow_front);
             } else if (strcmp(directions[i], "SIDE") == 0) {
@@ -93,9 +97,14 @@ void update_alert_arrows(int num_alerts, const char* directions[]) {
             } else {
                 lv_img_set_src(alert_directions[i], &img_small_arrow_front);
             }
-            lv_obj_clear_flag(alert_directions[i], LV_OBJ_FLAG_HIDDEN);
+
+            if (alert_directions[i] != NULL) {
+                lv_obj_clear_flag(alert_directions[i], LV_OBJ_FLAG_HIDDEN);
+            }
         } else {
-            lv_obj_add_flag(alert_directions[i], LV_OBJ_FLAG_HIDDEN);
+            if (alert_directions[i] != NULL) {
+                lv_obj_add_flag(alert_directions[i], LV_OBJ_FLAG_HIDDEN);
+            }
         }
     }
 }
@@ -436,8 +445,8 @@ void create_screen_main() {
 void tick_status_bar() {
     bool alertPresent = get_var_alertPresent();
     bool gps_enabled = get_var_gpsEnabled();
-    int alertCount = get_var_alertCount();
-    bool showBogeys = get_var_showBogeys();
+    //int alertCount = get_var_alertCount();
+    //bool showBogeys = get_var_showBogeys();
 
     // Bluetooth status
     {
@@ -491,52 +500,6 @@ void tick_status_bar() {
 
         LV_LOG_INFO("Updated Custom Frequency status");
     }
-    // Logic Mode
-    {
-        bool useDefault = get_var_useDefaultV1Mode();
-        const char *new_val = get_var_logicmode(useDefault);
-        lv_obj_t *target = useDefault ? objects.default_mode : objects.mode_type;
-        lv_obj_t *target_old = useDefault ? objects.mode_type : objects.default_mode;
-        lv_obj_t *overlay = objects.overlay_mode;
-        
-        if (!target) {
-            LV_LOG_ERROR("Error: %s is NULL!", useDefault ? "objects.default_mode" : "objects.mode_type");
-            return;
-        }
-    
-        if (!new_val) {
-            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
-            return;
-        }
-    
-        const char *cur_val = lv_label_get_text(target);
-        if (cur_val && strcmp(new_val, cur_val) != 0) {
-            LV_LOG_INFO("update Logic Mode");
-            tick_value_change_obj = target;
-            lv_label_set_text(target, new_val);
-            lv_label_set_text(target_old, "");
-    
-            lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_set_style_text_color(target, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
-
-            if (new_val == "c") {
-                lv_label_set_text(overlay, "q");
-                lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
-            }
-    
-            tick_value_change_obj = NULL;
-        }
-
-        if (alertPresent && showBogeys) {
-            lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
-        }
-        else if (alertPresent) {
-            lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-        }
-    }    
     // GPS status
     {
         bool gps_available = get_var_gpsAvailable(); // true if connected
@@ -565,7 +528,11 @@ void tick_status_bar() {
 }
 
 void tick_screen_main() {
-    if (get_var_alertPresent()) {
+    bool alertPresent = get_var_alertPresent();
+    int alertCount = get_var_alertCount();
+    bool showBogeys = get_var_showBogeys();
+    bool laserAlert = get_var_laserAlert();
+    if (alertPresent) {
         uint32_t now = lv_tick_get();
         bool muted = get_var_muted();
         bool muteToGray = get_var_muteToGray();
@@ -686,17 +653,19 @@ void tick_screen_main() {
                 cur_bars = numBars;
                 tick_value_change_obj = NULL;
             }
-        }
+        }  
         // Alert Table Freq & Direction update
         {
-            int alertCount = get_var_alertCount();
-            if (alertCount != cur_alert_count && alertCount > 1) {
+            int alertTableSize = get_var_alertTableSize();
+
+            // TODO: is the comparison to cur_alert_count needed?
+            if (alertTableSize != cur_alert_count && alertTableSize > 1) {
                 LV_LOG_INFO("update alert table");
                 const char** frequencies = get_var_frequencies();
                 const char** directions = get_var_directions();
-                update_alert_rows(alertCount, frequencies);
-                update_alert_arrows(alertCount, directions);
-                cur_alert_count = alertCount;
+                update_alert_rows(alertTableSize, frequencies);
+                update_alert_arrows(alertTableSize, directions);
+                cur_alert_count = alertTableSize;
             }
         }
         // Alert Table visibility
@@ -800,6 +769,52 @@ void tick_screen_main() {
         //     }
         // }
     }
+    // Logic Mode
+    {
+        bool useDefault = get_var_useDefaultV1Mode();
+        const char *new_val = get_var_logicmode(useDefault);
+        lv_obj_t *target = useDefault ? objects.default_mode : objects.mode_type;
+        lv_obj_t *target_old = useDefault ? objects.mode_type : objects.default_mode;
+        lv_obj_t *overlay = objects.overlay_mode;
+        
+        if (!target) {
+            LV_LOG_ERROR("Error: %s is NULL!", useDefault ? "objects.default_mode" : "objects.mode_type");
+            return;
+        }
+    
+        if (!new_val) {
+            LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
+            return;
+        }
+    
+        const char *cur_val = lv_label_get_text(target);
+        if (cur_val && strcmp(new_val, cur_val) != 0) {
+            LV_LOG_INFO("update Logic Mode");
+            tick_value_change_obj = target;
+            lv_label_set_text(target, new_val);
+            lv_label_set_text(target_old, "");
+    
+            lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_text_color(target, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
+
+            if (new_val == "c") {
+                lv_label_set_text(overlay, "q");
+                lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+            }
+
+            if (alertPresent && showBogeys && alertCount > 0 && !laserAlert) {
+                lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
+            }
+            else if (alertPresent || laserAlert) {
+                lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+            } 
+            else {
+                //lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+            }
+            tick_value_change_obj = NULL;
+        }
+    } 
 }
 
 void create_screen_settings() {

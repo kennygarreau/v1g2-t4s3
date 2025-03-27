@@ -3,12 +3,11 @@
 
 #include <NimBLEDevice.h>
 #include <Preferences.h>
-//#include <ESPAsyncWebServer.h>
 #include "LilyGo_AMOLED.h"
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.1.0a"
+#define FIRMWARE_VERSION "1.1.0b"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -35,7 +34,7 @@ extern LilyGo_AMOLED amoled;
 extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiConnecting, wifiConnected, localWifiStarted;
 
-extern int currentSpeed;
+extern int currentSpeed, alertTableSize;
 extern SemaphoreHandle_t xWiFiLock;
 
 extern std::vector<std::pair<int, int>> sectionBounds;
@@ -239,7 +238,6 @@ struct DisplayConstants {
 
 //extern DisplayConstants selectedConstants;
 extern std::string manufacturerName, modelNumber, serialNumber, softwareRevision;
-//extern std::string hardwareRevision, firmwareRevision
 
 extern Preferences preferences;
 extern bool isVBusIn, batteryCharging, isPortraitMode;

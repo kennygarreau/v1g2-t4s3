@@ -481,8 +481,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             bool found = false;
             for (auto& alertData : alertDataList) {
                 if (alertData.alertCount == alertCountValue) {
-                    alertData.frequencies[alertData.freqCount++] = freqGhz;  // Store display-relevant data and increment counter
-                    found = true;
+                    alertData.frequencies[alertData.freqCount++] = freqGhz;
                     break;
                 }
             }
@@ -491,6 +490,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             if (!found) {
                 AlertTableData newAlertData = {alertCountValue, {freqGhz}, {dirValue}, barCount, 1};
                 alertDataList.push_back(newAlertData);
+                found = true;
             }
         }
 
@@ -512,6 +512,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
     }
     set_var_alertCount(alertCountValue);
+    set_var_alertTableSize(alertDataList.size());
     set_var_frequencies(alertDataList);
 }
 
@@ -520,7 +521,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
     ID 43 (respAlertData): direct decode 
 */
 std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
-    unsigned long startTimeMillis = millis();
+    //unsigned long startTimeMillis = millis();
 
     if (packet.compare(0, 2, "AA") != 0) {
         return "err SOF";
@@ -642,8 +643,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
             if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS + 1) {
                 alertPresent = true;
-                decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 set_var_showAlertTable(alertCountValue > 1);
+                decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 alertTable.clear();
             } 
             /* else {
