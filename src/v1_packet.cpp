@@ -647,16 +647,6 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 alertTable.clear();
             } 
-            /* else {
-                if (alertCountValue == 0) {
-                    // this doesn't ever seem to trigger
-                    Serial.println("caught alertCountValue of 0 in ID43");
-                    alertPresent = false;
-                }
-                // is there anything to be done here?
-            }
-            */
-            
         //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
         }
     }

@@ -802,18 +802,18 @@ void tick_screen_main() {
                 lv_label_set_text(overlay, "q");
                 lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
             }
-
-            if (alertPresent && showBogeys && alertCount > 0 && !laserAlert) {
-                lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
-            }
-            else if (alertPresent || laserAlert) {
-                lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-            } 
-            else {
-                //lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-            }
-            tick_value_change_obj = NULL;
         }
+
+        if (alertPresent && showBogeys && alertCount > 0 && !laserAlert) {
+            lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
+        }
+        else if (alertPresent || laserAlert) {
+            lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+        } 
+        else {
+            //lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+        }
+        tick_value_change_obj = NULL;
     } 
 }
 
