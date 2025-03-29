@@ -844,6 +844,7 @@ void LilyGo_AMOLED::writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length)
     } else {
         t.tx_buffer = NULL;
         t.length = 0;
+        t.flags &= ~SPI_TRANS_USE_TXDATA; // may need to set this if we continue to see trans tx_buffer errors
     }
     spi_device_polling_transmit(spi, &t);
     clrCS();
