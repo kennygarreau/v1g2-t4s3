@@ -494,7 +494,7 @@ void tick_status_bar() {
                 lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
             }
         }
-        else {
+        else if (value && laserAlert) {
             lv_label_set_text(objects.custom_freq_en, "");
             lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
         }

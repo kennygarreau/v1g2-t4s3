@@ -118,7 +118,7 @@ void wifiScan() {
             for (int i = 0; i < networkCount; i++) {
                 if (WiFi.SSID(i) == cred.ssid) {
                     wifiConnecting = true;
-                    Serial.printf("Attempting to connect to: %s", cred.ssid.c_str());
+                    Serial.printf("Attempting to connect to: %s\n", cred.ssid.c_str());
                     WiFi.begin(cred.ssid.c_str(), cred.password.c_str());
 
                     unsigned long startAttemptTime = millis();
