@@ -174,7 +174,7 @@ bool SPIFFSFileManager::openDatabase() {
         sqlite3_config(SQLITE_CONFIG_HEAP, psramBuffer, SQLITE_PSRAM_BUFFER_SIZE, 64);
         Serial.println("SQLite memory allocated in PSRAM");
     }
-    listSPIFFSFiles();
+    //listSPIFFSFiles();
 
     File file = SPIFFS.open(DB_PATH, FILE_WRITE);
     if (!file) {

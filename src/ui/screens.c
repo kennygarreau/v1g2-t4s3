@@ -443,7 +443,8 @@ void create_screen_main() {
 }
 
 void tick_status_bar() {
-    bool alertPresent = get_var_alertPresent();
+    //bool alertPresent = get_var_alertPresent();
+    bool laserAlert = get_var_laserAlert();
     bool gps_enabled = get_var_gpsEnabled();
     //int alertCount = get_var_alertCount();
     //bool showBogeys = get_var_showBogeys();
@@ -487,7 +488,7 @@ void tick_status_bar() {
     // Custom Frequency Notification
     {
         bool value = get_var_customFreqEnabled();
-        if (value && !alertPresent) {
+        if (value && !laserAlert) {
             lv_label_set_text(objects.custom_freq_en, ".");
             if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) { 
                 lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
@@ -805,6 +806,7 @@ void tick_screen_main() {
         }
 
         if (alertPresent && showBogeys && alertCount > 0 && !laserAlert) {
+            lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
             lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
         }
         else if (alertPresent || laserAlert) {
