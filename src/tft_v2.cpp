@@ -286,7 +286,10 @@ extern "C" void set_var_prioBars(int value) {
 extern "C" const char *get_var_logicmode(bool value) {
     //return value ? globalConfig.defaultMode : globalConfig.mode;
     const char* result = value ? globalConfig.defaultMode : globalConfig.mode;
-    return result ? result : "U";
+    if (bt_connected) {
+        return result ? result : "U";
+    }
+    else return "";
 }
 
 extern "C" const char *get_var_prio_alert_freq() {

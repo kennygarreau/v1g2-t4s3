@@ -167,6 +167,7 @@ void update_alert_display(bool muted) {
     lv_obj_set_style_text_color(objects.band_k, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_ka, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_x, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_img_set_src(objects.front_arrow, front_arrow_src);
     lv_img_set_src(objects.side_arrow, side_arrow_src);
     lv_img_set_src(objects.rear_arrow, rear_arrow_src);

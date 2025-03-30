@@ -618,8 +618,8 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
         if (alertC == "00") {
             if (alertPresent) {
                 Serial.println("alertC 00 && alertPresent, clearing alerts");
-                clearInfAlerts();
                 clearTableAlerts();
+                clearInfAlerts();
                 alertPresent = false;
             }
             return "";

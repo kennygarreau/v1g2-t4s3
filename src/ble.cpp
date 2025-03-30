@@ -288,11 +288,11 @@ void reqMuteOff() {
 
 void initBLE() {
     NimBLEDevice::init("Async Client");
-    NimBLEDevice::setPower(3);
+    NimBLEDevice::setPower(7);
     NimBLEScan* pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scanCallbacks);
-    pScan->setInterval(45);
-    pScan->setWindow(45);
+    pScan->setInterval(100);
+    pScan->setWindow(75);
     pScan->setActiveScan(true);
     pScan->start(scanTimeMs);
 }
