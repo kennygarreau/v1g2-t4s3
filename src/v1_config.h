@@ -178,12 +178,14 @@ extern bool gpsAvailable;
 struct Stats {
     unsigned long uptime;
     uint32_t cpuBusy;
+    int cpuCores;
     uint32_t freeHeap;
     uint32_t freePsram;
     uint32_t totalHeap;
     uint32_t totalPsram;
     uint32_t totalStorageKB;
     uint32_t usedStorageKB;
+    uint8_t heapFrag;
     int connectedWifiClients;
     int btStr;
     int wifiRSSI;

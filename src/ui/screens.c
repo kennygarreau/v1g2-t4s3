@@ -672,16 +672,14 @@ void tick_screen_main() {
         // Alert Table visibility
         {
             bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
-            bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
-            if (new_val == cur_val) {
-                LV_LOG_INFO("show alert table");
-                tick_value_change_obj = objects.alert_table;
-                if (new_val) {
-                    lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-                }
-                else lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-                tick_value_change_obj = NULL;
+            //bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
+            tick_value_change_obj = objects.alert_table;
+            if (new_val) {
+                LV_LOG_INFO("update alert table");
+                lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
             }
+            else { lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); }
+            tick_value_change_obj = NULL;
         }
         // Mute status
         {

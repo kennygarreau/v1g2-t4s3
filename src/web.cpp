@@ -210,8 +210,10 @@ void setupWebServer()
         jsonDoc["uptime"] = stats.uptime;
         jsonDoc["frequency"] = frequency;
         jsonDoc["cpuBusy"] = stats.cpuBusy;
+        jsonDoc["cpuCores"] = stats.cpuCores;
         jsonDoc["totalHeap"] = stats.totalHeap / 1024;
         jsonDoc["freeHeapInKB"] = stats.freeHeap / 1024;
+        jsonDoc["heapFrag"] = stats.heapFrag;
         jsonDoc["totalPsram"] = stats.totalPsram / 1024;
         jsonDoc["freePsramInKB"] = stats.freePsram / 1024;
         jsonDoc["totalStorage"] = stats.totalStorageKB;

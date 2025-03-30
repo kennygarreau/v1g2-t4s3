@@ -29,6 +29,7 @@
 #include <ezTime.h>
 #include "gps.h"
 #include <Ticker.h>
+#include "esp_flash.h"
 
 Ticker writeBatteryVoltageTicker;
 Ticker writeVolumeTicker;
@@ -217,6 +218,7 @@ void setup()
   stats.totalPsram = ESP.getPsramSize();
   stats.totalStorageKB = fileManager.getStorageTotal();
   stats.usedStorageKB = fileManager.getStorageUsed();
+  stats.cpuCores = ESP.getChipCores();
 
   // TODO: should we check for BLE connectivity before invoking? should this be moved to loop?
   writeVolumeTicker.attach(61, reqVolume);
@@ -290,8 +292,11 @@ void loop() {
     batteryPercentage = constrain(batteryPercentage, 0, 100);
     uint32_t cpuIdle = lv_timer_get_idle();  
     stats.cpuBusy = 100 - cpuIdle;
-    stats.freeHeap = ESP.getFreeHeap();
     stats.freePsram = ESP.getFreePsram();
+    
+    stats.freeHeap = ESP.getFreeHeap();
+    size_t largestBlock = ESP.getMaxAllocHeap();
+    stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
 
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
