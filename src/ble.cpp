@@ -260,17 +260,13 @@ void requestAllSweepDefinitions() {
 
 void reqBatteryVoltage() {
   if (bt_connected && clientWriteCharacteristic) {
-    if (clientWriteCharacteristic->canWrite()) {
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
-    }
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
   }
 }
 
 void reqVolume() {
   if (bt_connected && clientWriteCharacteristic) {
-    if (clientWriteCharacteristic->canWrite()) {
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-    }
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
   }
 }
 

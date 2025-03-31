@@ -127,6 +127,9 @@ void setupWebServer()
     serveStaticFile(server, "/update.js", "application/javascript");
     serveStaticFile(server, "/lockouts.js", "application/javascript");
     serveStaticFile(server, "/status.js", "application/javascript");
+    serveStaticFile(server, "/js/chart.js", "application/javascript");
+    serveStaticFile(server, "/js/moment.js", "application/javascript");
+    serveStaticFile(server, "/js/chartjs-adapter-moment.js", "application/javascript");
     serveStaticFile(server, "/index.html", "text/html");
     serveStaticFile(server, "/update.html", "text/html");
     serveStaticFile(server, "/settings.html", "text/html");
@@ -208,6 +211,8 @@ void setupWebServer()
         JsonDocument jsonDoc;
 
         jsonDoc["uptime"] = stats.uptime;
+        jsonDoc["boardType"] = stats.boardType;
+        jsonDoc["boardRev"] = stats.boardRev;
         jsonDoc["frequency"] = frequency;
         jsonDoc["cpuBusy"] = stats.cpuBusy;
         jsonDoc["cpuCores"] = stats.cpuCores;

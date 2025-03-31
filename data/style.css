@@ -247,6 +247,58 @@ input[type="color"] {
     font-weight: bold;
 }
 
+.system-info-container {
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 10px;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.system-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.system-info-table th, .system-info-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.system-info-table th {
+    background: #007BFF;
+    color: white;
+    font-weight: bold;
+}
+
+.system-info-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.system-info-table td {
+    font-size: 16px;
+}
+
+.chart-container {
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+canvas {
+    max-width: 100%;
+    margin-bottom: 20px;
+}
+
 @media screen and (max-width: 768px) {
     .container {
         margin: 10px auto;
@@ -255,6 +307,9 @@ input[type="color"] {
     table {
         display: block;
         overflow-x: auto;
+    }
+    .system-info-table {
+        display: table;
     }
     #settingsForm {
         width: 90%;

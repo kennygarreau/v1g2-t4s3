@@ -6,9 +6,12 @@
         <title>v1g2.display resource monitor</title>
         <link rel="icon" type="image/x-icon" href="/favicon.ico">
         <link rel="stylesheet" href="style.css">
-      </head>
-      <body>
-        <script src="status.js"></script>
+        <script src="./js/chart.js"></script>
+        <script src="./js/moment.js"></script>
+        <script src="./js/chartjs-adapter-moment.js"></script>
+        <script defer src="status.js"></script>
+    </head>
+    <body>
         <nav>
           <a href="/">Home</a>
           <a href="settings.html">Configuration</a>
@@ -16,32 +19,50 @@
           <a href="#">Status</a>
           <a href="update.html">Update</a>
         </nav>
-        <div class="container">
-    <body>
-        <div id="container">
-            <h1>Resource Monitor</h1>
-
-            <div class="info-box">
-                <strong>CPU Frequency:</strong> <span id="cpu-freq">- MHz</span>
-            </div>
-            <div class="info-box">
-                <strong>Uptime:</strong> <span id="uptime">- s</span>
-            </div>
-            <div class="info-box">
-                <strong>BLE Signal Strength:</strong> <span id="ble-rssi">- dBm</span>
-                <strong>WiFi Signal Strength:</strong> <span id="wifi-rssi">- dBm</span>
-            </div>
-
-            <h2>Heap Usage</h2>
-            <div class="progress-bar">
-                <span id="heap-usage">0%</span>
-            </div>
-
-            <h2>PSRAM Usage</h2>
-            <div class="gauge-container">
-              <div class="gauge" id="gauge"></div>
-            </div>
-            <div class="gauge-label" id="gauge-label">0%</div>
+    <div class="container">        
+        <div class="system-info-container">
+            <h2>System Information</h2>
+            <table class="system-info-table">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Platform</td>
+                    <td id="cpu-boardType"></td>
+                </tr>
+                <tr>
+                    <td>CPU Frequency</td>
+                    <td id="cpu-freq">- MHz</td>
+                </tr>
+                <tr>
+                    <td>CPU Cores</td>
+                    <td id="cpu-cores"></td>
+                </tr>
+                <tr>
+                    <td>Uptime</td>
+                    <td id="uptime">-</td>
+                </tr>
+                <tr>
+                    <td>Heap Usage</td>
+                    <td id="total-heap">- KB</td>
+                </tr>
+                <tr>
+                    <td>PSRAM Usage</td>
+                    <td id="total-psram">- KB</td>
+                </tr>
+                <tr>
+                    <td>Flash Usage</td>
+                    <td id="total-storage">- MB</td>
+                </tr>
+            </table>
+        </div>
+        <div class="chart-container">
+            <h2>System Dashboard</h2>
+            <canvas id="cpuChart"></canvas>
+            <canvas id="heapChart"></canvas>
+            <canvas id="bleChart"></canvas>
+            <canvas id="wifiChart"></canvas>
         </div>
     </body>
 </html>

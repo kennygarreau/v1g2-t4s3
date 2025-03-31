@@ -92,6 +92,7 @@ void onWiFiEvent(WiFiEvent_t event) {
 
 void wifiSetup() {
     WiFi.mode(static_cast<wifi_mode_t>(settings.wifiMode));
+    WiFi.getTxPower();
     WiFi.disconnect();
     WiFi.onEvent(onWiFiEvent);
     if (settings.wifiMode == WIFI_SETTING_STA) {

@@ -186,6 +186,8 @@ struct Stats {
     uint32_t totalStorageKB;
     uint32_t usedStorageKB;
     uint8_t heapFrag;
+    std::string boardType;
+    uint8_t boardRev;
     int connectedWifiClients;
     int btStr;
     int wifiRSSI;

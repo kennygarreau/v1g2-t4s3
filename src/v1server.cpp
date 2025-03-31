@@ -205,9 +205,6 @@ void setup()
   xWiFiLock =  xSemaphoreCreateBinary();
   xSemaphoreGive( xWiFiLock );
 
-  wifiSetup();
-  setupWebServer();
-
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
 
   lv_obj_t * scr = lv_scr_act();
@@ -219,11 +216,16 @@ void setup()
   stats.totalStorageKB = fileManager.getStorageTotal();
   stats.usedStorageKB = fileManager.getStorageUsed();
   stats.cpuCores = ESP.getChipCores();
+  stats.boardType = ESP.getChipModel();
+  stats.boardRev = ESP.getChipRevision();
 
   // TODO: should we check for BLE connectivity before invoking? should this be moved to loop?
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
+
+  wifiSetup();
+  setupWebServer();
 
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);

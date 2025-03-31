@@ -844,6 +844,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 gpsData.voltage = voltageInt + (voltageDec / 100.0f);
             }
         } catch (const std::exception& e) {
+            Serial.println("caught an exception during respBatteryVoltage");
         }
     }
     // respUnsupportedPacket
