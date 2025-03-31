@@ -10,6 +10,8 @@ extern const char *lockoutFieldNames[];
 
 void setupWebServer();
 void checkReboot();
+void getDeviceStats();
+void bootDeviceStats();
 String readFileFromSPIFFS(const char* path);
 
 #endif

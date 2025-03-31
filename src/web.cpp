@@ -59,6 +59,45 @@ bool isRebootPending = false;
 
 std::string manufacturerName, modelNumber, serialNumber, softwareRevision;
 
+void bootDeviceStats() {
+    stats.totalHeap = ESP.getHeapSize();
+    stats.totalPsram = ESP.getPsramSize();
+    stats.cpuCores = ESP.getChipCores();
+    stats.boardType = ESP.getChipModel();
+    stats.boardRev = ESP.getChipRevision();
+}
+
+void getDeviceStats() {
+    stats.uptime = (millis() - bootMillis) / 1000;
+
+    if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
+      stats.connectedWifiClients = 0;
+    } else {
+      stats.connectedWifiClients = WiFi.softAPgetStationNum();
+    }
+
+    isVBusIn = amoled.isVbusIn();
+    if (isVBusIn) {
+      vBusVoltage = amoled.getVbusVoltage();
+    }
+    if (bt_connected && clientWriteCharacteristic) {
+      stats.btStr = getBluetoothSignalStrength();
+    }
+    
+    batteryCharging = amoled.isCharging();
+    uint16_t espVoltage = amoled.getBattVoltage();
+    voltageInMv = espVoltage; // cast this to float
+    batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
+    batteryPercentage = constrain(batteryPercentage, 0, 100);
+    uint32_t cpuIdle = lv_timer_get_idle();
+    stats.cpuBusy = 100 - cpuIdle;
+    stats.freePsram = ESP.getFreePsram();
+    
+    stats.freeHeap = ESP.getFreeHeap();
+    size_t largestBlock = ESP.getMaxAllocHeap();
+    stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
+}
+
 String readFileFromSPIFFS(const char *path)
 {
     File file = SPIFFS.open(path, "r");

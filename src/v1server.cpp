@@ -211,15 +211,11 @@ void setup()
   if (scr) {
     lv_obj_add_event_cb(scr, main_press_handler, LV_EVENT_ALL, NULL);
   }
-  stats.totalHeap = ESP.getHeapSize();
-  stats.totalPsram = ESP.getPsramSize();
+  
+  bootDeviceStats();
   stats.totalStorageKB = fileManager.getStorageTotal();
   stats.usedStorageKB = fileManager.getStorageUsed();
-  stats.cpuCores = ESP.getChipCores();
-  stats.boardType = ESP.getChipModel();
-  stats.boardRev = ESP.getChipRevision();
 
-  // TODO: should we check for BLE connectivity before invoking? should this be moved to loop?
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
@@ -270,35 +266,8 @@ void loop() {
   
   unsigned long currentMillis = millis();
   if (currentMillis - lastMillis >= 2000) {
-    stats.uptime = (millis() - bootMillis) / 1000;
     //Serial.printf("Uptime: %u | Loops executed: %d\n", stats.uptime, loopCounter); // uncomment for loop profiling
-
-    if (WiFi.getMode() == WIFI_MODE_AP && WiFi.softAPgetStationNum() == 0) {
-      stats.connectedWifiClients = 0;
-    } else {
-      stats.connectedWifiClients = WiFi.softAPgetStationNum();
-    }
-
-    isVBusIn = amoled.isVbusIn();
-    if (isVBusIn) {
-      vBusVoltage = amoled.getVbusVoltage();
-    }
-    if (bt_connected && clientWriteCharacteristic) {
-      stats.btStr = getBluetoothSignalStrength();
-    }
-    
-    batteryCharging = amoled.isCharging();
-    uint16_t espVoltage = amoled.getBattVoltage();
-    voltageInMv = espVoltage; // cast this to float
-    batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
-    batteryPercentage = constrain(batteryPercentage, 0, 100);
-    uint32_t cpuIdle = lv_timer_get_idle();  
-    stats.cpuBusy = 100 - cpuIdle;
-    stats.freePsram = ESP.getFreePsram();
-    
-    stats.freeHeap = ESP.getFreeHeap();
-    size_t largestBlock = ESP.getMaxAllocHeap();
-    stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
+    getDeviceStats();
 
     // This will obtain the User-defined settings (eg. disabling certain bands)
     if (!configHasRun && !settings.displayTest) {
