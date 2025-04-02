@@ -157,7 +157,7 @@ void update_alert_display(bool muted) {
     static bool last_muted_state = false;
     if (muted == last_muted_state) return;
 
-    lv_color_t text_color = muted ? lv_color_hex(0xff363636) : lv_color_hex(0xffff0000);
+    lv_color_t text_color = muted ? lv_color_hex(0xff636363) : lv_color_hex(default_color);
     const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
     const void* side_arrow_src = muted ? &img_arrow_side_gray : &img_arrow_side;
     const void* rear_arrow_src = muted ? &img_arrow_rear_gray : &img_arrow_rear;
@@ -168,9 +168,34 @@ void update_alert_display(bool muted) {
     lv_obj_set_style_text_color(objects.band_ka, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_x, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.custom_freq_en, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_img_set_src(objects.front_arrow, front_arrow_src);
     lv_img_set_src(objects.side_arrow, side_arrow_src);
     lv_img_set_src(objects.rear_arrow, rear_arrow_src);
 
     last_muted_state = muted;
+}
+
+lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img) {
+    if (!src_img) return NULL;
+
+    lv_img_dsc_t *psram_img = (lv_img_dsc_t *)lv_mem_alloc(sizeof(lv_img_dsc_t));
+    if (!psram_img) {
+        LV_LOG_ERROR("Failed to allocate image descriptor in PSRAM");
+        return (lv_img_dsc_t *)src_img;
+    }
+
+    memcpy(psram_img, src_img, sizeof(lv_img_dsc_t));  // Copy descriptor
+
+    psram_img->data = (const uint8_t *)lv_mem_alloc(psram_img->data_size);
+    if (!psram_img->data) {
+        LV_LOG_ERROR("Failed to allocate image data in PSRAM");
+        free(psram_img);
+        return (lv_img_dsc_t *)src_img;
+    }
+
+    memcpy((void *)psram_img->data, src_img->data, psram_img->data_size);
+
+    LV_LOG_INFO("Image allocated in PSRAM: %d bytes\n", psram_img->data_size);
+    return psram_img;
 }

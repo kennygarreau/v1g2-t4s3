@@ -13,14 +13,6 @@ void wifiScanTask(void *parameter) {
     vTaskDelete(NULL);
 }
 
-/*
-void reconnectTask(void *param) {
-    Serial.println("Reconnecting to WiFi...");
-    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
-    vTaskDelete(NULL);
-}
-*/
-
 void onWiFiEvent(WiFiEvent_t event) {
     wifi_mode_t currentMode = WiFi.getMode();
 

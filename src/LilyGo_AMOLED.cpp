@@ -685,6 +685,17 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
         }
     }
 
+    if (boards->display.frameBufferSize) {
+        if (psramFound()) {
+            pBuffer = (uint16_t *)ps_malloc(boards->display.frameBufferSize);
+            log_i("allocating PSRAM framebuffer with size: %u\n", boards->display.frameBufferSize);
+        } else {
+            pBuffer = (uint16_t *)malloc(boards->display.frameBufferSize);
+            log_i("allocating internal framebuffer with size: %u\n", boards->display.frameBufferSize);
+        }
+        assert(pBuffer);
+    }
+
     setRotation(0);
 
     return true;
@@ -766,8 +777,10 @@ bool LilyGo_AMOLED::beginAMOLED_147()
     if (boards->display.frameBufferSize) {
         if (psramFound()) {
             pBuffer = (uint16_t *)ps_malloc(boards->display.frameBufferSize);
+            Serial.printf("allocating PSRAM framebuffer with size: %u KB", boards->display.frameBufferSize);
         } else {
             pBuffer = (uint16_t *)malloc(boards->display.frameBufferSize);
+            Serial.printf("allocating internal framebuffer with size: %u KB", boards->display.frameBufferSize);
         }
         assert(pBuffer);
     }
@@ -850,6 +863,35 @@ void LilyGo_AMOLED::writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length)
     clrCS();
 }
 
+void LilyGo_AMOLED::writeCommand_v2(uint32_t cmd, uint8_t *pdat, uint32_t length)
+{
+    setCS();
+
+    static spi_transaction_t t;
+    memset(&t, 0, sizeof(t));
+
+    t.flags = SPI_TRANS_MULTILINE_CMD | SPI_TRANS_MULTILINE_ADDR;
+    t.cmd = 0x02;
+    t.addr = cmd << 8;
+
+    if (length != 0) {
+        t.tx_buffer = pdat;
+        t.length = 8 * length;
+    } else {
+        t.tx_buffer = NULL;
+        t.length = 0;
+        t.flags &= ~SPI_TRANS_USE_TXDATA;
+    }
+
+    esp_err_t ret = spi_device_queue_trans(spi, &t, portMAX_DELAY);
+    if (ret != ESP_OK) {
+        log_e("SPI DMA queue failed!");
+    }
+
+    clrCS();
+}
+
+
 void LilyGo_AMOLED::setBrightness(uint8_t level)
 {
     _brightness = level;
@@ -860,6 +902,32 @@ void LilyGo_AMOLED::setBrightness(uint8_t level)
 uint8_t LilyGo_AMOLED::getBrightness()
 {
     return _brightness;
+}
+
+void LilyGo_AMOLED::setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye) {
+    xs += _offset_x;
+    ys += _offset_y;
+    xe += _offset_x;
+    ye += _offset_y;
+
+    lcd_cmd_t t[2] = {
+        {
+            LCD_CMD_CASET, {
+                (uint8_t)(xs >> 8), (uint8_t)(xs & 0xFF),
+                (uint8_t)(xe >> 8), (uint8_t)(xe & 0xFF)
+            }, 4
+        },
+        {
+            LCD_CMD_RASET, {
+                (uint8_t)(ys >> 8), (uint8_t)(ys & 0xFF),
+                (uint8_t)(ye >> 8), (uint8_t)(ye & 0xFF)
+            }, 4
+        }
+    };
+
+    for (uint32_t i = 0; i < 2; i++) {
+        writeCommand_v2(t[i].addr, t[i].param, t[i].len);
+    }
 }
 
 void LilyGo_AMOLED::setAddrWindow(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye)
@@ -904,88 +972,59 @@ bool LilyGo_AMOLED::checkDisplayReady() {
     return digitalRead(tePin) == HIGH;
 }
 
-void LilyGo_AMOLED::pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *data) {
-    if (!spi) {
-        Serial.println("SPI device not initialized!");
-        return;
-    }
+void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
+    if (!spi) return;
 
-    size_t totalPixels = width * height;
-    size_t totalBytes = totalPixels * sizeof(uint16_t);
-    size_t maxTransferSize = 1024;
-    uint16_t *p = data;
+    bool first_send = true;
+    setCS();  // Set chip select
 
-    setCS();
-    setAddrWindow(x, y, x + width - 1, y + height - 1);
-    writeCommand(LCD_CMD_RAMWR, NULL, 0);
-
-    size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    Serial.printf("Available DMA memory: %d bytes\n", freeMem);
-
-    uint16_t *dmaBuffer1 = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT);
-    uint16_t *dmaBuffer2 = (uint16_t *)heap_caps_malloc(maxTransferSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT);    
-    if (!dmaBuffer1 || !dmaBuffer2) {
-        Serial.println("DMA Buffer allocation failed!");
-        if (dmaBuffer1) heap_caps_free(dmaBuffer1);
-        if (dmaBuffer2) heap_caps_free(dmaBuffer2);
-        clrCS();
-        return;
-    }
-
-    size_t remainingBytes = totalBytes;
-    std::vector<spi_transaction_t*> queuedTrans;
-    //spi_transaction_t trans = {0};
-
-    bool useBuffer1 = true;
-    while (remainingBytes > 0) {
-        size_t chunkSize = (remainingBytes > maxTransferSize) ? maxTransferSize : remainingBytes;
-        if (chunkSize % 2 != 0) chunkSize -= 1;
-
-        uint16_t *currentBuffer = useBuffer1 ? dmaBuffer1 : dmaBuffer2;
-        memcpy(currentBuffer, p, chunkSize);
-        p += chunkSize / sizeof(uint16_t); 
-
-        spi_transaction_t *trans = (spi_transaction_t *)heap_caps_malloc(sizeof(spi_transaction_t), MALLOC_CAP_DMA);
-        if (!trans) {
-            Serial.println("Failed to allocate SPI transaction!");
-            break;
+    while (len > 0) {
+        size_t chunk_size = len;
+        if (chunk_size > SEND_BUF_SIZE) {
+            chunk_size = SEND_BUF_SIZE;
         }
-        //memset(&trans, 0, sizeof(spi_transaction_t));
-        trans->flags = SPI_TRANS_MODE_QIO;
-        trans->tx_buffer = currentBuffer;
-        trans->length = chunkSize * 8;
 
-        digitalWrite(boards->display.d1, HIGH);
-        esp_err_t ret = spi_device_queue_trans(spi, trans, portMAX_DELAY);
+        spi_transaction_ext_t t = {0};
+        memset(&t, 0, sizeof(t));
+
+        // Setup the first transaction differently
+        if (first_send) {
+            t.base.flags = SPI_TRANS_MODE_QIO;
+            t.base.cmd = 0x32;  // Modify as necessary
+            t.base.addr = 0x002C00;  // Modify as necessary
+            first_send = 0;
+        } else {
+            t.base.flags = SPI_TRANS_MODE_QIO | SPI_TRANS_VARIABLE_CMD | SPI_TRANS_VARIABLE_ADDR | SPI_TRANS_VARIABLE_DUMMY;
+            t.command_bits = 0;
+            t.address_bits = 0;
+            t.dummy_bits = 0;
+        }
+
+        t.base.tx_buffer = data;
+        t.base.length = chunk_size * 16;  // Multiply by 16 for bit-length
+
+        //bool is_dma = esp_ptr_dma_capable(data);
+        //Serial.printf("Transferring buffer at %p (DMA: %s)\n", data, is_dma ? "YES" : "NO");
+
+        esp_err_t ret = spi_device_queue_trans(spi, &t.base, portMAX_DELAY);
         if (ret != ESP_OK) {
-            Serial.printf("Failed to queue SPI transaction: %d\n", ret);
-            heap_caps_free(trans);
-            break;
+            Serial.printf("DMA transfer failed: %d\n", ret);
         }
-        queuedTrans.push_back(trans);
 
-        Serial.printf("Queued transaction: %d bytes\n", chunkSize);
-        remainingBytes -= chunkSize;
-        useBuffer1 = !useBuffer1;
-    }
-
-    // Wait for all transactions to finish
-    Serial.println("Waiting for queued transactions...");
-    for (auto &t : queuedTrans) {
-        spi_transaction_t *done_trans;
-        esp_err_t ret = spi_device_get_trans_result(spi, &done_trans, portMAX_DELAY);
+        spi_transaction_t *trans_result;
+        ret = spi_device_get_trans_result(spi, &trans_result, portMAX_DELAY);
         if (ret != ESP_OK) {
-            Serial.printf("Error in getting transaction result: %d\n", ret);
-            break;
+            log_e("DMA SPI transfer failed!");
         }
-        heap_caps_free(t);
+
+        // Move data pointer and decrease length
+        data += chunk_size;
+        len -= chunk_size;
     }
 
-    heap_caps_free(dmaBuffer1);
-    heap_caps_free(dmaBuffer2);
-    clrCS();
-    Serial.println("DMA buffer freed and SPI transaction complete.");
+    clrCS();  // Clear chip select
 }
+
 
 // Push (aka write pixel) colours to the TFT (use setAddrWindow() first)
 void LilyGo_AMOLED::pushColors(uint16_t *data, uint32_t len)
@@ -1034,8 +1073,8 @@ void LilyGo_AMOLED::pushColors(uint16_t *data, uint32_t len)
 
 void LilyGo_AMOLED::pushColors(uint16_t x, uint16_t y, uint16_t width, uint16_t hight, uint16_t *data)
 {
-
-    if (boards->display.frameBufferSize) {
+    // make sure to change this back to remove the !
+    if (!boards->display.frameBufferSize) {
         assert(pBuffer);
         uint16_t _x = this->height() - (y + hight);
         uint16_t _y = x;

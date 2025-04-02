@@ -218,7 +218,8 @@ static const DisplayConfigure_t RM690B0_AMOLED  = {
     RM690B0_INIT_SEQUENCE_LENGTH,
     RM690B0_WIDTH,//width
     RM690B0_HEIGHT,//height
-    0,//frameBufferSize
+    //RM690B0_WIDTH * RM690B0_HEIGHT * sizeof(uint16_t), //frameBufferSize
+    0, // frameBufferSize
     false //fullRefresh
 };
 static const int AMOLED_241_BUTTONTS[1] = {0};
@@ -309,7 +310,9 @@ class LilyGo_AMOLED:
 {
 public:
     // KG
-    void pushColorsDMA(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *data);
+    void pushColorsDMA_v2(uint16_t *data, uint32_t len);
+    void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye);
+    void writeCommand_v2(uint32_t cmd, uint8_t *pdat, uint32_t length);
     bool checkDisplayReady();
     // LILYGO_AMOLED_191_SPI USE BQ25896
     PowersSY6970 SY;

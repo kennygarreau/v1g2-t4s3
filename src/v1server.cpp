@@ -36,7 +36,7 @@ Ticker writeVolumeTicker;
 Ticker statusBarTicker;
 
 AsyncWebServer server(80);
-SemaphoreHandle_t xWiFiLock = NULL;
+//SemaphoreHandle_t xWiFiLock = NULL;
 
 static bool laserAlert = false;
 static std::string bogeyValue, barValue, bandValue, directionValue;
@@ -68,6 +68,7 @@ int loopCounter = 0;
 unsigned long bootMillis = 0;
 unsigned long lastMillis = 0;
 const unsigned long uiTickInterval = 5;
+const unsigned long atTickInterval = 250;
 
 SPIFFSFileManager fileManager;
 
@@ -168,8 +169,14 @@ void setup()
     }
   }
 
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap before helper: %u\n", stats.freeHeap);
+
   beginLvglHelper(amoled);
   Serial.printf("Setup running on core %d\n", xPortGetCoreID());
+
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap after helper: %u\n", stats.freeHeap);
 
   ui_init();
   ui_tick();
@@ -202,8 +209,8 @@ void setup()
     initBLE();
   }
 
-  xWiFiLock =  xSemaphoreCreateBinary();
-  xSemaphoreGive( xWiFiLock );
+  // xWiFiLock =  xSemaphoreCreateBinary();
+  // xSemaphoreGive( xWiFiLock );
 
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
 
@@ -230,8 +237,9 @@ void setup()
 void loop() {  
   static bool configHasRun = false;
   static unsigned long lastGPSUpdate = 0;
-  static unsigned long lastWifiReconnect = 0;
+  //static unsigned long lastWifiReconnect = 0;
   static unsigned long lastTick = 0;
+  static unsigned long lastTableTick = 0;
   unsigned long gpsMillis = millis();
   
   if (bt_connected && bleInit) {
@@ -342,11 +350,11 @@ void loop() {
       gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";
 
       if (settings.unitSystem == "Metric") {
-        gpsData.speed = gps.speed.kmph();
+        gpsData.speed = static_cast<int>(round(gps.speed.kmph()));
         gpsData.altitude = gps.altitude.meters();
         currentSpeed = static_cast<int>(gps.speed.kmph());
       } else {
-        gpsData.speed = gps.speed.mph();
+        gpsData.speed = static_cast<int>(round(gps.speed.mph()));
         gpsData.altitude = gps.altitude.feet();
         currentSpeed = static_cast<int>(gps.speed.mph());
       }
@@ -363,6 +371,15 @@ void loop() {
     lastTick = now;
     ui_tick();
     lv_task_handler();
+    unsigned long elapsed = millis() - now;
+    if (elapsed > 16) {
+      Serial.printf("Warning: screen draw time: %u ms\n", elapsed);
+    }
+  }
+
+  if (now - lastTableTick >= atTickInterval) {
+    lastTableTick = now;
+    tick_alertTable();
   }
 
   loopCounter++;

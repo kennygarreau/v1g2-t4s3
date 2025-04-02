@@ -16,7 +16,7 @@ struct alertByte {
     int count;
     int index; };
 static std::string dirValue, bandValue;
-static std::string lastPayload = "";
+//static std::string lastPayload = "";
 static std::string lastinfPayload = "";
 int frontStrengthVal, rearStrengthVal;
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
@@ -44,6 +44,7 @@ PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
     this is required for the bar mapping functions below
 */
 
+/*
 int hexToDecimal(char hex) {
     if (hex >= '0' && hex <= '9') {
         return hex - '0';
@@ -66,6 +67,31 @@ int hexToDecimal(const std::string& hexStr) {
     }
     return decimalValue;
 }
+*/
+
+int combineMSBLSB(const std::string& msb, const std::string& lsb) {
+    auto hexToDecimal = [](const std::string& hex) -> int {
+        int decimalValue = 0;
+        for (char c : hex) {
+            int digit = (c >= '0' && c <= '9') ? (c - '0') :
+                        (c >= 'A' && c <= 'F') ? (c - 'A' + 10) :
+                        (c >= 'a' && c <= 'f') ? (c - 'a' + 10) : -1;
+            if (digit == -1) return -1;
+            decimalValue = (decimalValue << 4) | digit;
+        }
+        return decimalValue;
+    };
+
+    int msbDecimal = hexToDecimal(msb);
+    int lsbDecimal = hexToDecimal(lsb);
+
+    if (msbDecimal == -1 || lsbDecimal == -1) {
+        return 0;
+    }
+
+    return (msbDecimal << 8) | lsbDecimal;
+}
+
 
 std::string hexToAscii(const std::string& hexStr) {
     std::string asciiStr;
@@ -157,6 +183,7 @@ int mapKaToBars(const std::string& hex) {
     return -1;
 }
 
+/*
 int combineMSBLSB(const std::string& msb, const std::string& lsb) {
     int msbDecimal = hexToDecimal(msb);
     int lsbDecimal = hexToDecimal(lsb);
@@ -165,6 +192,7 @@ int combineMSBLSB(const std::string& msb, const std::string& lsb) {
     }
     return (msbDecimal * 256) + lsbDecimal;
 }
+*/
 
 void processSection(const std::string& packet, int offset) {
     int sweepDefIndexNum = std::stoi(packet.substr(offset, 2), nullptr, 16);
@@ -289,7 +317,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.ka != arrow2.ka) {
         enable_blinking(BLINK_KA);
-        Serial.print("== blink ka ");
+        //Serial.print("== blink ka ");
         //updateActiveBands(0b00000010);
     }
     if (!blink_enabled[BLINK_KA] && arrow1.ka) {
@@ -300,7 +328,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.k != arrow2.k) {
         enable_blinking(BLINK_K);
-        Serial.print("== blink k ");
+        //Serial.print("== blink k ");
         //updateActiveBands(0b00000100);
     }
     if (!blink_enabled[BLINK_K] && arrow1.k) {
@@ -311,7 +339,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.x != arrow2.x && globalConfig.xBand) {
         enable_blinking(BLINK_X);
-        Serial.print("== blink x ");
+        //Serial.print("== blink x ");
         //updateActiveBands(0b00001000);
     }
     if (!blink_enabled[BLINK_X] && arrow1.x && globalConfig.xBand) {
@@ -322,21 +350,21 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 
     if (arrow1.front != arrow2.front) {
         enable_blinking(BLINK_FRONT);
-        Serial.printf("== blink front == \n");
+        //Serial.printf("== blink front == \n");
     } else if (!blink_enabled[BLINK_FRONT]) {
         set_var_arrowPrioFront(arrow1.front);
     }
 
     if (arrow1.side != arrow2.side) {
         enable_blinking(BLINK_SIDE);
-        Serial.printf("== blink side == \n");
+        //Serial.printf("== blink side == \n");
     } else if (!blink_enabled[BLINK_SIDE]) {
         set_var_arrowPrioSide(arrow1.side);
     }
 
     if (arrow1.rear != arrow2.rear) {
         enable_blinking(BLINK_REAR);
-        Serial.printf("== blink rear == \n");
+        //Serial.printf("== blink rear == \n");
     } else if (!blink_enabled[BLINK_REAR]) {
         set_var_arrowPrioRear(arrow1.rear);
     }
@@ -352,7 +380,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         set_var_prioBars(7);
         updateActiveBands(0b00000001);
         anyBandActive = true;
-        Serial.println("== blink laser == ");
+        //Serial.println("== blink laser == ");
         set_var_laserAlert(arrow1.laser);
 
         if (arrow1.front || arrow1.rear) {
@@ -369,71 +397,52 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 Execute if we successfully write reqStartAlertData to clientWriteUUID
 */
 void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int currentSpeed) {
-    static unsigned long startTimeMillis = millis();
+    unsigned long startTimeMicros = micros();
 
     frontStrengthVal = 0;
     rearStrengthVal = 0;
 
     std::vector<AlertTableData> alertDataList;
+    AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
 
     for (int i = 0; i < alerts.size(); i++) {
-        if (alerts[i].length() < 14) {
-            Serial.printf("Error: alert string too short: %s\n", alerts[i].c_str());
-            continue;
-        }
-
         std::string alertIndexStr = alerts[i].substr(0, 2);
 
-        if (!alertIndexStr.empty()) {
-            try {
-                int alertIndex = std::stoi(alertIndexStr, nullptr, 16);
-    
-                alertCountValue = alertIndex & 0b00001111;
-                alertIndexValue = (alertIndex & 0b11110000) >> 4;
-            } catch (const std::exception& e) {
-                // Serial.print("Error parsing alert index: ");
-                // Serial.println(alertIndexStr.c_str());
-            }
-        } else {
-            Serial.print("Invalid alertIndexStr: ");
-            Serial.println(alertIndexStr.c_str());
-        }
+        try {
+            int alertIndex = std::stoi(alertIndexStr, nullptr, 16);
 
-        std::string freqMSB = alerts[i].substr(2, 2);
-        std::string freqLSB = alerts[i].substr(4, 2);
-
-        int freqMhz = combineMSBLSB(freqMSB, freqLSB);
-        freqGhz = static_cast<float>(freqMhz) / 1000.0f;
+            alertCountValue = alertIndex & 0b00001111;
+            alertIndexValue = (alertIndex & 0b11110000) >> 4;
+        } catch (const std::exception& e) {}
 
         std::string frontStrength = alerts[i].substr(6, 2);
         std::string rearStrength = alerts[i].substr(8, 2);
+        std::string bandArrowDef = alerts[i].substr(10, 2);
         std::string auxByte = alerts[i].substr(12, 2);
 
-        std::string bandArrowDef = alerts[i].substr(10, 2);
-
-        if (!bandArrowDef.empty()) {
-            try {
-                int bandArrow = std::stoi(bandArrowDef, nullptr, 16);
-                bandValue = "Unknown";
-                dirValue = "Unknown";
-            
-                switch (bandArrow & 0b00011111) { // Mask the band bits
-                    case 0b00000001: bandValue = "LASER"; break;
-                    case 0b00000010: bandValue = "Ka"; break;
-                    case 0b00000100: bandValue = "K"; break;
-                    case 0b00001000: bandValue = "X"; break;
-                    case 0b00010000: bandValue = "Ku"; break;
-                }
-            
-                switch (bandArrow & 0b11100000) { // Mask the direction bits
-                    case 0b00100000: dirValue = "FRONT"; break;
-                    case 0b01000000: dirValue = "SIDE"; break;
-                    case 0b10000000: dirValue = "REAR"; break;
-                }
-            } catch (const std::exception& e) {
-                // anything to be done here?
+        //if (!bandArrowDef.empty()) {
+        try {
+            int bandArrow = std::stoi(bandArrowDef, nullptr, 16);
+            bandValue = "Unknown";
+            dirValue = "Unknown";
+        
+            switch (bandArrow & 0b00011111) { // Mask the band bits
+                case 0b00000001: bandValue = "LASER"; break;
+                case 0b00000010: bandValue = "Ka"; break;
+                case 0b00000100: bandValue = "K"; break;
+                case 0b00001000: bandValue = "X"; break;
+                case 0b00010000: bandValue = "Ku"; break;
             }
+        
+            switch (bandArrow & 0b11100000) { // Mask the direction bits
+                case 0b00100000: dirValue = "FRONT"; break;
+                case 0b01000000: dirValue = "SIDE"; break;
+                case 0b10000000: dirValue = "REAR"; break;
+            }
+        } catch (const std::exception& e) {
+            // anything to be done here?
         }
+        //}
 
         priority = (auxByte == "80");
         junkAlert = (auxByte == "40");
@@ -452,13 +461,21 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             frontStrengthVal = mapKaToBars(frontStrength);
             rearStrengthVal = mapKaToBars(rearStrength);        
         }
+        
+        if (bandValue != "LASER") {
+            std::string freqMSB = alerts[i].substr(2, 2);
+            std::string freqLSB = alerts[i].substr(4, 2);
+    
+            int freqMhz = combineMSBLSB(freqMSB, freqLSB);
+            freqGhz = static_cast<float>(freqMhz) / 1000.0f;
+        }
+        
         // paint the priority alert
         if (priority && bandValue != "LASER") {
-            if (!muted && gpsAvailable) {
-                if (currentSpeed <= lowSpeedThreshold) {
-                    Serial.println("SilentRide requesting mute");
-                    requestMute();
-                }
+            if (!muted && gpsAvailable && currentSpeed <= lowSpeedThreshold) {
+                Serial.println("SilentRide requesting mute");
+                requestMute();
+                muted = true;
             }
 
             // paint the main signal bar
@@ -476,27 +493,31 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                 set_var_prio_alert_freq(freqStr); 
             }
         }
-
-        if (!priority) {
+        
+        if (alertCountValue > 1) {
             bool found = false;
             for (auto& alertData : alertDataList) {
                 if (alertData.alertCount == alertCountValue) {
-                    alertData.frequencies[alertData.freqCount++] = freqGhz;
+                    alertData.frequencies[alertData.freqCount] = freqGhz;
+                    alertData.direction[alertData.freqCount] = dirValue;
+                    alertData.freqCount++;
+                    found = true;
                     break;
                 }
             }
-    
-            int barCount = get_var_prioBars();
-            if (!found) {
-                AlertTableData newAlertData = {alertCountValue, {freqGhz}, {dirValue}, barCount, 1};
+            
+            if (!found && !priority) {
+                AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
+                newAlertData.frequencies[newAlertData.freqCount] = freqGhz;
+                newAlertData.direction[newAlertData.freqCount] = dirValue;
+                newAlertData.freqCount++;
                 alertDataList.push_back(newAlertData);
-                found = true;
             }
         }
 
-        unsigned long elapsedTimeMillis = millis() - startTimeMillis;
+        unsigned long elapsedTimeMicros = micros() - startTimeMicros;
         //Serial.printf("decode time: %lu\n", elapsedTimeMillis);
-        if (freqGhz > 0) {
+        if (freqGhz > 0 || bandValue == "LASER") {
             std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
                                         " TOTL:" + std::to_string(alertCountValue) +
                                         " FREQ:" + std::to_string(freqGhz) +
@@ -506,14 +527,56 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                                         " BDIR:" + dirValue +
                                         " PRIO:" + std::to_string(priority) +
                                         " JUNK:" + std::to_string(junkAlert) +
-                                        " SPEED: " + std::to_string(gpsData.speed);
-                                        //+ " decodeAlert(ms): " + std::to_string(elapsedTimeMillis);
+                                        " SPEED: " + std::to_string(currentSpeed)
+                                        + " decodeAlert(us): " + std::to_string(elapsedTimeMicros);
             Serial.println(("respAlertData: " + decodedPayload).c_str());
         }
+        yield();
     }
-    set_var_alertCount(alertCountValue);
-    set_var_alertTableSize(alertDataList.size());
-    set_var_frequencies(alertDataList);
+
+    if (alertCountValue > 1) {
+
+        for (auto& alertData : alertDataList) {
+            std::vector<float> uniqueFrequencies;
+            std::vector<std::string> uniqueDirections;
+        
+            for (int i = 0; i < alertData.freqCount; i++) {
+                bool freqExists = false;
+                for (auto& uniqueFreq : uniqueFrequencies) {
+                    if (alertData.frequencies[i] == uniqueFreq) {
+                        freqExists = true;
+                        break;
+                    }
+                }
+        
+                if (!freqExists) {
+                    uniqueFrequencies.push_back(alertData.frequencies[i]);
+                    uniqueDirections.push_back(alertData.direction[i]);
+                }
+            }
+        
+            alertData.freqCount = uniqueFrequencies.size();
+            for (int i = 0; i < alertData.freqCount; i++) {
+                alertData.frequencies[i] = uniqueFrequencies[i];
+                alertData.direction[i] = uniqueDirections[i];
+            }
+        }
+    }
+
+    set_var_alertCount(alertCountValue); // sets the bogey counter
+    //int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
+    int tableSize = alertCountValue - 1;
+    if (tableSize > MAX_ALERTS) {tableSize = MAX_ALERTS;}
+    //Serial.printf("table size passed to set_var_alertTableSize: %d\n", tableSize);
+    
+    set_var_alertTableSize(tableSize); // should be no larger than 4
+    if (tableSize > 0) {
+        //Serial.printf("sending alertDataList with size of: %d\n", tableSize);
+        set_var_showAlertTable(true);  // moved from decode()
+        set_var_frequencies(alertDataList);
+    } else {
+        set_var_showAlertTable(false);
+    }
 }
 
 /*  decode operation, passed from loop() - based on the packet ID.
@@ -566,9 +629,12 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             try {
                 int auxByte0Int = std::stoi(auxByte0, nullptr, 16);
                 bool softMute = (auxByte0Int & 0b00000001) ? 1 : 0;
+                // TODO: figure out what to do here, if anything
+                /*
                 if (softMute) {
                     Serial.printf("soft mute status: %d | muted set to: %d\n", softMute, muted);
                 }
+                */
             } catch (const std::exception& e) {}
         }
         if (!auxByte1.empty()) {
@@ -625,7 +691,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             return "";
         } 
         else {
-            lastPayload = payload;
+            //lastPayload = payload;
             std::string alertIndexStr = packet.substr(10, 2);
 
             if (!alertIndexStr.empty()) {
@@ -643,11 +709,10 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
             if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS + 1) {
                 alertPresent = true;
-                set_var_showAlertTable(alertCountValue > 1);
                 decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
                 alertTable.clear();
+                //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
             } 
-        //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
         }
     }
     // respVersion
@@ -827,9 +892,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
                 globalConfig.mutedVolume = mutedVol;
                 volumeReceived = true;
             }
-        } catch (const std::exception& e) {
-
-        }
+        } catch (const std::exception& e) {}
     }
     // respBatteryVoltage
     else if (packetID == "63") {
@@ -878,6 +941,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
     else if (packetID == "74") {
         Serial.println("respVehicleSpeed encountered");
     }
+    yield();
     return "";
 }
 

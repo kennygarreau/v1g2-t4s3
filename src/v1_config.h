@@ -159,7 +159,7 @@ extern Config globalConfig;
 struct GPSData {
   double latitude;
   double longitude;
-  double speed;
+  int speed;
   double altitude;
   double course;
   double hdop;
@@ -250,10 +250,10 @@ extern float voltageInMv, batteryPercentage;
 extern unsigned long bootMillis;
 
 struct AlertTableData {
-    int alertCount;
+    int alertCount; // this might be spurious
     float frequencies[MAX_ALERTS + 1];
     std::string direction[MAX_ALERTS + 1];
-    int barCount;
+    int barCount; // TODO: convert to array
     int freqCount;
 };
 

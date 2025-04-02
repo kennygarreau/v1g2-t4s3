@@ -125,23 +125,27 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
 
-  unsigned long bleCallbackStart = millis();
+  unsigned long bleCallbackStart = micros();
+
+  static const char hexLookup[] = "0123456789ABCDEF";
   std::string tempHexData;
+  tempHexData.reserve(length * 2);
 
   for (size_t i = 0; i < length; i++) {
-      char hexBuffer[3];
-      sprintf(hexBuffer, "%02X", pData[i]);
-      tempHexData += hexBuffer;
+    tempHexData.push_back(hexLookup[pData[i] >> 4]);
+    tempHexData.push_back(hexLookup[pData[i] & 0x0F]);
   }
 
   if (tempHexData != previousHexData) {
-      previousHexData = tempHexData;
-      latestHexData = tempHexData;
-      newDataAvailable = true;
+    previousHexData = tempHexData;
+    latestHexData = std::move(tempHexData);
+    newDataAvailable = true;
   }
 
-  unsigned long bleCallbackLength = millis() - bleCallbackStart;
-  //Serial.printf("HEX decode time: %d ms\n", bleCallbackLength);
+  unsigned long bleCallbackLength = micros() - bleCallbackStart;
+  if (bleCallbackLength > 500) {
+    Serial.printf("Warning: HEX decode time: %d us\n", bleCallbackLength);
+  }
 }
 
 void displayReader(NimBLEClient* pClient) {
@@ -219,65 +223,65 @@ void queryDeviceInfo(NimBLEClient* pClient) {
 
 void requestSerialNumber() {
       clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSerialNumber(), 7, false);
-      delay(15);
+      delay(10);
   }
   
 void requestVersion() {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqVersion(), 7, false);
-    delay(15);
+    delay(10);
 }
 
 void requestVolume() {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-    delay(15);
+    delay(10);
 }
 
 void requestUserBytes() {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
-    delay(15);
+    delay(10);
 }
 
 void requestSweepSections() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSweepSections(), 7, false);
-    delay(20);
+    delay(10);
   }
 }
 
 void requestMaxSweepIndex() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMaxSweepIndex(), 7, false);
-    delay(20);
+    delay(10);
   }
 }
 
 void requestAllSweepDefinitions() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqAllSweepDefinitions(), 7, false);
-    delay(20);
+    delay(10);
   }
 }
 
 void reqBatteryVoltage() {
-  if (bt_connected && clientWriteCharacteristic) {
+  if (bt_connected && clientWriteCharacteristic && !alertPresent) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
   }
 }
 
 void reqVolume() {
-  if (bt_connected && clientWriteCharacteristic) {
+  if (bt_connected && clientWriteCharacteristic && !alertPresent) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
   }
 }
 
 void requestMute() {
-  if (!settings.displayTest && clientWriteCharacteristic) {
+  if (!settings.displayTest && clientWriteCharacteristic && bt_connected) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
   }
 }
 
 void reqMuteOff() {
-  if (!settings.displayTest && clientWriteCharacteristic) {
+  if (!settings.displayTest && clientWriteCharacteristic && bt_connected) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOff(), 7, false);
   }
 }

@@ -73,11 +73,15 @@ enum BlinkIndices {
     BLINK_LASER = 6
 };
 
+extern uint32_t default_color;
+extern uint32_t gray_color;
+
 void create_screen_logo_screen();
 void tick_screen_logo_screen();
 
 void create_screen_main();
 void tick_screen_main();
+void tick_alertTable();
 
 void create_screen_settings();
 void tick_screen_settings();
@@ -87,7 +91,8 @@ void tick_screen(int screen_index);
 
 void tick_status_bar();
 
-void update_alert_rows(int num_visible, const char* frequencies[]);
+void update_alert_rows(int num_visible, const char* frequencies[], bool muted, bool muteToGray);
+void update_alert_arrows(int num_alerts, const char* directions[], bool muted, bool muteToGray);
 void register_blinking_image(int index, lv_obj_t *obj);
 void init_blinking_system(void);
 

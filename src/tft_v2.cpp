@@ -323,6 +323,7 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
     int index = 0;
     for (const auto& alertData : alertDataList) {
         constexpr int MAX_FREQ_COUNT = 4;
+        Serial.printf("Alert #%d - alertCount: %d, freqCount: %d\n", index + 1, alertData.alertCount, alertData.freqCount);
 
         for (int i = 0; i < alertData.freqCount && i < MAX_FREQ_COUNT && index < MAX_ALERTS; i++) {
             snprintf(alert_frequencies[index], sizeof(alert_frequencies[index]), "%.3f", alertData.frequencies[i]);
@@ -331,6 +332,8 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
             strncpy(alert_directions[index], alertData.direction[i].c_str(), sizeof(alert_directions[index]) - 1);
             alert_directions[index][sizeof(alert_directions[index]) - 1] = '\0';
             direction_ptrs[index] = alert_directions[index];
+
+            Serial.printf(" -> Freq[%d]: %s, Dir[%d]: %s\n", i, alert_frequencies[index], i, alert_directions[index]);
 
             index++;
         }
@@ -454,13 +457,13 @@ void displayTest() {
     // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
     //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
-
+    
     for (const std::string& packet : packets) {
       //unsigned long decodeLoopStart = millis();
       PacketDecoder decoder(packet); 
       decoder.decode(settings.lowSpeedThreshold, 20);
       //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
-      delay(50);
+      delay(64);
     }
 }
 

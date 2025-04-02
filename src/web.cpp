@@ -92,7 +92,6 @@ void getDeviceStats() {
     uint32_t cpuIdle = lv_timer_get_idle();
     stats.cpuBusy = 100 - cpuIdle;
     stats.freePsram = ESP.getFreePsram();
-    
     stats.freeHeap = ESP.getFreeHeap();
     size_t largestBlock = ESP.getMaxAllocHeap();
     stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
