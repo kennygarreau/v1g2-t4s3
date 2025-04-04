@@ -1,0 +1,322 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+
+form, #settingsForm {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    overflow-y: auto;
+}
+
+nav {
+    background-color: #1e477a;
+    color: white;
+    padding: 5px 0;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 20px;
+    display: inline-block;
+}
+
+nav a:hover {
+    background-color: #12365f;
+}
+
+.container {
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+.container h2, h2, h3 {
+    color: #1e477a;
+    padding: 5px 40px;
+}
+
+.progress-bar {
+    width: 100%;
+    background-color: #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.progress-bar span {
+    display: block;
+    height: 25px;
+    background-color: #4caf50;
+    width: 0;
+    transition: width 0.3s ease-in-out;
+    color: white;
+    text-align: center;
+    line-height: 25px;
+}
+.info-box {
+    padding: 10px;
+    background-color: #e7e7e7;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.user-settings-btn {
+    background-color: #1e477a;
+    position: absolute;
+    top: 10px;
+    right: -10px;
+    width: 50px;
+    height: 50px;
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-settings-btn:hover {
+    background-color: #555;
+}
+
+.side-navbar {
+    position: fixed;
+    top: 0;
+    left: -310px;
+    width: 300px;
+    height: 100%;
+    background-color: #1e477a;
+    color: white;
+    overflow-y: auto;
+    transition: 0.3s;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.side-navbar.active {
+    left: 0;
+}
+
+.side-navbar h2 {
+    text-align: center;
+}
+
+.side-navbar table {
+    font-size: 10px;
+    width: 90%;
+    border-collapse: collapse;
+}
+
+.side-navbar th, .side-navbar td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: left;
+}
+
+.side-navbar th {
+    background-color: #f2f2f2;
+    color: black;
+}
+
+.side-navbar tbody tr:nth-child(odd) {
+    background-color: #2b5d9b;
+}
+
+.side-navbar tbody tr:nth-child(even) {
+    background-color: #1e477a;
+}
+
+.side-navbar td {
+    color: white;
+}
+
+.hardware-bar {
+    background-color: #f0f4f8;
+    color: #1e477a;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+.hardware-bar span {
+    margin: 0 10px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    font-size: 14px;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #007BFF;
+    color: white;
+    text-transform: uppercase;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #1e477a;
+    width: 80px;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #12365f;
+}
+
+input[type="color"] {
+    border: none;
+    width: 50px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.gauge-container {
+    width: 200px;
+    height: 100px;
+    background: #eee;
+    border-top-left-radius: 100px;
+    border-top-right-radius: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gauge {
+    width: 50%;
+    height: 50%;
+    background: #4caf50; /* Green color for the gauge */
+    position: absolute;
+    bottom: 0;
+    transform-origin: bottom center;
+    transform: rotate(-90deg); /* Start from the left side */
+    transition: transform 0.3s ease;
+}
+
+.gauge-label {
+    text-align: left;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.system-info-container {
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 10px;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.system-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.system-info-table th, .system-info-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.system-info-table th {
+    background: #007BFF;
+    color: white;
+    font-weight: bold;
+}
+
+.system-info-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.system-info-table td {
+    font-size: 16px;
+}
+
+.chart-container {
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+canvas {
+    max-width: 100%;
+    margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        margin: 10px auto;
+        max-width: 90%;
+    }
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    .system-info-table {
+        display: table;
+    }
+    #settingsForm {
+        width: 90%;
+        max-width: 600px;
+        margin: 10px auto;
+    }
+    .hardware-bar {
+        margin-left: 25px;
+    }
+}
