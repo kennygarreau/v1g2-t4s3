@@ -31,6 +31,8 @@
 #include "../TouchDrvInterface.hpp"
 #include "../SensorCommon.tpp"
 
+extern volatile bool touchInterrupt;
+
 class TouchClassCST226 : public TouchDrvInterface,
     public SensorCommon<TouchClassCST226>
 {

@@ -8,6 +8,7 @@
  */
 #include <Arduino.h>
 #include "LV_Helper.h"
+#include "TouchDrvCSTXXX.hpp"
 
 
 #if LV_VERSION_CHECK(9,0,0)
@@ -50,14 +51,22 @@ static void disp_flush_v2(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 static void touchpad_read( lv_indev_drv_t *indev_driver, lv_indev_data_t *data )
 {
     static int16_t x, y;
-    uint8_t touched =   static_cast<LilyGo_Display *>(indev_driver->user_data)->getPoint(&x, &y, 1);
-    if ( touched ) {
-        data->point.x = x;
-        data->point.y = y;
-        data->state = LV_INDEV_STATE_PR;
-        return;
+    
+    if (touchInterrupt) {
+        touchInterrupt = false;
+
+        uint8_t touched = static_cast<LilyGo_Display *>(indev_driver->user_data)->getPoint(&x, &y, 1);
+        if ( touched ) {
+            data->point.x = x;
+            data->point.y = y;
+            data->state = LV_INDEV_STATE_PR;
+            //return;
+        } else {
+            data->state = LV_INDEV_STATE_REL;
+        }
+    } else {
+        data->state = LV_INDEV_STATE_REL;
     }
-    data->state = LV_INDEV_STATE_REL;
 }
 
 #ifndef BOARD_HAS_PSRAM

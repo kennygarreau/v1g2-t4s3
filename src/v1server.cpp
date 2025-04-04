@@ -150,6 +150,7 @@ void setup()
 {
   bootMillis = millis();
   Serial.begin();
+  pinMode(8, INPUT_PULLUP);
   analogReadResolution(12);
 
   Serial.println("Reading initial settings...");

@@ -665,6 +665,7 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
             TouchDrvCSTXXX::setTouchDrvModel(TouchDrv_CST226);
             TouchDrvCSTXXX::setPins(boards->touch->rst, boards->touch->irq);
             bool res = TouchDrvCSTXXX::begin(Wire, CST226SE_SLAVE_ADDRESS, boards->touch->sda, boards->touch->scl);
+            //bool res = false;
             if (!res) {
                 log_e("Failed to find CST226SE - check your wiring!");
                 // return false;

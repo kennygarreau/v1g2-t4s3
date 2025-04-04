@@ -32,14 +32,22 @@
 #define CST226SE_BUFFER_NUM         (28)
 #define CST226SE_CHIPTYPE           (0xA8)
 
+volatile bool touchInterrupt = false;
+
 #if defined(ARDUINO)
 TouchClassCST226::TouchClassCST226()
 {
 
 }
 
+void IRAM_ATTR touchISR() {
+    touchInterrupt = true;
+    //Serial.println("Touch detected!");
+}
+
 bool TouchClassCST226::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl)
 {
+    attachInterrupt(digitalPinToInterrupt(8), touchISR, CHANGE);
     return SensorCommon::begin(wire, address, sda, scl);
 }
 
@@ -59,9 +67,9 @@ bool TouchClassCST226::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl
 
 #endif //ARDUINO
 
-
 bool TouchClassCST226::begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
 {
+    attachInterrupt(digitalPinToInterrupt(8), touchISR, CHANGE);
     return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
 }
 

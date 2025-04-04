@@ -114,7 +114,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
     lv_indev_t * indev = lv_indev_get_act();
 
     if (!indev) {
-        LV_LOG_WARN("No active input device!");
+        //LV_LOG_WARN("No active input device!");
         return;
     }
 
@@ -123,6 +123,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
     if(code == LV_EVENT_LONG_PRESSED) {
         LV_LOG_INFO("requesting manual lockout via long press");
         long_press_detected = true;
+        Serial.println("long press detected");
 
         if (gpsAvailable) {
             LockoutEntry thisLockout;            

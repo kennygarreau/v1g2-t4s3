@@ -314,9 +314,9 @@ public:
     void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye);
     void writeCommand_v2(uint32_t cmd, uint8_t *pdat, uint32_t length);
     bool checkDisplayReady();
-    // LILYGO_AMOLED_191_SPI USE BQ25896
-    PowersSY6970 SY;
     // LILYGO_AMOLED_241 USE SY6970
+    PowersSY6970 SY;
+    // LILYGO_AMOLED_191_SPI USE BQ25896
     PowersBQ25896 BQ;
 
     LilyGo_AMOLED();
