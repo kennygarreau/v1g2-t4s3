@@ -114,6 +114,7 @@ struct v1Settings {
   bool showBogeyCount;
   int lowSpeedThreshold;
   bool muteToGray;
+  bool colorBars;
   String timezone;
   int networkCount;
 };

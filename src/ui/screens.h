@@ -75,6 +75,9 @@ enum BlinkIndices {
 
 extern uint32_t default_color;
 extern uint32_t gray_color;
+extern uint32_t green_bar;
+extern uint32_t yellow_bar;
+extern uint32_t orange_bar;
 
 void create_screen_logo_screen();
 void tick_screen_logo_screen();

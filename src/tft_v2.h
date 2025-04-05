@@ -40,6 +40,7 @@ extern unsigned long getMillis();
 void disconnectCurrentDevice();
 bool get_var_showBogeys();
 const char *get_var_logicmode(bool value);
+bool get_var_colorBars();
 
 void set_var_prioBars(int value);
 int get_var_prioBars();

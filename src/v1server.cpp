@@ -106,6 +106,7 @@ void loadSettings() {
   settings.displayOrientation = preferences.getInt("displayOrient", 0);
   settings.timezone = preferences.getString("timezone", "UTC");
   settings.muteToGray = preferences.getBool("muteToGray", false);
+  settings.colorBars = preferences.getBool("colorBars", true);
   settings.showBogeyCount = preferences.getBool("showBogeys", false);
 
   if (settings.displayOrientation == 0 || settings.displayOrientation == 2) {

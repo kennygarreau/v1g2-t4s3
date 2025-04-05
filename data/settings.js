@@ -58,6 +58,7 @@ async function populateBoardInfo() {
                 displayTest: boardInfo.displaySettings.displayTest || false,
                 unitSystem: boardInfo.displaySettings.unitSystem || "Imperial",
                 muteToGray: boardInfo.displaySettings.muteToGray || false,
+                colorBars: boardInfo.displaySettings.colorBars || false,
                 showBogeys: boardInfo.displaySettings.showBogeys || false,
                 wifiCredentials: boardInfo.displaySettings.wifiCredentials || [],
             };
@@ -98,6 +99,7 @@ async function populateBoardInfo() {
             document.getElementById("displayTest").value = currentValues.displayTest.toString();
             document.getElementById("unitSystem").value = currentValues.unitSystem;
             document.getElementById("muteToGray").value = currentValues.muteToGray;
+            document.getElementById("colorBars").value = currentValues.colorBars;
             document.getElementById("showBogeys").value = currentValues.showBogeys;
 
             const wifiContainer = document.getElementById("wifiCredentialsContainer");
@@ -163,6 +165,9 @@ document.getElementById("settingsForm").addEventListener("submit", function(even
         }
         if ((document.getElementById("muteToGray").value === "true") !== currentValues.muteToGray) {
             updatedSettings.muteToGray = document.getElementById("muteToGray").value === "true";
+        }
+        if ((document.getElementById("colorBars").value === "true") !== currentValues.colorBars) {
+            updatedSettings.colorBars = document.getElementById("colorBars").value === "true";
         }
         if ((document.getElementById("showBogeys").value === "true") !== currentValues.showBogeys) {
             updatedSettings.showBogeys = document.getElementById("showBogeys").value === "true";

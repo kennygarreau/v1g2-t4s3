@@ -32,6 +32,7 @@ void gesture_event_handler(lv_event_t * e);
 void slider_brightness_event_handler(lv_event_t * e);
 void show_popup(const char * message);
 void update_alert_display(bool muted);
+uint32_t get_bar_color(int i);
 
 extern lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img);
 

@@ -157,7 +157,7 @@ void update_alert_display(bool muted) {
     static bool last_muted_state = false;
     if (muted == last_muted_state) return;
 
-    lv_color_t text_color = muted ? lv_color_hex(0xff636363) : lv_color_hex(default_color);
+    lv_color_t text_color = muted ? lv_color_hex(gray_color) : lv_color_hex(default_color);
     const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
     const void* side_arrow_src = muted ? &img_arrow_side_gray : &img_arrow_side;
     const void* rear_arrow_src = muted ? &img_arrow_rear_gray : &img_arrow_rear;
@@ -198,4 +198,17 @@ lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img) {
 
     LV_LOG_INFO("Image allocated in PSRAM: %d bytes\n", psram_img->data_size);
     return psram_img;
+}
+
+uint32_t get_bar_color(int i) {
+    switch (i) {
+        case 0: return green_bar;
+        case 1: return yellow_bar;
+        case 2: return yellow_bar;
+        case 3: return orange_bar;
+        case 4: return default_color;
+        case 5: return default_color;
+        case 6: return default_color;
+        default: return default_color;
+    }
 }

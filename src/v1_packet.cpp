@@ -39,36 +39,6 @@ uint8_t packet[10];
 
 PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
 
-/* 
-    hexToDecimal is an overloaded function which will convert a hex input to a decimal
-    this is required for the bar mapping functions below
-*/
-
-/*
-int hexToDecimal(char hex) {
-    if (hex >= '0' && hex <= '9') {
-        return hex - '0';
-    } else if (hex >= 'a' && hex <= 'f') {
-        return hex - 'a' + 10;
-    } else if (hex >= 'A' && hex <= 'F') {
-        return hex - 'A' + 10;
-    }
-    return -1;
-}
-
-int hexToDecimal(const std::string& hexStr) {
-    int decimalValue = 0;
-    for (size_t i = 0; i < hexStr.length(); ++i) {
-        int digit = hexToDecimal(hexStr[i]);
-        if (digit == -1) {
-            return -1;
-        }
-        decimalValue += digit * pow(16, hexStr.length() - 1 - i);
-    }
-    return decimalValue;
-}
-*/
-
 int combineMSBLSB(const std::string& msb, const std::string& lsb) {
     auto hexToDecimal = [](const std::string& hex) -> int {
         int decimalValue = 0;
@@ -91,7 +61,6 @@ int combineMSBLSB(const std::string& msb, const std::string& lsb) {
 
     return (msbDecimal << 8) | lsbDecimal;
 }
-
 
 std::string hexToAscii(const std::string& hexStr) {
     std::string asciiStr;

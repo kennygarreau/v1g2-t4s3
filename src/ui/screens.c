@@ -28,6 +28,10 @@ static bool blink_state = false;
 uint32_t default_color = 0xffff0000;
 uint32_t gray_color = 0xff636363;
 
+uint32_t green_bar = 0xff8cd47e;
+uint32_t yellow_bar = 0xfff8d66d;
+uint32_t orange_bar = 0xffffb54c;
+
 lv_obj_t* create_alert_row(lv_obj_t* parent, int x, int y, const char* frequency) {
     lv_obj_t* obj = lv_label_create(parent);
     lv_obj_set_pos(obj, x, y);
@@ -141,6 +145,7 @@ void create_signal_bars(lv_obj_t* parent, int num_bars) {
 void update_signal_bars(int num_visible) {
     bool muted = get_var_muted();
     bool muteToGray = get_var_muteToGray();
+    bool colorBars = get_var_colorBars();
 
     for (int i = 0; i < MAX_BARS; ++i) {
         if (signal_bars[i] == NULL) {
@@ -148,12 +153,15 @@ void update_signal_bars(int num_visible) {
         }
 
         if (i < num_visible) {
+            uint32_t bar_color = default_color;
+
             if (muted && muteToGray) {
-                lv_obj_set_style_bg_color(signal_bars[i], lv_color_hex(gray_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+                bar_color = gray_color;
+            } else if (colorBars) {
+                bar_color = get_bar_color(i);
             }
-            else {
-                lv_obj_set_style_bg_color(objects.prioalertfreq, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
+            
+            lv_obj_set_style_bg_color(signal_bars[i], lv_color_hex(bar_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_clear_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
@@ -456,11 +464,8 @@ void create_screen_main() {
 }
 
 void tick_status_bar() {
-    //bool alertPresent = get_var_alertPresent();
     bool laserAlert = get_var_laserAlert();
     bool gps_enabled = get_var_gpsEnabled();
-    //int alertCount = get_var_alertCount();
-    //bool showBogeys = get_var_showBogeys();
 
     // Bluetooth status
     {
@@ -474,14 +479,6 @@ void tick_status_bar() {
     {
         bool wifi_connected = get_var_wifiConnected(); // true when connected
         bool local_wifi = get_var_localWifi(); // true when local wifi started
-    
-        /*
-        lv_obj_clear_flag(objects.wifi_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
-        lv_obj_add_flag(objects.wifi_local_logo, wifi_connected ? LV_OBJ_FLAG_HIDDEN : 0);
-        
-        lv_obj_add_flag(objects.wifi_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(objects.wifi_local_logo, wifi_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
-        */
 
         if (!wifi_connected && !local_wifi) {
             lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
@@ -561,7 +558,6 @@ void tick_alertTable() {
         // Alert Table visibility
         {
             bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
-            //bool cur_val = lv_obj_has_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); // true if hidden
             tick_value_change_obj = objects.alert_table;
             if (new_val) {
                 LV_LOG_INFO("update alert table");

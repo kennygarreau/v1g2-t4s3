@@ -64,6 +64,9 @@ void checkProximityForMute(double currentLat, double currentLon) {
 }
 */
 
+extern "C" bool get_var_colorBars() {
+    return settings.colorBars; 
+}
 extern "C" bool get_var_muteToGray() {
     return settings.muteToGray;
 }

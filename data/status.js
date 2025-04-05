@@ -1,4 +1,4 @@
-let cpuChart, heapChart, wifiChart;
+let cpuChart, heapChart, wifiChart, bleChart;
 
 async function fetchSystemInfo() {
     const response = await fetch('/stats');
@@ -12,9 +12,12 @@ async function fetchSystemInfo() {
     document.getElementById('cpu-boardType').textContent = `${data.boardType}`;
     document.getElementById('cpu-cores').textContent = `${data.cpuCores}`;
     document.getElementById('uptime').textContent = formatUptime(data.uptime);
-    document.getElementById('total-storage').textContent = `${data.usedStorage} / ${data.totalStorage} KB`;
-    document.getElementById('total-heap').textContent = `${usedHeap} / ${data.totalHeap} KB`;
-    document.getElementById('total-psram').textContent = `${usedPsram} / ${data.totalPsram} KB`;
+    document.getElementById('total-storage').textContent = `${data.usedStorage} / ${data.totalStorage} KB 
+        (${((data.usedStorage / data.totalStorage) * 100).toFixed(1)}%)`;
+    document.getElementById('total-heap').textContent = `${usedHeap} / ${data.totalHeap} KB
+        (${((usedHeap / data.totalHeap) * 100).toFixed(1)}%)`;
+    document.getElementById('total-psram').textContent = `${usedPsram} / ${data.totalPsram} KB
+        (${((usedPsram / data.totalPsram) * 100).toFixed(1)}%)`;
 
     const heapUsage = (1 - data.freeHeapInKB / data.totalHeap) * 100;
 
