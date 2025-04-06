@@ -1279,11 +1279,12 @@ void tick_screen_dispSettings() {
     // Populate unit of speed drop-down
     {
         bool useImperial = get_var_useImperial();
-        
-        if (useImperial) {
-            lv_dropdown_set_selected(objects.unit_of_speed_dropdown, 0);
-        } else {
-            lv_dropdown_set_selected(objects.unit_of_speed_dropdown, 1);
+        int current = lv_dropdown_get_selected(objects.unit_of_speed_dropdown);
+        int desired = useImperial ? 0 : 1;
+    
+        if (current != desired) {
+            LV_LOG_INFO("setting unit of speed");
+            lv_dropdown_set_selected(objects.unit_of_speed_dropdown, desired);
         }
     }
     // Populate SilentRide threshold
@@ -1295,6 +1296,7 @@ void tick_screen_dispSettings() {
             return;
         }
 
+        LV_LOG_INFO("setting silentRide threshold");
         switch (threshold) {
             case 20:
                 lv_dropdown_set_selected(objects.quietride_dropdown, 0);
@@ -1330,34 +1332,30 @@ void tick_screen_dispSettings() {
     }
     // Show or hide the BT icon setting
     {
-        bool showBTSetting = get_var_blankDisplay();
-        if (showBTSetting) {
-            lv_obj_clear_flag(objects.show_bt_label, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(objects.show_bt_button, LV_OBJ_FLAG_HIDDEN);
-            
-            bool showBT = get_var_dispBTIcon();
+        bool showBT = get_var_dispBTIcon();
+        bool switch_checked = lv_obj_has_state(objects.show_bt_button, LV_STATE_CHECKED);
+
+        if (showBT != switch_checked) {
+            LV_LOG_INFO("updating show BT icon");
             if (showBT) {
-                bool switch_checked = lv_obj_has_state(objects.show_bt_button, LV_STATE_CHECKED);
-            
-                if (showBT && !switch_checked) {
-                    lv_obj_add_state(objects.show_bt_button, LV_STATE_CHECKED);
-                } else if (!showBT && switch_checked) {
-                    lv_obj_clear_state(objects.show_bt_button, LV_STATE_CHECKED);
-                }
+                lv_obj_add_state(objects.show_bt_button, LV_STATE_CHECKED);
             } else {
-                // anything to be done here?
+                lv_obj_clear_state(objects.show_bt_button, LV_STATE_CHECKED);
             }
         }
     }
     // Blank V1 Display
     {
         bool showBlankDisp = get_var_blankDisplay();
-        if (showBlankDisp) {
-            bool switch_checked = lv_obj_has_state(objects.blankscreen_button, LV_STATE_CHECKED);
+        bool switch_checked = lv_obj_has_state(objects.blankscreen_button, LV_STATE_CHECKED);
 
-            if (showBlankDisp && !switch_checked) {
+        if (showBlankDisp != switch_checked) {
+            LV_LOG_INFO("updating blank v1 display setting");
+            if (showBlankDisp) {
                 lv_obj_add_state(objects.blankscreen_button, LV_STATE_CHECKED);
-            } else if (!showBlankDisp && switch_checked) {
+                lv_obj_clear_flag(objects.show_bt_label, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(objects.show_bt_button, LV_OBJ_FLAG_HIDDEN);
+            } else {
                 lv_obj_clear_state(objects.blankscreen_button, LV_STATE_CHECKED);
             }
         }
@@ -1365,12 +1363,13 @@ void tick_screen_dispSettings() {
     // Mute to Gray
     {
         bool muteToGray = get_var_muteToGray();
-        if (muteToGray) {
-            bool switch_checked = lv_obj_has_state(objects.mutetogray_button, LV_STATE_CHECKED);
-
-            if (muteToGray && !switch_checked) {
+        bool switch_checked = lv_obj_has_state(objects.mutetogray_button, LV_STATE_CHECKED);
+    
+        if (muteToGray != switch_checked) {
+            LV_LOG_INFO("setting mute to gray");
+            if (muteToGray) {
                 lv_obj_add_state(objects.mutetogray_button, LV_STATE_CHECKED);
-            } else if (!muteToGray && switch_checked) {
+            } else {
                 lv_obj_clear_state(objects.mutetogray_button, LV_STATE_CHECKED);
             }
         }
@@ -1378,12 +1377,13 @@ void tick_screen_dispSettings() {
     // Bogey Counter
     {
         bool showBogeyCounter = get_var_showBogeys();
-        if (showBogeyCounter) {
-            bool switch_checked = lv_obj_has_state(objects.showbogeys_button, LV_STATE_CHECKED);
-
-            if (showBogeyCounter && !switch_checked) {
+        bool switch_checked = lv_obj_has_state(objects.showbogeys_button, LV_STATE_CHECKED);
+    
+        if (showBogeyCounter != switch_checked) {
+            LV_LOG_INFO("setting bogey counter");
+            if (showBogeyCounter) {
                 lv_obj_add_state(objects.showbogeys_button, LV_STATE_CHECKED);
-            } else if (!showBogeyCounter && switch_checked) {
+            } else {
                 lv_obj_clear_state(objects.showbogeys_button, LV_STATE_CHECKED);
             }
         }
@@ -1391,12 +1391,13 @@ void tick_screen_dispSettings() {
     // Color Bars
     {
         bool colorBars = get_var_colorBars();
-        if (colorBars) {
-            bool switch_checked = lv_obj_has_state(objects.colorbars_button, LV_STATE_CHECKED);
-
-            if (colorBars && !switch_checked) {
+        bool switch_checked = lv_obj_has_state(objects.colorbars_button, LV_STATE_CHECKED);
+    
+        if (colorBars != switch_checked) {
+            LV_LOG_INFO("setting color bars");
+            if (colorBars) {
                 lv_obj_add_state(objects.colorbars_button, LV_STATE_CHECKED);
-            } else if (!colorBars && switch_checked) {
+            } else {
                 lv_obj_clear_state(objects.colorbars_button, LV_STATE_CHECKED);
             }
         }
@@ -1404,12 +1405,13 @@ void tick_screen_dispSettings() {
     // Default Mode
     {
         bool defaultMode = get_var_useDefaultV1Mode();
-        if (defaultMode) {
-            bool switch_checked = lv_obj_has_state(objects.defaultmode_button, LV_STATE_CHECKED);
-
-            if (defaultMode && !switch_checked) {
+        bool switch_checked = lv_obj_has_state(objects.defaultmode_button, LV_STATE_CHECKED);
+    
+        if (defaultMode != switch_checked) {
+            LV_LOG_INFO("setting default mode");
+            if (defaultMode) {
                 lv_obj_add_state(objects.defaultmode_button, LV_STATE_CHECKED);
-            } else if (!defaultMode && switch_checked) {
+            } else {
                 lv_obj_clear_state(objects.defaultmode_button, LV_STATE_CHECKED);
             }
         }
