@@ -14,7 +14,6 @@ extern uint8_t activeBands;
 
 double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 void main_press_handler(lv_event_t * e);
-bool get_var_useDefaultV1Mode();
 bool get_var_customFreqEnabled();
 void set_var_bt_connected(bool value);
 bool get_var_muted();
@@ -38,9 +37,31 @@ int getBluetoothSignalStrength();
 int getWifiRSSI();
 extern unsigned long getMillis();
 void disconnectCurrentDevice();
-bool get_var_showBogeys();
 const char *get_var_logicmode(bool value);
+
+bool get_var_muteToGray();
+void set_var_muteToGray(bool value);
+
 bool get_var_colorBars();
+void set_var_colorBars(bool value);
+
+bool get_var_useDefaultV1Mode();
+void set_var_useDefaultV1Mode(bool value);
+
+bool get_var_showBogeys();
+void set_var_showBogeys(bool value);
+
+bool get_var_blankDisplay();
+void set_var_blankDisplay(bool value);
+
+bool get_var_dispBTIcon();
+void set_var_dispBTIcon(bool value);
+
+bool get_var_useImperial();
+void set_var_useImperial(bool value);
+
+int get_var_speedThreshold();
+void set_var_speedThreshold(int value);
 
 void set_var_prioBars(int value);
 int get_var_prioBars();
@@ -63,7 +84,6 @@ void set_var_xAlert(bool value);
 bool get_var_laserAlert();
 void set_var_laserAlert(bool value);
 bool get_var_alertPresent();
-bool get_var_muteToGray();
 
 void set_var_arrowPrioFront(bool value);
 bool get_var_arrowPrioFront();

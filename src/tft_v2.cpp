@@ -64,16 +64,101 @@ void checkProximityForMute(double currentLat, double currentLon) {
 }
 */
 
+extern "C" bool get_var_blankDisplay() {
+    return settings.turnOffDisplay;
+}
+
+extern "C" void set_var_blankDisplay(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.turnOffDisplay = false;
+        Serial.println("Enabling display"); 
+    }
+    else {
+        settings.turnOffDisplay = true;
+        Serial.println("Disabling display");
+    }
+
+    preferences.putBool("turnOffDisplay", settings.turnOffDisplay);
+    preferences.end();
+}
+
+extern "C" bool get_var_dispBTIcon() {
+    return settings.onlyDisplayBTIcon;
+}
+
+extern "C" void set_var_dispBTIcon(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.onlyDisplayBTIcon = false;
+        Serial.println("BT Icon disabled"); 
+    }
+    else {
+        settings.onlyDisplayBTIcon = true;
+        Serial.println("BT Icon enabled");
+    }
+
+    preferences.putBool("onlyDispBTIcon", settings.onlyDisplayBTIcon);
+    preferences.end();
+}
+
 extern "C" bool get_var_colorBars() {
     return settings.colorBars; 
 }
+
+extern "C" void set_var_colorBars(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.colorBars = false;
+        Serial.println("Color Bars disabled"); 
+    }
+    else {
+        settings.colorBars = true;
+        Serial.println("Color Bars enabled");
+    }
+
+    preferences.putBool("colorBars", settings.colorBars);
+    preferences.end();
+}
+
 extern "C" bool get_var_muteToGray() {
     return settings.muteToGray;
 }
 
+extern "C" void set_var_muteToGray(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.muteToGray = false;
+        Serial.println("Mute-to-Gray disabled");
+    } else {
+        settings.muteToGray = true;
+        Serial.println("Mute-to-Gray enabled");
+    }
+    
+    preferences.putBool("muteToGray", settings.muteToGray);
+    preferences.end();
+}
+
+
 extern "C" bool get_var_useDefaultV1Mode() {
     return settings.useDefaultV1Mode;
 }
+
+extern "C" void set_var_useDefaultV1Mode(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.useDefaultV1Mode = false;
+        Serial.println("Default Mode disabled"); 
+    }
+    else {
+        settings.useDefaultV1Mode = true;
+        Serial.println("Default Mode enabled");
+    }
+
+    preferences.putBool("useDefMode", settings.useDefaultV1Mode);
+    preferences.end();
+}
+
 extern "C" bool get_var_customFreqEnabled() {
     return (!globalConfig.customFreqEnabled && settings.useDefaultV1Mode && bt_connected); // default state is disable for customFreqEnabled
 }
@@ -395,8 +480,56 @@ extern "C" bool get_var_muted() {
     return muted;
 }
 
+extern "C" bool get_var_useImperial() {
+    if (settings.unitSystem == "Metric") {
+        return false;
+    }
+    return true;
+}
+
+extern "C" void set_var_useImperial(bool value) {
+    preferences.begin("settings", false);
+    if (value) {
+        settings.unitSystem = "Imperial";
+        Serial.println("Unit system set to Imperial");
+    } else {
+        settings.unitSystem = "Metric";
+        Serial.println("Unit system set to Metric");
+    }
+
+    preferences.putString("unitSystem", settings.unitSystem);
+    preferences.end();
+}
+
+extern "C" int get_var_speedThreshold() {
+    return settings.lowSpeedThreshold;
+}
+
+extern "C" void set_var_speedThreshold(int value) {
+    preferences.begin("settings", false);
+    settings.lowSpeedThreshold = value;
+    Serial.printf("SilentRide threshold set to: %d\n", value);
+    preferences.putInt("lowSpeedThres", settings.lowSpeedThreshold);
+    preferences.end();
+}
+
 extern "C" bool get_var_showBogeys() {
     return settings.showBogeyCount;
+}
+
+extern "C" void set_var_showBogeys(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.showBogeyCount = false;
+        Serial.println("Bogeys disabled"); 
+    }
+    else {
+        settings.showBogeyCount = true;
+        Serial.println("Bogeys enabled");
+    }
+
+    preferences.putBool("showBogeys", settings.showBogeyCount);
+    preferences.end();
 }
 
 extern "C" void set_var_muted(bool value) {

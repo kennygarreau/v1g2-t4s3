@@ -67,18 +67,152 @@ void v1cle_switch_event_handler(lv_event_t * e) {
     LV_LOG_INFO("User toggled V1 CLE switch. New state: %d", switch_state);
 }
 
+void muteToGray_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Enable Mute-to-Gray");
+    } else {
+        show_popup("Disable Mute-to-Gray");
+    }
+    set_var_muteToGray(switch_state);
+    LV_LOG_INFO("User toggled Mute-to-Gray switch. New state: %d", switch_state);
+}
+
+void colorBars_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Enable Color Bars");
+    } else {
+        show_popup("Disable Color Bars");
+    }
+    set_var_colorBars(switch_state);
+    LV_LOG_INFO("User toggled Color Bars switch. New state: %d", switch_state);
+}
+
+void defaultMode_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Enabling Default Mode");
+    } else {
+        show_popup("Disabling Default Mode");
+    }
+    set_var_useDefaultV1Mode(switch_state);
+    LV_LOG_INFO("User toggled Default Mode switch. New state: %d", switch_state);
+}
+
+void bogeyCounter_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Showing Bogeys");
+    } else {
+        show_popup("Hiding Bogeys");
+    }
+    set_var_showBogeys(switch_state);
+    LV_LOG_INFO("User toggled Show Bogeys switch. New state: %d", switch_state);
+}
+
+void blankV1display_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Blanking Display");
+    } else {
+        show_popup("Showing Display");
+    }
+    set_var_blankDisplay(switch_state);
+    LV_LOG_INFO("User toggled V1 Display switch. New state: %d", switch_state);
+}
+
+void showBT_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Showing BT Icon");
+    } else {
+        show_popup("Hiding BT Icon");
+    }
+    set_var_dispBTIcon(switch_state);
+    LV_LOG_INFO("User toggled BT Icon switch. New state: %d", switch_state);
+}
+
+void speedThreshold_handler(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+
+    if (code == LV_EVENT_VALUE_CHANGED) {
+        uint16_t selected = lv_dropdown_get_selected(obj);
+        int threshold = 0;
+
+        switch (selected) {
+            case 0: threshold = 20; break;
+            case 1: threshold = 25; break;
+            case 2: threshold = 30; break;
+            case 3: threshold = 35; break;
+            case 4: threshold = 40; break;
+            case 5: threshold = 45; break;
+            case 6: threshold = 50; break;
+            case 7: threshold = 55; break;
+            case 8: threshold = 60; break;
+            default: return;
+        }
+
+        set_var_speedThreshold(threshold);
+    }
+}
+
+void unitOfSpeed_handler(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+
+    if (code == LV_EVENT_VALUE_CHANGED) {
+        uint16_t selected = lv_dropdown_get_selected(obj);
+        bool value;
+
+        switch (selected) {
+            case 0: value = true; break;
+            case 1: value = false; break;
+            default: return;
+        }
+
+        set_var_useImperial(value);
+    }
+}
+
 void gesture_event_handler(lv_event_t * e) {
+    lv_obj_t *screen = lv_scr_act();
     lv_dir_t gesture = lv_indev_get_gesture_dir(lv_indev_get_act());
 
     if (gesture == LV_DIR_LEFT) {
-        LV_LOG_INFO("Swipe Left - Go to Settings");
-        lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
-        loadScreen(SCREEN_ID_SETTINGS);
+        if (screen == objects.main) {
+            LV_LOG_INFO("Swipe Left - Main -> Settings");
+            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
+            loadScreen(SCREEN_ID_SETTINGS);
+        } else if (screen == objects.settings) {
+            LV_LOG_INFO("Swipe Left - Settings -> Display Settings");
+            lv_scr_load_anim(objects.dispSettings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
+            loadScreen(SCREEN_ID_DISPSETTINGS);
+        }
     } 
     else if (gesture == LV_DIR_RIGHT) {
-        LV_LOG_INFO("Swipe Right - Go to Main Screen");
-        lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
-        loadScreen(SCREEN_ID_MAIN);
+        if (screen == objects.settings) {
+            LV_LOG_INFO("Swipe Right - Settings -> Main");
+            lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
+            loadScreen(SCREEN_ID_MAIN);
+        } else if (screen == objects.dispSettings) {
+            LV_LOG_INFO("Swipe Right - Display Settings -> Settings");
+            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
+            loadScreen(SCREEN_ID_SETTINGS);
+        }
     }
 }
 
@@ -140,7 +274,7 @@ void show_popup(const char * message) {
     }
 
     mbox = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(mbox, 320, 120);
+    lv_obj_set_size(mbox, 420, 120);
     lv_obj_align(mbox, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_t * label = lv_label_create(mbox);

@@ -286,21 +286,10 @@ void create_screen_main() {
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
-            // automutespeed
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.automutespeed = obj;
-            lv_obj_set_pos(obj, 439, 18);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        {
             // mute_logo
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.mute_logo = obj;
-            lv_obj_set_pos(obj, 386, 0);
+            lv_obj_set_pos(obj, 432, 0);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_mute_logo_small);
             lv_img_set_src(obj, psram_img);
@@ -522,50 +511,36 @@ void tick_status_bar() {
         lv_obj_add_flag(objects.nav_logo_disabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
         LV_LOG_INFO("Updated GPS status");
     }
-    // SilentRide threshold
-    {
-        if (gps_enabled) {
-            const char *new_val = get_var_lowspeedthreshold();
-            const char *cur_val = lv_label_get_text(objects.automutespeed);
-            if (strcmp(new_val, cur_val) != 0) {
-                LV_LOG_INFO("update silentride");
-                tick_value_change_obj = objects.automutespeed;
-                lv_obj_clear_flag(objects.automutespeed, LV_OBJ_FLAG_HIDDEN);
-                lv_label_set_text(objects.automutespeed, new_val); 
-                tick_value_change_obj = NULL;
-            }
-        }
-    }
 }
 
 void tick_alertTable() {
-        bool muted = get_var_muted();
-        bool muteToGray = get_var_muteToGray();
-        // Alert Table Freq & Direction update
-        {
-            int alertTableSize = get_var_alertTableSize();
-            //bool needsUpdate = (alertTableSize != cur_alert_count);
+    bool muted = get_var_muted();
+    bool muteToGray = get_var_muteToGray();
+    // Alert Table Freq & Direction update
+    {
+        int alertTableSize = get_var_alertTableSize();
+        //bool needsUpdate = (alertTableSize != cur_alert_count);
 
-            if (alertTableSize > 0) {
-                LV_LOG_INFO("update alert table");
-                const char** frequencies = get_var_frequencies();
-                const char** directions = get_var_directions();
-                update_alert_rows(alertTableSize, frequencies, muted, muteToGray);
-                update_alert_arrows(alertTableSize, directions, muted, muteToGray);
-                //cur_alert_count = alertTableSize;
-            }
+        if (alertTableSize > 0) {
+            LV_LOG_INFO("update alert table");
+            const char** frequencies = get_var_frequencies();
+            const char** directions = get_var_directions();
+            update_alert_rows(alertTableSize, frequencies, muted, muteToGray);
+            update_alert_arrows(alertTableSize, directions, muted, muteToGray);
+            //cur_alert_count = alertTableSize;
         }
-        // Alert Table visibility
-        {
-            bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
-            tick_value_change_obj = objects.alert_table;
-            if (new_val) {
-                LV_LOG_INFO("update alert table");
-                lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-            }
-            else { lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); }
-            tick_value_change_obj = NULL;
+    }
+    // Alert Table visibility
+    {
+        bool new_val = get_showAlertTable(); // true if alert table should display (more than 1 alert)
+        tick_value_change_obj = objects.alert_table;
+        if (new_val) {
+            LV_LOG_INFO("update alert table");
+            lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
         }
+        else { lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); }
+        tick_value_change_obj = NULL;
+    }
 }
 
 void tick_screen_main() {
@@ -1128,6 +1103,319 @@ void tick_screen_settings() {
     }
 }
 
+void create_screen_dispSettings() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.dispSettings = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 600, 450);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_event_cb(objects.dispSettings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            // mutetogray_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.mutetogray_label = obj;
+            lv_obj_set_pos(obj, 20, 16);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "MUTE-TO-GRAY");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // mutetogray_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.mutetogray_button = obj;
+            lv_obj_set_pos(obj, 500, 10);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.mutetogray_button, muteToGray_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // colorbars_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.colorbars_label = obj;
+            lv_obj_set_pos(obj, 20, 66);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "COLOR BARS");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // colorbars_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.colorbars_button = obj;
+            lv_obj_set_pos(obj, 500, 60);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.colorbars_button, colorBars_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // defaultmode_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.defaultmode_label = obj;
+            lv_obj_set_pos(obj, 20, 116);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "USE DEFAULT MODE");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // defaultmode_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.defaultmode_button = obj;
+            lv_obj_set_pos(obj, 500, 110);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.defaultmode_button, defaultMode_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // showbogeys_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.showbogeys_label = obj;
+            lv_obj_set_pos(obj, 20, 166);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "SHOW BOGEY COUNTER");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // showbogeys_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.showbogeys_button = obj;
+            lv_obj_set_pos(obj, 500, 160);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.showbogeys_button, bogeyCounter_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // quietride_dropdown
+            lv_obj_t *obj = lv_dropdown_create(parent_obj);
+            objects.quietride_dropdown = obj;
+            lv_obj_set_pos(obj, 426, 387);
+            lv_obj_set_size(obj, 150, LV_SIZE_CONTENT);
+            lv_dropdown_set_options(obj, "20\n25\n30\n35\n40\n45\n50\n55\n60");
+            lv_dropdown_set_dir(obj, LV_DIR_TOP);
+            lv_obj_add_event_cb(obj, speedThreshold_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // quietride_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.quietride_label = obj;
+            lv_obj_set_pos(obj, 20, 391);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "QUIET RIDE SPEED");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // unit of speed label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.unit_of_speed_label = obj;
+            lv_obj_set_pos(obj, 20, 327);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "UNIT OF SPEED");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // unit of speed dropdown
+            lv_obj_t *obj = lv_dropdown_create(parent_obj);
+            objects.unit_of_speed_dropdown = obj;
+            lv_obj_set_pos(obj, 426, 323);
+            lv_obj_set_size(obj, 150, LV_SIZE_CONTENT);
+            lv_dropdown_set_options(obj, "MPH\nKPH");
+            lv_dropdown_set_dir(obj, LV_DIR_TOP);
+            lv_obj_add_event_cb(obj, unitOfSpeed_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // blankscreen_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.blankscreen_label = obj;
+            lv_obj_set_pos(obj, 20, 216);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "BLANK V1");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // blankscreen_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.blankscreen_button = obj;
+            lv_obj_set_pos(obj, 500, 210);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.blankscreen_button, blankV1display_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+        {
+            // show_bt_label
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.show_bt_label = obj;
+            lv_obj_set_pos(obj, 20, 266);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "SHOW BT ICON");
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // show_bt_button
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.show_bt_button = obj;
+            lv_obj_set_pos(obj, 500, 263);
+            lv_obj_set_size(obj, 76, 36);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_event_cb(objects.show_bt_button, showBT_handler, LV_EVENT_VALUE_CHANGED, NULL);
+        }
+    }
+    
+    tick_screen_dispSettings();
+}
+
+void tick_screen_dispSettings() {
+    // Populate unit of speed drop-down
+    {
+        bool useImperial = get_var_useImperial();
+        
+        if (useImperial) {
+            lv_dropdown_set_selected(objects.unit_of_speed_dropdown, 0);
+        } else {
+            lv_dropdown_set_selected(objects.unit_of_speed_dropdown, 1);
+        }
+    }
+    // Populate SilentRide threshold
+    {
+        static int last_threshold = -1;
+        int threshold = get_var_speedThreshold();
+
+        if (threshold == last_threshold) {
+            return;
+        }
+
+        switch (threshold) {
+            case 20:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 0);
+                break;
+            case 25:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 1);
+                break;
+            case 30:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 2);
+                break;
+            case 35:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 3);
+                break;
+            case 40:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 4);
+                break;
+            case 45:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 5);
+                break;
+            case 50:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 6);
+                break;
+            case 55:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 7);
+                break;
+            case 60:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 8);
+                break;
+            default:
+                lv_dropdown_set_selected(objects.quietride_dropdown, 0);
+                break;
+        }
+    }
+    // Show or hide the BT icon setting
+    {
+        bool showBTSetting = get_var_blankDisplay();
+        if (showBTSetting) {
+            lv_obj_clear_flag(objects.show_bt_label, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(objects.show_bt_button, LV_OBJ_FLAG_HIDDEN);
+            
+            bool showBT = get_var_dispBTIcon();
+            if (showBT) {
+                bool switch_checked = lv_obj_has_state(objects.show_bt_button, LV_STATE_CHECKED);
+            
+                if (showBT && !switch_checked) {
+                    lv_obj_add_state(objects.show_bt_button, LV_STATE_CHECKED);
+                } else if (!showBT && switch_checked) {
+                    lv_obj_clear_state(objects.show_bt_button, LV_STATE_CHECKED);
+                }
+            } else {
+                // anything to be done here?
+            }
+        }
+    }
+    // Blank V1 Display
+    {
+        bool showBlankDisp = get_var_blankDisplay();
+        if (showBlankDisp) {
+            bool switch_checked = lv_obj_has_state(objects.blankscreen_button, LV_STATE_CHECKED);
+
+            if (showBlankDisp && !switch_checked) {
+                lv_obj_add_state(objects.blankscreen_button, LV_STATE_CHECKED);
+            } else if (!showBlankDisp && switch_checked) {
+                lv_obj_clear_state(objects.blankscreen_button, LV_STATE_CHECKED);
+            }
+        }
+    }
+    // Mute to Gray
+    {
+        bool muteToGray = get_var_muteToGray();
+        if (muteToGray) {
+            bool switch_checked = lv_obj_has_state(objects.mutetogray_button, LV_STATE_CHECKED);
+
+            if (muteToGray && !switch_checked) {
+                lv_obj_add_state(objects.mutetogray_button, LV_STATE_CHECKED);
+            } else if (!muteToGray && switch_checked) {
+                lv_obj_clear_state(objects.mutetogray_button, LV_STATE_CHECKED);
+            }
+        }
+    }
+    // Bogey Counter
+    {
+        bool showBogeyCounter = get_var_showBogeys();
+        if (showBogeyCounter) {
+            bool switch_checked = lv_obj_has_state(objects.showbogeys_button, LV_STATE_CHECKED);
+
+            if (showBogeyCounter && !switch_checked) {
+                lv_obj_add_state(objects.showbogeys_button, LV_STATE_CHECKED);
+            } else if (!showBogeyCounter && switch_checked) {
+                lv_obj_clear_state(objects.showbogeys_button, LV_STATE_CHECKED);
+            }
+        }
+    }
+    // Color Bars
+    {
+        bool colorBars = get_var_colorBars();
+        if (colorBars) {
+            bool switch_checked = lv_obj_has_state(objects.colorbars_button, LV_STATE_CHECKED);
+
+            if (colorBars && !switch_checked) {
+                lv_obj_add_state(objects.colorbars_button, LV_STATE_CHECKED);
+            } else if (!colorBars && switch_checked) {
+                lv_obj_clear_state(objects.colorbars_button, LV_STATE_CHECKED);
+            }
+        }
+    }
+    // Default Mode
+    {
+        bool defaultMode = get_var_useDefaultV1Mode();
+        if (defaultMode) {
+            bool switch_checked = lv_obj_has_state(objects.defaultmode_button, LV_STATE_CHECKED);
+
+            if (defaultMode && !switch_checked) {
+                lv_obj_add_state(objects.defaultmode_button, LV_STATE_CHECKED);
+            } else if (!defaultMode && switch_checked) {
+                lv_obj_clear_state(objects.defaultmode_button, LV_STATE_CHECKED);
+            }
+        }
+    }
+}
+
 void create_screens() {
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), true, LV_FONT_DEFAULT);
@@ -1136,6 +1424,7 @@ void create_screens() {
     create_screen_logo_screen();
     create_screen_main();
     create_screen_settings();
+    create_screen_dispSettings();
 
     //lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
     lv_obj_add_event_cb(objects.settings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
@@ -1150,6 +1439,7 @@ tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_logo_screen,
     tick_screen_main,
     tick_screen_settings,
+    tick_screen_dispSettings,
 };
 
 void tick_screen(int screen_index) {

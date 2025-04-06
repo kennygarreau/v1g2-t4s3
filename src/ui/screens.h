@@ -11,6 +11,7 @@ typedef struct _objects_t {
     lv_obj_t *logo_screen;
     lv_obj_t *main;
     lv_obj_t *settings;
+    lv_obj_t *dispSettings;
     lv_obj_t *v1gen2logo;
     lv_obj_t *prioalertfreq;
     lv_obj_t *bt_logo;
@@ -53,6 +54,22 @@ typedef struct _objects_t {
     lv_obj_t *label_ble_rssi_val;
     lv_obj_t *label_wifi_rssi_val;
     lv_obj_t *label_wifi_rssi;
+    lv_obj_t *mutetogray_label;
+    lv_obj_t *mutetogray_button;
+    lv_obj_t *colorbars_label;
+    lv_obj_t *colorbars_button;
+    lv_obj_t *defaultmode_label;
+    lv_obj_t *defaultmode_button;
+    lv_obj_t *showbogeys_label;
+    lv_obj_t *showbogeys_button;
+    lv_obj_t *quietride_dropdown;
+    lv_obj_t *quietride_label;
+    lv_obj_t *unit_of_speed_label;
+    lv_obj_t *unit_of_speed_dropdown;
+    lv_obj_t *blankscreen_label;
+    lv_obj_t *blankscreen_button;
+    lv_obj_t *show_bt_label;
+    lv_obj_t *show_bt_button;
 } objects_t;
 
 extern objects_t objects;
@@ -61,6 +78,7 @@ enum ScreensEnum {
     SCREEN_ID_LOGO_SCREEN = 1,
     SCREEN_ID_MAIN = 2,
     SCREEN_ID_SETTINGS = 3,
+    SCREEN_ID_DISPSETTINGS = 4,
 };
 
 enum BlinkIndices {
@@ -88,6 +106,9 @@ void tick_alertTable();
 
 void create_screen_settings();
 void tick_screen_settings();
+
+void create_screen_dispSettings();
+void tick_screen_dispSettings();
 
 void create_screens();
 void tick_screen(int screen_index);
