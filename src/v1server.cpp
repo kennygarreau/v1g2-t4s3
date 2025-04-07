@@ -235,13 +235,15 @@ void setup()
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
 
-  wifiSetup();
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap after Wifi startup: %u\n", stats.freeHeap);
+  if (settings.enableWifi) {
+    wifiSetup();
+    stats.freeHeap = ESP.getFreeHeap();
+    Serial.printf("Free heap after Wifi startup: %u\n", stats.freeHeap);
 
-  setupWebServer();
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap after web startup: %u\n", stats.freeHeap);
+    setupWebServer();
+    stats.freeHeap = ESP.getFreeHeap();
+    Serial.printf("Free heap after web startup: %u\n", stats.freeHeap);
+  }
 
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);
