@@ -21,6 +21,7 @@ int locationCount = 0;
 int alertTableSize = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
+/*
 double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
     double lat1_rad = lat1 * M_PI / 180.0;
     double lon1_rad = lon1 * M_PI / 180.0;
@@ -38,6 +39,7 @@ double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
 
     return distance; // this is in km
 }
+*/
 
 /*
 void checkProximityForMute(double currentLat, double currentLon) {
@@ -305,7 +307,7 @@ extern "C" void set_var_wifiEnabled(bool enable) {
     if (enable) {
         settings.enableWifi = true;
         Serial.println("WiFi enabled and attempting to connect...");
-        xTaskCreate(wifiScanTask, "wifiScanTask", 2048, NULL, 1, NULL);
+        xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
     } else {
         settings.enableWifi = false;
         Serial.println("Disabling WiFi...");
@@ -321,6 +323,8 @@ extern "C" void set_var_wifiEnabled(bool enable) {
 
         WiFi.mode(WIFI_MODE_NULL);
         Serial.println("WiFi module powered down.");
+        stats.freeHeap = ESP.getFreeHeap();
+        Serial.printf("Free heap after Wifi shutdown: %u\n", stats.freeHeap);
     }
 }
 

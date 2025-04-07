@@ -200,12 +200,18 @@ void setup()
     return;
   }
 
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap after lockout in PSRAM: %u\n", stats.freeHeap);
+
   new (lockoutList) std::vector<LockoutEntry>();
   Serial.println("Lockout list allocated in PSRAM.");
 
   if (!fileManager.openDatabase()) return;
   fileManager.createTable();
   fileManager.readLockouts();
+
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap after DB startup: %u\n", stats.freeHeap);
 
  if (!settings.disableBLE && !settings.displayTest) {
     initBLE();
@@ -230,7 +236,12 @@ void setup()
   statusBarTicker.attach(1, ui_tick_statusBar);
 
   wifiSetup();
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap after Wifi startup: %u\n", stats.freeHeap);
+
   setupWebServer();
+  stats.freeHeap = ESP.getFreeHeap();
+  Serial.printf("Free heap after web startup: %u\n", stats.freeHeap);
 
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);

@@ -334,7 +334,7 @@ void create_screen_main() {
             objects.custom_freq_en = obj;
             lv_obj_set_pos(obj, 60, 341);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            //lv_label_set_text(obj, ".");
+            lv_label_set_text(obj, "");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -458,58 +458,80 @@ void tick_status_bar() {
 
     // Bluetooth status
     {
+        static bool lastValue = false;
         bool bt_connected = get_var_bt_connected(); // true when connected
-    
-        lv_obj_clear_flag(objects.bt_logo, bt_connected ? LV_OBJ_FLAG_HIDDEN : 0);
-        lv_obj_add_flag(objects.bt_logo, bt_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
-        LV_LOG_INFO("Updated Bluetooth status");
+        if (lastValue != bt_connected) {
+            lv_obj_clear_flag(objects.bt_logo, bt_connected ? LV_OBJ_FLAG_HIDDEN : 0);
+            lv_obj_add_flag(objects.bt_logo, bt_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
+            LV_LOG_INFO("Updated Bluetooth status");
+            lastValue = bt_connected;
+        }
     }
     // Wifi status
     {
+        static bool last_wifi_connected = false;
+        static bool last_local_wifi = false;
+
         bool wifi_connected = get_var_wifiConnected(); // true when connected
         bool local_wifi = get_var_localWifi(); // true when local wifi started
 
-        if (!wifi_connected && !local_wifi) {
-            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
-        } 
-        else if (wifi_connected) {
-            lv_obj_clear_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
-        }
-        else if (local_wifi) {
-            lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
-        }
+        if (wifi_connected != last_wifi_connected || local_wifi != last_local_wifi) {
+            if (!wifi_connected && !local_wifi) {
+                lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+            } 
+            else if (wifi_connected) {
+                lv_obj_clear_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            }
+            else if (local_wifi) {
+                lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+            }
 
-        LV_LOG_INFO("Updated WiFi status");
+            LV_LOG_INFO("Updated WiFi status");
+            last_wifi_connected = wifi_connected;
+            last_local_wifi = local_wifi;
+        }
     }
     // Custom Frequency Notification
     {
+        static bool lastValue = false;
         bool value = get_var_customFreqEnabled();
-        if (value && !laserAlert) {
-            lv_label_set_text(objects.custom_freq_en, ".");
-            if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) { 
-                lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
-            }
-        }
-        else if (value && laserAlert) {
-            lv_label_set_text(objects.custom_freq_en, "");
-            lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
-        }
 
-        LV_LOG_INFO("Updated Custom Frequency status");
+        if (value != lastValue) {
+            if (value && !laserAlert) {
+                lv_label_set_text(objects.custom_freq_en, ".");
+                if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) { 
+                    lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+                }
+            }
+            else if (value && laserAlert) {
+                lv_label_set_text(objects.custom_freq_en, "");
+                lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+            } 
+            else {
+                lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+            }
+
+            LV_LOG_INFO("Updated Custom Frequency status");
+            lastValue = value;
+        }
     }
     // GPS status
     {
+        bool lastValue = false;
         bool gps_available = get_var_gpsAvailable(); // true if connected
     
-        lv_obj_clear_flag(objects.nav_logo_enabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
-        lv_obj_add_flag(objects.nav_logo_enabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
-    
-        lv_obj_clear_flag(objects.nav_logo_disabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.nav_logo_disabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
-        LV_LOG_INFO("Updated GPS status");
+        if (lastValue != gps_available) {
+            lv_obj_clear_flag(objects.nav_logo_enabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
+            lv_obj_add_flag(objects.nav_logo_enabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
+        
+            lv_obj_clear_flag(objects.nav_logo_disabled, gps_enabled ? 0 : LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.nav_logo_disabled, gps_enabled ? LV_OBJ_FLAG_HIDDEN : 0);
+            LV_LOG_INFO("Updated GPS status");
+            lastValue = gps_available;
+        }
     }
 }
 
@@ -1009,21 +1031,27 @@ void tick_screen_settings() {
     // WiFi password
     {
         //const char *cur_val = (objects.label_pass_val) ? lv_label_get_text(objects.label_pass_val) : NULL;
+        static const char *lastPassword;
+
         bool show = get_var_wifiConnected();
-        if (show) {
-            lv_obj_add_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            const char *password = get_var_password();
-            {
-                tick_value_change_obj = objects.label_pass_val;
-                LV_LOG_INFO("updating password");
-                lv_label_set_text(objects.label_pass_val, password);
-                lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
-                tick_value_change_obj = NULL;
+            if (show) {
+                if (!lv_obj_has_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN)) {
+                    lv_obj_add_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+                }
+            } else {
+                const char *password = get_var_password();
+                if (lastPassword != password) 
+                    {
+                        tick_value_change_obj = objects.label_pass_val;
+                        LV_LOG_INFO("updating password");
+                        lv_label_set_text(objects.label_pass_val, password);
+                        lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+                        tick_value_change_obj = NULL;
+                        lastPassword = password;
+                    }
             }
-        }
     }
     // IP address
     {
@@ -1329,6 +1357,7 @@ void tick_screen_dispSettings() {
                 lv_dropdown_set_selected(objects.quietride_dropdown, 0);
                 break;
         }
+        last_threshold = threshold;
     }
     // Show or hide the BT icon setting
     {

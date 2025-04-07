@@ -4,9 +4,12 @@
 #include "v1_config.h"
 #include <TinyGPS++.h>
 
-String formatLocalTime(TinyGPSPlus &gps) {
+const char* formatLocalTime(TinyGPSPlus &gps) {
+  static char timeBuffer[10];
+
   if (!gps.time.isValid()) {
-    return "00:00:00";
+    snprintf(timeBuffer, sizeof(timeBuffer), "00:00:00");
+    return timeBuffer;
   }
 
   tmElements_t tm;
@@ -20,15 +23,17 @@ String formatLocalTime(TinyGPSPlus &gps) {
   time_t utcTime = makeTime(tm);
   time_t localTime = tz.tzTime(utcTime, LOCAL_TIME);
 
-  char timeBuffer[10];
   snprintf(timeBuffer, sizeof(timeBuffer), "%02d:%02d:%02d", hour(localTime), minute(localTime), second(localTime));
 
-  return String(timeBuffer);
+  return timeBuffer;
 }
   
-String formatLocalDate(TinyGPSPlus &gps) {
+const char* formatLocalDate(TinyGPSPlus &gps) {
+  static char dateBuffer[11];
+  
   if (!gps.date.isValid()) {
-    return "00/00/0000";
+    snprintf(dateBuffer, sizeof(dateBuffer), "00/00/0000");
+    return dateBuffer;
   }
 
   tmElements_t tm;
@@ -42,10 +47,9 @@ String formatLocalDate(TinyGPSPlus &gps) {
   time_t utcTime = makeTime(tm);
   time_t localTime = tz.tzTime(utcTime);
 
-  char dateBuffer[11];
   snprintf(dateBuffer, sizeof(dateBuffer), "%02d/%02d/%04d", month(localTime), day(localTime), year(localTime));
 
-  return String(dateBuffer);
+  return dateBuffer;
 }
   
 uint32_t convertToUnixTimestamp(TinyGPSPlus &gps) {

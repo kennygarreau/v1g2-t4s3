@@ -77,7 +77,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 
           pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
-            Serial.println("No disconnected client available, creating new one...");
+            //Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
           }
         } else {
@@ -93,7 +93,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 
           pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
-            Serial.println("No disconnected client available, creating new one...");
+            //Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
             if (!pClient) {
               Serial.printf("Failed to create client\n");

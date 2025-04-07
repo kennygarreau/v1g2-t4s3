@@ -14,19 +14,19 @@
 #define EMPTY_VOLTAGE 3100
 #define MAX_ALERTS 4
 #define MAX_WIFI_NETWORKS 4
-#define BLE_RETRY_INTERVAL 10000
+//#define BLE_RETRY_INTERVAL 10000
 
-#define EARTH_RADIUS_KM 6371.0
+//#define EARTH_RADIUS_KM 6371.0
 #define MUTING_RADIUS_KM 0.8
 #define LAT_OFFSET 0.008 // Roughly 0.8 km in degrees latitude (~800m)
 #define LON_OFFSET LAT_OFFSET
 #define MAX_LOCATIONS 50000
 
-#define KBLOCK1 24.199 // +/- .005 (5 MHz) Honda
-#define KBLOCK2 24.168 // +/- .002 (2 MHz) Honda / Acura
-#define KBLOCK3 24.123 // +/- .002 (2 MHz) Mazda
-#define KBLOCK4 24.072 // +/- .003 (3 MHz) GM
-#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
+//#define KBLOCK1 24.199 // +/- .005 (5 MHz) Honda
+//#define KBLOCK2 24.168 // +/- .002 (2 MHz) Honda / Acura
+//#define KBLOCK3 24.123 // +/- .002 (2 MHz) Mazda
+//#define KBLOCK4 24.072 // +/- .003 (3 MHz) GM
+//#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
 
 extern NimBLEClient* pClient;
 extern NimBLERemoteCharacteristic* clientWriteCharacteristic;

@@ -29,7 +29,7 @@ void onWiFiEvent(WiFiEvent_t event) {
                 wifiConnected = false;
                 Serial.println("WiFi disconnected. Attempting reconnect...");
                 if (!wifiConnecting) {
-                    xTaskCreate(wifiScanTask, "wifiScanTask", 8192, NULL, 1, NULL);
+                    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
                 }
                 break;
             case SYSTEM_EVENT_STA_GOT_IP:
@@ -88,7 +88,7 @@ void wifiSetup() {
     WiFi.disconnect();
     WiFi.onEvent(onWiFiEvent);
     if (settings.wifiMode == WIFI_SETTING_STA) {
-        xTaskCreate(wifiScanTask, "wifiScanTask", 8192, NULL, 1, NULL);
+        xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
     } else 
     {
         startLocalWifi();

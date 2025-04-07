@@ -1,4 +1,4 @@
-let cpuChart, heapChart, wifiChart, bleChart;
+let cpuChart, heapChart, heapFragChart, wifiChart, bleChart;
 
 async function fetchSystemInfo() {
     const response = await fetch('/stats');
@@ -23,6 +23,7 @@ async function fetchSystemInfo() {
 
     if (cpuChart) updateChart(cpuChart, timestamp, data.cpuBusy);
     if (heapChart) updateChart(heapChart, timestamp, heapUsage);
+    if (heapFragChart) updateChart(heapFragChart, timestamp, data.heapFrag);
     if (wifiChart) updateChart(wifiChart, timestamp, data.wifiRSSI);
     if (bleChart) updateChart(bleChart, timestamp, data.bluetoothRSSI);
 }
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const ctxCpu = document.getElementById('cpuChart')?.getContext('2d');
     const ctxHeap = document.getElementById('heapChart')?.getContext('2d');
+    const ctxHeapFrag = document.getElementById('heapFragChart').getContext('2d');
     const ctxWifi = document.getElementById('wifiChart')?.getContext('2d');
     const ctxBle = document.getElementById('bleChart')?.getContext('2d');
     
@@ -109,6 +111,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } else {
         console.error("heapChart canvas not found.");
+    }
+
+    if (ctxHeapFrag) {
+        heapFragChart = new Chart(ctxHeapFrag, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Heap Fragmentation %', data: [], borderColor: '#be29ec', borderWidth: 2, 
+                fill: true, backgroundColor: 'rgba(190, 41, 236, 0.3)', }] },
+            options: chartOptions
+        });
+    } else {
+        console.error("heapFragChart canvas not found.");
     }
 
     if (ctxBle) {
