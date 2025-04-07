@@ -520,7 +520,7 @@ void tick_status_bar() {
     }
     // GPS status
     {
-        bool lastValue = false;
+        static bool lastValue = false;
         bool gps_available = get_var_gpsAvailable(); // true if connected
     
         if (lastValue != gps_available) {
