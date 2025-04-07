@@ -304,6 +304,7 @@ extern "C" bool get_var_wifiEnabled() {
 }
 
 extern "C" void set_var_wifiEnabled(bool enable) {
+    preferences.begin("settings", false);
     if (enable) {
         settings.enableWifi = true;
         Serial.println("WiFi enabled and attempting to connect...");
@@ -326,6 +327,8 @@ extern "C" void set_var_wifiEnabled(bool enable) {
         stats.freeHeap = ESP.getFreeHeap();
         Serial.printf("Free heap after Wifi shutdown: %u\n", stats.freeHeap);
     }
+    preferences.putBool("enableWifi", settings.enableWifi);
+    preferences.end();
 }
 
 extern "C" const char *get_var_ssid() {
