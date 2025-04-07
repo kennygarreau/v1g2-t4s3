@@ -633,4 +633,5 @@ void setupWebServer()
     });
 
     server.begin();
+    webStarted = true;
 }

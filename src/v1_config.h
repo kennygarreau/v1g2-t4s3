@@ -32,7 +32,7 @@ extern NimBLEClient* pClient;
 extern NimBLERemoteCharacteristic* clientWriteCharacteristic;
 extern LilyGo_AMOLED amoled;
 extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
-extern bool wifiConnecting, wifiConnected, localWifiStarted;
+extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
 
 extern int currentSpeed, alertTableSize;
 extern SemaphoreHandle_t xWiFiLock;

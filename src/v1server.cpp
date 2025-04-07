@@ -49,7 +49,7 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(1);
 int currentSpeed = 0;
 float batteryPercentage = 0.0f;
-bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting;
+bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting, webStarted;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
 bool gpsAvailable = false;
@@ -239,10 +239,6 @@ void setup()
     wifiSetup();
     stats.freeHeap = ESP.getFreeHeap();
     Serial.printf("Free heap after Wifi startup: %u\n", stats.freeHeap);
-
-    setupWebServer();
-    stats.freeHeap = ESP.getFreeHeap();
-    Serial.printf("Free heap after web startup: %u\n", stats.freeHeap);
   }
 
   unsigned long elapsedMillis = millis() - bootMillis;

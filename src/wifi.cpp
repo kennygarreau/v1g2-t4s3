@@ -1,5 +1,6 @@
 #include "v1_config.h"
 #include <ESPAsyncWebServer.h>
+#include "web.h"
 #include "wifi.h"
 
 IPAddress local_ip(192, 168, 242, 1);
@@ -36,6 +37,9 @@ void onWiFiEvent(WiFiEvent_t event) {
                 wifiConnected = true;
                 wifiConnecting = false;
                 Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+                if (!webStarted) {
+                    setupWebServer();
+                }
                 break;
             default:
                 Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
@@ -45,6 +49,9 @@ void onWiFiEvent(WiFiEvent_t event) {
         switch (event) {
             case WIFI_EVENT_AP_START:
                 Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
+                if (!webStarted) {
+                    setupWebServer();
+                }
                 break;
             case WIFI_EVENT_AP_STOP:
                 Serial.println("Access Point stopped.");
@@ -66,7 +73,7 @@ void onWiFiEvent(WiFiEvent_t event) {
     }
 }
 
- void startLocalWifi() {
+void startLocalWifi() {
     Serial.println("Starting AP mode...");
     WiFi.disconnect();
 
@@ -77,6 +84,9 @@ void onWiFiEvent(WiFiEvent_t event) {
         Serial.printf("Fallback AP started. SSID: %s, IP: %s\n", 
             settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
         localWifiStarted = true;
+        if (!webStarted) {
+            setupWebServer();
+        }
     } else {
         Serial.println("Failed to start fallback Access Point.");
     }
@@ -89,8 +99,8 @@ void wifiSetup() {
     WiFi.onEvent(onWiFiEvent);
     if (settings.wifiMode == WIFI_SETTING_STA) {
         xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
-    } else 
-    {
+    } 
+    else {
         startLocalWifi();
     }
 }
