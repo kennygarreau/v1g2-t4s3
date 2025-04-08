@@ -216,11 +216,15 @@ extern "C" void main_press_handler(lv_event_t * e) {
         Serial.println("long press detected");
 
         if (gpsAvailable) {
-            LockoutEntry thisLockout;            
-            thisLockout.timestamp = gpsData.rawTime;
-            thisLockout.latitude = gpsData.latitude;
-            thisLockout.longitude = gpsData.longitude;
-            thisLockout.entryType = "manual";
+            LockoutEntry thisLockout;
+            if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {
+                thisLockout.timestamp = gpsData.rawTime;
+                thisLockout.latitude = gpsData.latitude;
+                thisLockout.longitude = gpsData.longitude;
+                thisLockout.entryType = "manual";
+
+                xSemaphoreGive(gpsDataMutex);
+            }
 
             Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
             show_popup("Lockout Stored");

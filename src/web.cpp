@@ -209,18 +209,21 @@ void setupWebServer()
     server.on("/gps-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
 
-        jsonDoc["latitude"] = gpsData.latitude;
-        jsonDoc["longitude"] = gpsData.longitude;
-        jsonDoc["speed"] = gpsData.speed;
-        jsonDoc["altitude"] = gpsData.altitude;
-        jsonDoc["course"] = gpsData.course;
-        jsonDoc["time"] = gpsData.time;
-        jsonDoc["date"] = gpsData.date;
-        jsonDoc["hdop"] = gpsData.hdop;
-        jsonDoc["satelliteCount"] = gpsData.satelliteCount;
-        jsonDoc["signalQuality"] = gpsData.signalQuality;
-        jsonDoc["timezone"] = settings.timezone;
-        jsonDoc["carVoltage"] = gpsData.voltage;
+        if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {
+            jsonDoc["latitude"] = gpsData.latitude;
+            jsonDoc["longitude"] = gpsData.longitude;
+            jsonDoc["speed"] = gpsData.speed;
+            jsonDoc["altitude"] = gpsData.altitude;
+            jsonDoc["course"] = gpsData.course;
+            jsonDoc["time"] = gpsData.time;
+            jsonDoc["date"] = gpsData.date;
+            jsonDoc["hdop"] = gpsData.hdop;
+            jsonDoc["satelliteCount"] = gpsData.satelliteCount;
+            jsonDoc["signalQuality"] = gpsData.signalQuality;
+            jsonDoc["timezone"] = settings.timezone;
+
+            xSemaphoreGive(gpsDataMutex);
+        }
 
         String jsonResponse;
         serializeJson(jsonDoc, jsonResponse);
@@ -272,6 +275,7 @@ void setupWebServer()
         if (batteryCharging) {
             jsonDoc["batteryCharging"] = "(charging)";
         }
+        jsonDoc["carVoltage"] = stats.voltage;
 
         String jsonResponse;
         serializeJson(jsonDoc, jsonResponse);

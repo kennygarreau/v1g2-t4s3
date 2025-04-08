@@ -873,7 +873,7 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
             if (!intPart.empty() && !decPart.empty()) {
                 voltageInt = std::stoi(intPart, nullptr, 16);
                 voltageDec = std::stoi(decPart, nullptr, 16);
-                gpsData.voltage = voltageInt + (voltageDec / 100.0f);
+                stats.voltage = voltageInt + (voltageDec / 100.0f);
             }
         } catch (const std::exception& e) {
             Serial.println("caught an exception during respBatteryVoltage");

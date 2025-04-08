@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.2.2"
+#define FIRMWARE_VERSION "1.2.3a"
 #define BAUD_RATE 9600
 #define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
@@ -36,6 +36,7 @@ extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
 
 extern int currentSpeed, alertTableSize;
 extern SemaphoreHandle_t xWiFiLock;
+extern SemaphoreHandle_t gpsDataMutex;
 
 extern std::vector<std::pair<int, int>> sectionBounds;
 extern std::vector<std::pair<int, int>> sweepBounds;
@@ -170,7 +171,6 @@ struct GPSData {
   String date;
   String localtime;
   uint32_t rawTime;
-  float voltage;
 };
 
 extern GPSData gpsData;
@@ -192,6 +192,7 @@ struct Stats {
     int connectedWifiClients;
     int btStr;
     int wifiRSSI;
+    float voltage;
 };
 
 extern Stats stats;

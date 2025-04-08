@@ -19,7 +19,7 @@
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
-#include <TinyGPS++.h>
+//#include <TinyGPS++.h>
 #include "web.h"
 #include "wifi.h"
 #include <ui/ui.h>
@@ -44,17 +44,12 @@ std::vector<LockoutEntry> *lockoutList;
 
 LilyGo_AMOLED amoled;
 
-GPSData gpsData;
-TinyGPSPlus gps;
-HardwareSerial gpsSerial(1);
-int currentSpeed = 0;
 float batteryPercentage = 0.0f;
 bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting, webStarted;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
 bool gpsAvailable = false;
 bool wifiConnected = false;
-unsigned long lastValidGPSUpdate = 0;
 unsigned long lastBLEAttempt = 0;
 bool v1le = false;
 
@@ -187,6 +182,8 @@ void setup()
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
     gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
+    gpsDataMutex = xSemaphoreCreateMutex();
+    xTaskCreatePinnedToCore(gpsTask, "GPSTask", 4096, NULL, 1, NULL, 1);
   }
 
   if (!fileManager.init()) {
@@ -216,9 +213,6 @@ void setup()
  if (!settings.disableBLE && !settings.displayTest) {
     initBLE();
   }
-
-  // xWiFiLock =  xSemaphoreCreateBinary();
-  // xSemaphoreGive( xWiFiLock );
 
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
 
@@ -339,44 +333,7 @@ void loop() {
     loopCounter = 0;
     checkReboot();
   }
-  
-  if (settings.enableGPS && (currentMillis - lastGPSUpdate >= 200)) {
-    lastGPSUpdate = currentMillis; 
-
-    while (gpsSerial.available() > 0) {
-      char c = gpsSerial.read();
-      //Serial.print(c);
-      gps.encode(c);
-    }
-    if (gps.location.isUpdated() && gps.location.isValid()) {
-      gpsData.latitude = gps.location.lat();
-      gpsData.longitude = gps.location.lng();
-      gpsData.satelliteCount = gps.satellites.value();
-      gpsData.course = gps.course.deg();
-      gpsData.rawTime = convertToUnixTimestamp(gps);
-      gpsData.date = formatLocalDate(gps);
-      gpsData.time = formatLocalTime(gps);
-      gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
-
-      gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good" : (gpsData.hdop <= 10) ? "moderate" : "poor";
-
-      if (settings.unitSystem == "Metric") {
-        gpsData.speed = static_cast<int>(round(gps.speed.kmph()));
-        gpsData.altitude = gps.altitude.meters();
-        currentSpeed = static_cast<int>(gps.speed.kmph());
-      } else {
-        gpsData.speed = static_cast<int>(round(gps.speed.mph()));
-        gpsData.altitude = gps.altitude.feet();
-        currentSpeed = static_cast<int>(gps.speed.mph());
-      }
-      gpsAvailable = true;
-      lastValidGPSUpdate = currentMillis;
-    }
-    if (currentMillis - lastValidGPSUpdate > 5000) {
-      gpsAvailable = false;
-    }
-  }
-  
+    
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
