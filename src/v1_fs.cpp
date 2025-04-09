@@ -1,6 +1,5 @@
 #include "v1_config.h"
 #include "v1_fs.h"
-#include <ArduinoJson.h>
 #include <sqlite3.h>
 
 sqlite3 *db;

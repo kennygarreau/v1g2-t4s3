@@ -6,29 +6,17 @@
  * License: MIT
  */
 
-//#include <Arduino.h>
-#include <Preferences.h>
-#include <SPIFFS.h>
-#include <LilyGo_AMOLED.h>
-#include <LV_Helper.h>
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
-#include <NimBLEDevice.h>
-#include "ble.h"
 #include "v1_config.h"
+#include <LV_Helper.h>
+#include <FreeRTOS.h>
+#include <Ticker.h>
+#include "ble.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
-//#include <TinyGPS++.h>
 #include "web.h"
-#include "wifi.h"
 #include <ui/ui.h>
-#include "lvgl.h"
 #include "tft_v2.h"
-#include <FreeRTOS.h>
-#include <ezTime.h>
 #include "gps.h"
-#include <Ticker.h>
 #include "esp_flash.h"
 
 Ticker writeBatteryVoltageTicker;
@@ -39,7 +27,6 @@ AsyncWebServer server(80);
 //SemaphoreHandle_t xWiFiLock = NULL;
 
 static bool laserAlert = false;
-static std::string bogeyValue, barValue, bandValue, directionValue;
 std::vector<LockoutEntry> *lockoutList;
 
 LilyGo_AMOLED amoled;
@@ -48,10 +35,7 @@ float batteryPercentage = 0.0f;
 bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting, webStarted;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
-bool gpsAvailable = false;
-bool wifiConnected = false;
-unsigned long lastBLEAttempt = 0;
-bool v1le = false;
+bool gpsAvailable, wifiConnected, v1le;
 
 v1Settings settings;
 lockoutSettings autoLockoutSettings;
@@ -152,6 +136,8 @@ void setup()
   Serial.println("Reading initial settings...");
   loadSettings();
 
+  Serial.printf("Heap at boot: %u\n", ESP.getFreeHeap());
+
   bool rslt = amoled.begin();
   if (rslt) {
     amoled.setBrightness(settings.brightness);
@@ -166,14 +152,11 @@ void setup()
     }
   }
 
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap before helper: %u\n", stats.freeHeap);
+  Serial.printf("Free heap after board init: %u\n", ESP.getFreeHeap());
 
-  beginLvglHelper(amoled);
+  beginLvglHelperDMA(amoled);
   Serial.printf("Setup running on core %d\n", xPortGetCoreID());
-
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap after helper: %u\n", stats.freeHeap);
+  Serial.printf("Free heap after LVGL init: %u\n", ESP.getFreeHeap());
 
   ui_init();
   ui_tick();
@@ -191,14 +174,13 @@ void setup()
     return;
   }
 
+  Serial.printf("Free heap after SPIFFS init: %u\n", ESP.getFreeHeap());
+
   lockoutList = (std::vector<LockoutEntry> *)ps_malloc(sizeof(std::vector<LockoutEntry>));
   if (!lockoutList) {
     Serial.println("Failed to allocate lockoutList in PSRAM");
     return;
   }
-
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap after lockout in PSRAM: %u\n", stats.freeHeap);
 
   new (lockoutList) std::vector<LockoutEntry>();
   Serial.println("Lockout list allocated in PSRAM.");
@@ -207,11 +189,11 @@ void setup()
   fileManager.createTable();
   fileManager.readLockouts();
 
-  stats.freeHeap = ESP.getFreeHeap();
-  Serial.printf("Free heap after DB startup: %u\n", stats.freeHeap);
+  Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
 
  if (!settings.disableBLE && !settings.displayTest) {
     initBLE();
+    Serial.printf("Free heap after BLE init: %u\n", ESP.getFreeHeap());
   }
 
   Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
@@ -231,8 +213,7 @@ void setup()
 
   if (settings.enableWifi) {
     wifiSetup();
-    stats.freeHeap = ESP.getFreeHeap();
-    Serial.printf("Free heap after Wifi startup: %u\n", stats.freeHeap);
+    Serial.printf("Free heap after Wifi startup: %u\n", ESP.getFreeHeap());
   }
 
   unsigned long elapsedMillis = millis() - bootMillis;
@@ -241,11 +222,8 @@ void setup()
 
 void loop() {  
   static bool configHasRun = false;
-  static unsigned long lastGPSUpdate = 0;
-  //static unsigned long lastWifiReconnect = 0;
   static unsigned long lastTick = 0;
   static unsigned long lastTableTick = 0;
-  unsigned long gpsMillis = millis();
   
   if (bt_connected && bleInit) {
     displayReader(pClient);
@@ -333,7 +311,8 @@ void loop() {
     loopCounter = 0;
     checkReboot();
   }
-    
+
+  
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
@@ -345,6 +324,7 @@ void loop() {
     }
   }
 
+  // TODO: move this to a task
   if (now - lastTableTick >= atTickInterval) {
     lastTableTick = now;
     tick_alertTable();

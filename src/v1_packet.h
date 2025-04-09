@@ -39,6 +39,21 @@ struct BandArrowData {
     bool rear;
 };
 
+struct BandDirection {
+    const char* band;
+    const char* direction; };
+
+struct alertByte {
+    int count;
+    int index; };
+
+enum Direction {
+    DIR_NONE = 0,
+    DIR_FRONT = 1,
+    DIR_SIDE  = 2,
+    DIR_REAR  = 3
+};
+
 using alertsVector = std::vector<std::string>;
 
 class PacketDecoder {

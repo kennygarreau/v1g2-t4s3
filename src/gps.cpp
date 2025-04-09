@@ -89,8 +89,6 @@ void gpsTask(void *parameter)
   {
     if (settings.enableGPS)
     {
-      //lastGPSUpdate = currentMillis;
-
       while (gpsSerial.available() > 0)
       {
         char c = gpsSerial.read();

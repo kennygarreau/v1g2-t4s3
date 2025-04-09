@@ -1075,7 +1075,7 @@ void LilyGo_AMOLED::pushColors(uint16_t *data, uint32_t len)
 void LilyGo_AMOLED::pushColors(uint16_t x, uint16_t y, uint16_t width, uint16_t hight, uint16_t *data)
 {
     // make sure to change this back to remove the !
-    if (!boards->display.frameBufferSize) {
+    if (boards->display.frameBufferSize) {
         assert(pBuffer);
         uint16_t _x = this->height() - (y + hight);
         uint16_t _y = x;

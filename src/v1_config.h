@@ -7,16 +7,14 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.2.3a"
+#define FIRMWARE_VERSION "1.2.3b"
 #define BAUD_RATE 9600
-#define WIFI_MODE WIFI_STA
+//#define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
 #define MAX_ALERTS 4
 #define MAX_WIFI_NETWORKS 4
-//#define BLE_RETRY_INTERVAL 10000
 
-//#define EARTH_RADIUS_KM 6371.0
 #define MUTING_RADIUS_KM 0.8
 #define LAT_OFFSET 0.008 // Roughly 0.8 km in degrees latitude (~800m)
 #define LON_OFFSET LAT_OFFSET
@@ -64,6 +62,7 @@ enum LockoutField {
 
 extern const char *lockoutFieldNames[];
 
+// active, entrytype, timestamp, lastSeen, counter, latitude, longitude, speed, course, strength, direction, frequency
 struct LockoutEntry {
     bool active; // 0: inactive, 1: active
     bool entryType; // 0: auto 1: manual
@@ -75,7 +74,30 @@ struct LockoutEntry {
     int speed;
     int course;
     int strength;
-    bool direction; // 0: front, 1: rear
+    int direction; // 1: front, 2 side, 3: rear
+    int frequency;
+};
+
+/**
+ * @brief create an alert log entry
+ * 
+ * @param timestamp uint32_t
+ * @param latitude double
+ * @param longitude double
+ * @param speed int
+ * @param course int
+ * @param strength int
+ * @param direction bool
+ * @param frequency int
+ */
+struct LogEntry {
+    uint32_t timestamp;
+    double latitude;
+    double longitude;
+    int speed;
+    int course;
+    int strength;
+    int direction;
     int frequency;
 };
 
@@ -251,6 +273,7 @@ extern uint16_t vBusVoltage, batteryVoltage;
 extern float voltageInMv, batteryPercentage;
 extern unsigned long bootMillis;
 
+// int alertCount, float frequencies[5], std::string direction[5], int barCount, int freqCount
 struct AlertTableData {
     int alertCount; // this might be spurious
     float frequencies[MAX_ALERTS + 1];

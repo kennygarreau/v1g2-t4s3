@@ -134,8 +134,49 @@ static void lv_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
         area->y2++;
 }
 
-void beginLvglHelper(LilyGo_Display &board, bool debug)
-{
+void beginLvglHelper(LilyGo_Display &board, bool debug) {
+
+    lv_init();
+
+#if LV_USE_LOG
+    if (debug) {
+        lv_log_register_print_cb(lv_log_print_g_cb);
+    }
+#endif
+
+    size_t lv_buffer_size = board.width() * board.height() * sizeof(lv_color_t);
+    buf = (lv_color_t *)ps_malloc(lv_buffer_size);
+    assert(buf);
+
+    lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
+
+    /*Initialize the display*/
+    lv_disp_drv_init( &disp_drv );
+    /* display resolution */
+    disp_drv.hor_res = board.width();
+    disp_drv.ver_res = board.height();
+    disp_drv.flush_cb = disp_flush;
+    disp_drv.draw_buf = &draw_buf;
+    bool full_refresh = board.needFullRefresh();
+    disp_drv.full_refresh = full_refresh;
+    disp_drv.user_data = &board;
+    if (!full_refresh) {
+        disp_drv.rounder_cb = lv_rounder_cb;
+    }
+    lv_disp_drv_register( &disp_drv );
+
+    if (board.hasTouch()) {
+        lv_indev_drv_init( &indev_drv );
+        indev_drv.type = LV_INDEV_TYPE_POINTER;
+        indev_drv.read_cb = touchpad_read;
+        indev_drv.user_data = &board;
+        lv_indev_drv_register( &indev_drv );
+    }
+
+    lv_group_set_default(lv_group_create());
+}
+
+void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
 
     lv_init();
 

@@ -4,19 +4,9 @@
 #include "tft_v2.h"
 #include "ui/ui.h"
 #include "ui/actions.h"
-#include <vector>
-#include <LilyGo_AMOLED.h>
 #include <set>
 
-
-struct BandDirection {
-    const char* band;
-    const char* direction; };
-struct alertByte {
-    int count;
-    int index; };
 static std::string dirValue, bandValue;
-//static std::string lastPayload = "";
 static std::string lastinfPayload = "";
 int frontStrengthVal, rearStrengthVal;
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
@@ -151,17 +141,6 @@ int mapKaToBars(const std::string& hex) {
     }
     return -1;
 }
-
-/*
-int combineMSBLSB(const std::string& msb, const std::string& lsb) {
-    int msbDecimal = hexToDecimal(msb);
-    int lsbDecimal = hexToDecimal(lsb);
-    if (msbDecimal == -1 || lsbDecimal == -1) {
-        return 0;
-    }
-    return (msbDecimal * 256) + lsbDecimal;
-}
-*/
 
 void processSection(const std::string& packet, int offset) {
     int sweepDefIndexNum = std::stoi(packet.substr(offset, 2), nullptr, 16);
@@ -370,6 +349,8 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
     frontStrengthVal = 0;
     rearStrengthVal = 0;
+    int freqMhz = 0;
+    Direction dir;
 
     std::vector<AlertTableData> alertDataList;
     AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
@@ -389,7 +370,6 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         std::string bandArrowDef = alerts[i].substr(10, 2);
         std::string auxByte = alerts[i].substr(12, 2);
 
-        //if (!bandArrowDef.empty()) {
         try {
             int bandArrow = std::stoi(bandArrowDef, nullptr, 16);
             bandValue = "Unknown";
@@ -404,14 +384,13 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             }
         
             switch (bandArrow & 0b11100000) { // Mask the direction bits
-                case 0b00100000: dirValue = "FRONT"; break;
-                case 0b01000000: dirValue = "SIDE"; break;
-                case 0b10000000: dirValue = "REAR"; break;
+                case 0b00100000: dirValue = "FRONT"; dir = DIR_FRONT; break;
+                case 0b01000000: dirValue = "SIDE"; dir = DIR_SIDE; break;
+                case 0b10000000: dirValue = "REAR"; dir = DIR_REAR; break;
             }
         } catch (const std::exception& e) {
             // anything to be done here?
         }
-        //}
 
         priority = (auxByte == "80");
         junkAlert = (auxByte == "40");
@@ -435,7 +414,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             std::string freqMSB = alerts[i].substr(2, 2);
             std::string freqLSB = alerts[i].substr(4, 2);
     
-            int freqMhz = combineMSBLSB(freqMSB, freqLSB);
+            freqMhz = combineMSBLSB(freqMSB, freqLSB);
             freqGhz = static_cast<float>(freqMhz) / 1000.0f;
         }
         
@@ -485,8 +464,14 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
 
         unsigned long elapsedTimeMicros = micros() - startTimeMicros;
-        //Serial.printf("decode time: %lu\n", elapsedTimeMillis);
         if (freqGhz > 0 || bandValue == "LASER") {
+            LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
+                                max(frontStrengthVal, rearStrengthVal), dir, freqMhz};
+            Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
+                            newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
+                            newEntry.strength, newEntry.direction, newEntry.frequency);
+
+            /*
             std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
                                         " TOTL:" + std::to_string(alertCountValue) +
                                         " FREQ:" + std::to_string(freqGhz) +
@@ -497,8 +482,9 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                                         " PRIO:" + std::to_string(priority) +
                                         " JUNK:" + std::to_string(junkAlert) +
                                         " SPEED: " + std::to_string(currentSpeed)
-                                        + " decodeAlert(us): " + std::to_string(elapsedTimeMicros);
+                                        + " decodeAlert(us): " + std::to_string(elapsedTimeMicros);                      
             Serial.println(("respAlertData: " + decodedPayload).c_str());
+            */
         }
         yield();
     }
@@ -536,11 +522,9 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
     //int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
     int tableSize = alertCountValue - 1;
     if (tableSize > MAX_ALERTS) {tableSize = MAX_ALERTS;}
-    //Serial.printf("table size passed to set_var_alertTableSize: %d\n", tableSize);
     
     set_var_alertTableSize(tableSize); // should be no larger than 4
     if (tableSize > 0) {
-        //Serial.printf("sending alertDataList with size of: %d\n", tableSize);
         set_var_showAlertTable(true);  // moved from decode()
         set_var_frequencies(alertDataList);
     } else {

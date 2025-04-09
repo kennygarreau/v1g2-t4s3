@@ -1,7 +1,7 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include <TinyGPS++.h>
+//#include <TinyGPS++.h>
 #include <Update.h>
 #include "v1_config.h"
 #include "v1_packet.h"

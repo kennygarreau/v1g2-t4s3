@@ -1,10 +1,10 @@
 #include "v1_config.h"
 #include <ESPAsyncWebServer.h>
-#include "lvgl.h"
+//#include "lvgl.h"
 #include "ui/ui.h"
 #include "ui/actions.h"
 #include "tft_v2.h"
-#include <vector>
+//#include <vector>
 #include "wifi.h"
 #include "v1_packet.h"
 #include "math.h"
@@ -20,26 +20,6 @@ int prio_bars = 0;
 int locationCount = 0;
 int alertTableSize = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
-
-/*
-double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
-    double lat1_rad = lat1 * M_PI / 180.0;
-    double lon1_rad = lon1 * M_PI / 180.0;
-    double lat2_rad = lat2 * M_PI / 180.0;
-    double lon2_rad = lon2 * M_PI / 180.0;
-
-    double delta_lat = lat2_rad - lat1_rad;
-    double delta_lon = lon2_rad - lon1_rad;
-
-    // Haversine formula
-    double a = sin(delta_lat / 2) * sin(delta_lat / 2) +
-               cos(lat1_rad) * cos(lat2_rad) * sin(delta_lon / 2) * sin(delta_lon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double distance = EARTH_RADIUS_KM * c;
-
-    return distance; // this is in km
-}
-*/
 
 /*
 void checkProximityForMute(double currentLat, double currentLon) {
