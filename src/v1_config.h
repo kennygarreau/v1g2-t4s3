@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.2.3"
+#define FIRMWARE_VERSION "1.2.1"
 #define BAUD_RATE 9600
 //#define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
