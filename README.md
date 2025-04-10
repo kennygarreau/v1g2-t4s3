@@ -2,8 +2,7 @@
 
 This is a remote display for the Valentine One Gen 2 radar detector written in C++, inspired by SquirrelMaster on [rdforum](http://rdforum.org)
 
-Connectivity is via Bluetooth Low Energy (BLE). If you want to use this along with another accessory or app such as JBV1, you will need a 
-[V1Connection LE](https://store.valentine1.com/store/item.asp?i=20232). A quick run-down of the radar-related features:
+Connectivity is via Bluetooth Low Energy (BLE). A quick run-down of the radar-related features:
 - Directional arrows (front/side/rear)
 - Band display (in GHz)
 - Signal strength per alert
@@ -18,7 +17,7 @@ The hardware is a [LilyGO T4 S3](https://lilygo.cc/products/t4-s3). It is an ESP
 and a 2.9" AMOLED display. A previous version of this project can be found in my repo for the T-Display S3.
 
 Here's what's done in the current release:
-- BLE auto-scan for connecting to a V1 Gen2 advertising the appropriate characteristics / service
+- BLE auto-scan for connecting to a V1 Gen2 / V1C LE advertising the appropriate characteristics / service
 - WiFi enabled (by default as an AP for user configuration), defaults as follows:
     - SSID: v1display
     - Password: password123
@@ -27,8 +26,9 @@ Here's what's done in the current release:
 - Landscape mode (Portrait support TBD)
 - "Store mode" for display testing
 
-Here's the TODO as of Mar 2025: (in descending order of priority)
-- Touch-screen interaction for user-defined lockouts
+Here's the TODO as of Apr 2025: (in descending order of priority)
+- Extend logging support
+- Implement lockouts (manual and automatic)
 - Timezone support for auto-brightness (sunrise/sunset)
 
 If you have suggestions or requests, please ping me on the [rdforum valentine one](https://www.rdforum.org/threads/136559/) sub on rdforum.
