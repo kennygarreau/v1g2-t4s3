@@ -25,6 +25,11 @@ NimBLERemoteCharacteristic* clientWriteCharacteristic = nullptr;
 NimBLEClient* pClient = nullptr;
 NimBLEScan* pBLEScan = nullptr;
 
+NimBLEServer* pServer;
+NimBLEService* pRadarService;
+NimBLECharacteristic* pAlertNotifyChar;
+NimBLECharacteristic* pCommandWriteChar;
+
 const uint8_t notificationOn[] = {0x1, 0x0};
 
 class ClientCallbacks : public NimBLEClientCallbacks {
@@ -121,6 +126,37 @@ class ScanCallbacks : public NimBLEScanCallbacks {
   }
 } scanCallbacks;
 
+class CommandWriteCallback : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+    std::string cmd = pCharacteristic->getValue();
+    Serial.print("Received write: ");
+    for (char c : cmd) Serial.printf("%02X ", (uint8_t)c);
+    Serial.println();
+
+    if (clientWriteCharacteristic) {
+      if (clientWriteCharacteristic->writeValue(cmd)) {
+        Serial.println("Command forwarded to V1G2.");
+      } else {
+        Serial.println("Failed to forward command.");
+      }
+    } else {
+      Serial.println("Write characteristic not ready.");
+    }
+  }
+};
+
+class MyServerCallbacks : public NimBLEServerCallbacks {
+  void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
+    Serial.println("BLE client connected to server");
+  }
+
+  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
+    Serial.println("BLE client disconnected from server");
+  }
+};
+
+
+
 // TODO: remove the conversion dependency
 static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
@@ -140,6 +176,11 @@ static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, u
     previousHexData = tempHexData;
     latestHexData = std::move(tempHexData);
     newDataAvailable = true;
+  }
+
+  if (pAlertNotifyChar) {
+    pAlertNotifyChar->setValue(pData, length);
+    pAlertNotifyChar->notify();
   }
 
   unsigned long bleCallbackLength = micros() - bleCallbackStart;
@@ -287,12 +328,35 @@ void reqMuteOff() {
 }
 
 void initBLE() {
-    NimBLEDevice::init("Async Client");
-    NimBLEDevice::setPower(7);
     NimBLEScan* pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scanCallbacks);
     pScan->setInterval(100);
     pScan->setWindow(75);
     pScan->setActiveScan(true);
     pScan->start(scanTimeMs);
+}
+
+void initBLEServer() {
+  pServer = NimBLEDevice::createServer();
+  pRadarService = pServer->createService("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
+
+  pAlertNotifyChar = pRadarService->createCharacteristic(
+    "92A0B2CE-9E05-11E2-AA59-F23C91AEC05E",
+    NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
+  );
+
+  pCommandWriteChar = pRadarService->createCharacteristic(
+    "92A0B6D4-9E05-11E2-AA59-F23C91AEC05E",
+    NIMBLE_PROPERTY::WRITE
+  );
+
+  pCommandWriteChar->setCallbacks(new CommandWriteCallback());
+  pRadarService->start();
+
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(pRadarService->getUUID());
+  pAdvertising->start();
+  Serial.println("Radar BLE proxy server advertising");
 }

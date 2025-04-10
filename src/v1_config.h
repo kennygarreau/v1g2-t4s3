@@ -110,6 +110,7 @@ struct v1Settings {
   String unitSystem;
   bool isPortraitMode;
   bool disableBLE;
+  bool proxyBLE;
   bool useV1LE;
   bool enableGPS;
   bool enableWifi;

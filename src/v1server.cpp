@@ -72,6 +72,7 @@ void loadSettings() {
   settings.localSSID = preferences.getString("localSSID", "v1display");
   settings.localPW = preferences.getString("localPW", "password123");
   settings.disableBLE = preferences.getBool("disableBLE", false);
+  settings.proxyBLE = preferences.getBool("proxyBLE", true);
   settings.useV1LE = preferences.getBool("useV1LE", false);
   settings.displayTest = preferences.getBool("displayTest", false);
   settings.enableGPS = preferences.getBool("enableGPS", false);
@@ -188,7 +189,17 @@ void setup()
   Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
 
  if (!settings.disableBLE && !settings.displayTest) {
-    initBLE();
+    if (settings.proxyBLE) {
+      NimBLEDevice::init("V1 Proxy");
+      NimBLEDevice::setDeviceName("V1C-LE-64B6");
+      NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+      initBLEServer();
+      initBLE();
+    } else {
+      NimBLEDevice::init("V1G2 Client");
+      NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+      initBLE();
+    }
     Serial.printf("Free heap after BLE init: %u\n", ESP.getFreeHeap());
   }
 

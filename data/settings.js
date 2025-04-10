@@ -46,6 +46,7 @@ async function populateBoardInfo() {
                 ssid: boardInfo.displaySettings.ssid || "v1display",
                 password: boardInfo.displaySettings.password || "password123",
                 disableBLE: boardInfo.displaySettings.disableBLE || false,
+                proxyBLE: boardInfo.displaySettings.proxyBLE || false,
                 useV1LE: boardInfo.displaySettings.useV1LE || false,
                 timezone: boardInfo.displaySettings.timezone || "UTC",
                 enableGPS: boardInfo.displaySettings.enableGPS || false,
@@ -87,6 +88,7 @@ async function populateBoardInfo() {
             document.getElementById("localSSID").value = currentValues.ssid;
             document.getElementById("localPW").value = currentValues.password;
             document.getElementById("disableBLE").value = currentValues.disableBLE.toString();
+            document.getElementById("proxyBLE").value = currentValues.proxyBLE.toString();
             document.getElementById("useV1LE").value = currentValues.useV1LE.toString();
             document.getElementById("timezone").value = currentValues.timezone;
             document.getElementById("enableGPS").value = currentValues.enableGPS.toString();
@@ -132,6 +134,9 @@ document.getElementById("settingsForm").addEventListener("submit", function(even
         }
         if ((document.getElementById("disableBLE").value === "true") !== currentValues.disableBLE) {
             updatedSettings.disableBLE = document.getElementById("disableBLE").value === "true";
+        }
+        if ((document.getElementById("proxyBLE").value === "true") !== currentValues.proxyBLE) {
+            updatedSettings.proxyBLE = document.getElementById("proxyBLE").value === "true";
         }
         if ((document.getElementById("useV1LE").value === "true") !== currentValues.useV1LE) {
             updatedSettings.useV1LE = document.getElementById("useV1LE").value === "true";

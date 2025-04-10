@@ -10,6 +10,7 @@ extern std::string latestHexData;
 extern std::string hexData, lastPacket;
 
 void initBLE();
+void initBLEServer();
 void requestSerialNumber();
 void requestVersion();
 void requestVolume();

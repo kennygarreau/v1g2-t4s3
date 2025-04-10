@@ -377,6 +377,7 @@ void setupWebServer()
         displaySettingsJson["localSSID"] = settings.localSSID;
         displaySettingsJson["localPW"] = settings.localPW;
         displaySettingsJson["disableBLE"] = settings.disableBLE;
+        displaySettingsJson["proxyBLE"] = settings.proxyBLE;
         displaySettingsJson["useV1LE"] = settings.useV1LE;
         displaySettingsJson["timezone"] = settings.timezone;
         displaySettingsJson["enableGPS"] = settings.enableGPS;
@@ -584,6 +585,11 @@ void setupWebServer()
                 settings.disableBLE = doc["disableBLE"].as<bool>();
                 Serial.println("disableBLE: " + String(settings.disableBLE));
                 preferences.putBool("disableBLE", settings.disableBLE);
+            }
+            if (doc.containsKey("proxyBLE")) {
+                settings.proxyBLE = doc["proxyBLE"].as<bool>();
+                Serial.println("proxyBLE: " + String(settings.proxyBLE));
+                preferences.putBool("proxyBLE", settings.proxyBLE);
             }
             if (doc.containsKey("useV1LE")) {
                 settings.useV1LE = doc["useV1LE"].as<bool>();
