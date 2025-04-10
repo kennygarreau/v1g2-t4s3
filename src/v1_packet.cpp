@@ -9,13 +9,15 @@
 static std::string lastinfPayload = "";
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
 static int alertCountValue, alertIndexValue;
-alertsVector alertTable;
-Config globalConfig;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];
 static int num_current_alerts = 0;
 uint8_t activeBands = 0;
 uint8_t lastReceivedBands = 0;
+
+std::vector<LogEntry> logHistory;
+alertsVector alertTable;
+Config globalConfig;
 
 static bool k_rcvd = false;
 static bool ka_rcvd = false;
@@ -465,11 +467,33 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
         unsigned long elapsedTimeMicros = micros() - startTimeMicros;
         if (freqGhz > 0 || bnd == BAND_LASER) {
-            LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
-                                max(frontStrengthVal, rearStrengthVal), dir, freqMhz};
-            Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
-                            newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                            newEntry.strength, newEntry.direction, newEntry.frequency);
+            if (settings.enableGPS) {    
+                const uint32_t now = gpsData.rawTime;
+                const uint32_t timeWindow = 10;
+                int strength = std::max(frontStrengthVal, rearStrengthVal);
+                if (bnd == BAND_LASER) { freqMhz = 3012; strength = 6; }
+                
+                auto it = std::find_if(logHistory.begin(), logHistory.end(), [freqMhz, now, timeWindow](const LogEntry& entry) {
+                    return entry.frequency == freqMhz && (now - entry.timestamp) <= timeWindow;});
+                
+                if (it != logHistory.end()) {
+                    if (strength >= it->strength) {
+                        it->strength = strength;
+                        it->latitude = gpsData.latitude;
+                        it->longitude = gpsData.longitude;
+                        it->timestamp = gpsData.rawTime;
+                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d\n", now, gpsData.latitude, gpsData.longitude,
+                                    strength, freqMhz);
+                    }
+                } else {
+                    LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
+                                        strength, dir, freqMhz};
+                    logHistory.push_back(newEntry);
+                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
+                                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
+                                    newEntry.strength, newEntry.direction, newEntry.frequency);
+                }
+            }
 
             /*
             std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +

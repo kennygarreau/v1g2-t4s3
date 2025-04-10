@@ -45,24 +45,6 @@ struct WiFiCredential {
     String password;
 };
 
-enum LockoutField {
-    ACTIVE,
-    ENTRY_TYPE,
-    TIMESTAMP,
-    LAST_SEEN,
-    COUNTER,
-    LATITUDE,
-    LONGITUDE,
-    SPEED,
-    COURSE,
-    STRENGTH,
-    DIRECTION,
-    FREQUENCY,
-    LOCKOUT_FIELD_COUNT // Total number of fields
-};
-
-extern const char *lockoutFieldNames[];
-
 // active, entrytype, timestamp, lastSeen, counter, latitude, longitude, speed, course, strength, direction, frequency
 struct LockoutEntry {
     bool active; // 0: inactive, 1: active

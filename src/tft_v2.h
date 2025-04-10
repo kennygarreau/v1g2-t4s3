@@ -11,6 +11,7 @@ extern "C" {
 #include "lvgl.h"
 
 extern uint8_t activeBands;
+void displayTestTask(void *pvParameters);
 
 //double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 void main_press_handler(lv_event_t * e);
@@ -108,7 +109,6 @@ bool get_var_arrowPrioRear();
 #ifdef __cplusplus
 }
 void set_var_frequencies(const std::vector<AlertTableData>& alertDataList);
-void displayTest();
 
 #endif
 

@@ -212,6 +212,10 @@ void setup()
     Serial.printf("Free heap after Wifi startup: %u\n", ESP.getFreeHeap());
   }
 
+  if (settings.displayTest) {
+    xTaskCreate(displayTestTask, "DisplayTestTask", 8192, NULL, 1, NULL);
+  }
+
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);
 }
@@ -247,9 +251,11 @@ void loop() {
     std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
   }
 
+  /*
   if (settings.displayTest) {
     displayTest();
   }
+  */
   
   unsigned long currentMillis = millis();
   if (currentMillis - lastMillis >= 2000) {

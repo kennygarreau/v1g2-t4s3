@@ -811,6 +811,8 @@ void tick_screen_main() {
             if (new_val == "c") {
                 lv_label_set_text(overlay, "q");
                 lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
             }
         }
 

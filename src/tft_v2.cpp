@@ -579,17 +579,16 @@ extern "C" bool get_var_gpsAvailable() {
     return gpsAvailable;
 }
 
-void displayTest() {
-    // TODO: generate more synthetic packets as 31 paints the arrow/bars/band but the alert table doesn't match 1:1
+void displayTestTask(void *pvParameters) {
     std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
-    //std::string packets[] = {"AAD8EA31095B5B0724248CCC5457AB", "AAD8EA310906060F24248CCC54B5AB"};
-    
-    for (const std::string& packet : packets) {
-      //unsigned long decodeLoopStart = millis();
-      PacketDecoder decoder(packet); 
-      decoder.decode(settings.lowSpeedThreshold, 20);
-      //Serial.printf("Decode loop: %lu\n", millis() - decodeLoopStart);
-      delay(64);
+
+    while (true) {
+        for (const std::string& packet : packets) {
+            PacketDecoder decoder(packet);
+            decoder.decode(settings.lowSpeedThreshold, 20);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 

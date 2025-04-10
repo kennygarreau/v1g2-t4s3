@@ -23,6 +23,10 @@ const char *lockoutFieldNames[] = {
     "freq"
 };
 
+const char* logFieldNames[] = {
+    "ts", "lat", "long", "speed", "course", "str", "dir", "freq"
+};
+
 LockoutEntry savedLockoutLocations[] = {
     {
         .active = true,
@@ -179,6 +183,32 @@ void setupWebServer()
     serveStaticFile(server, "/style.css", "text/css");
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
 
+    server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
+        JsonDocument jsonDoc;
+        JsonArray logArray = jsonDoc.createNestedArray("logs");
+    
+        for (const auto &logItem : logHistory) {
+            JsonObject sectionObj = logArray.createNestedObject();
+    
+            for (int i = 0; i < LOG_FIELD_COUNT; i++) {
+                switch (i) {
+                    case LogField::TS:   sectionObj[logFieldNames[i]] = logItem.timestamp; break;
+                    case LogField::LAT:    sectionObj[logFieldNames[i]] = logItem.latitude; break;
+                    case LogField::LON:   sectionObj[logFieldNames[i]] = logItem.longitude; break;
+                    case LogField::SPD:       sectionObj[logFieldNames[i]] = logItem.speed; break;
+                    case LogField::CRSE:      sectionObj[logFieldNames[i]] = logItem.course; break;
+                    case LogField::STR:    sectionObj[logFieldNames[i]] = logItem.strength; break;
+                    case LogField::DIR:   sectionObj[logFieldNames[i]] = logItem.direction; break;
+                    case LogField::FREQ:   sectionObj[logFieldNames[i]] = logItem.frequency; break;
+                }
+            }
+        }
+    
+        String response;
+        serializeJson(jsonDoc, response);
+        request->send(200, "application/json", response);
+    });   
+
     server.on("/lockouts", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
         JsonArray lockoutArray = jsonDoc.createNestedArray("lockouts");
@@ -188,18 +218,18 @@ void setupWebServer()
     
             for (int i = 0; i < LOCKOUT_FIELD_COUNT; i++) {
                 switch (i) {
-                    case ACTIVE:      sectionObj[lockoutFieldNames[i]] = lockout.active; break;
-                    case ENTRY_TYPE:  sectionObj[lockoutFieldNames[i]] = lockout.entryType; break;
-                    case TIMESTAMP:   sectionObj[lockoutFieldNames[i]] = lockout.timestamp; break;
-                    case LAST_SEEN:   sectionObj[lockoutFieldNames[i]] = lockout.lastSeen; break;
-                    case COUNTER:     sectionObj[lockoutFieldNames[i]] = lockout.counter; break;
-                    case LATITUDE:    sectionObj[lockoutFieldNames[i]] = lockout.latitude; break;
-                    case LONGITUDE:   sectionObj[lockoutFieldNames[i]] = lockout.longitude; break;
-                    case SPEED:       sectionObj[lockoutFieldNames[i]] = lockout.speed; break;
-                    case COURSE:      sectionObj[lockoutFieldNames[i]] = lockout.course; break;
-                    case STRENGTH:    sectionObj[lockoutFieldNames[i]] = lockout.strength; break;
-                    case DIRECTION:   sectionObj[lockoutFieldNames[i]] = lockout.direction; break;
-                    case FREQUENCY:   sectionObj[lockoutFieldNames[i]] = lockout.frequency; break;
+                    case LockoutField::ACTIVE:      sectionObj[lockoutFieldNames[i]] = lockout.active; break;
+                    case LockoutField::ENTRY_TYPE:  sectionObj[lockoutFieldNames[i]] = lockout.entryType; break;
+                    case LockoutField::TIMESTAMP:   sectionObj[lockoutFieldNames[i]] = lockout.timestamp; break;
+                    case LockoutField::LAST_SEEN:   sectionObj[lockoutFieldNames[i]] = lockout.lastSeen; break;
+                    case LockoutField::COUNTER:     sectionObj[lockoutFieldNames[i]] = lockout.counter; break;
+                    case LockoutField::LATITUDE:    sectionObj[lockoutFieldNames[i]] = lockout.latitude; break;
+                    case LockoutField::LONGITUDE:   sectionObj[lockoutFieldNames[i]] = lockout.longitude; break;
+                    case LockoutField::SPEED:       sectionObj[lockoutFieldNames[i]] = lockout.speed; break;
+                    case LockoutField::COURSE:      sectionObj[lockoutFieldNames[i]] = lockout.course; break;
+                    case LockoutField::STRENGTH:    sectionObj[lockoutFieldNames[i]] = lockout.strength; break;
+                    case LockoutField::DIRECTION:   sectionObj[lockoutFieldNames[i]] = lockout.direction; break;
+                    case LockoutField::FREQUENCY:   sectionObj[lockoutFieldNames[i]] = lockout.frequency; break;
                 }
             }
         }
@@ -587,13 +617,12 @@ void setupWebServer()
                 settings.useDefaultV1Mode = doc["useDefaultV1Mode"].as<bool>();
                 Serial.println("useDefaultV1Mode: " + String(settings.useDefaultV1Mode));
                 preferences.putBool("useDefMode", settings.useDefaultV1Mode);
-                // TODO: dynamically update without reboot
-                //isRebootPending = true;
             }
             if (doc.containsKey("displayTest")) {
                 settings.displayTest = doc["displayTest"].as<bool>();
                 Serial.println("displayTest: " + String(settings.displayTest));
                 preferences.putBool("displayTest", settings.displayTest);
+                preferences.end();
                 delay(1500);
                 ESP.restart();
             }

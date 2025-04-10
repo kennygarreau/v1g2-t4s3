@@ -64,6 +64,7 @@ enum Band {
 };
 
 using alertsVector = std::vector<std::string>;
+extern std::vector<LogEntry> logHistory;
 
 class PacketDecoder {
 private:
