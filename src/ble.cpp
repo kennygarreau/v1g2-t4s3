@@ -129,13 +129,14 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 class CommandWriteCallback : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
     std::string cmd = pCharacteristic->getValue();
-    Serial.print("Received write: ");
-    for (char c : cmd) Serial.printf("%02X ", (uint8_t)c);
-    Serial.println();
 
     if (clientWriteCharacteristic) {
       if (clientWriteCharacteristic->writeValue(cmd)) {
-        Serial.println("Command forwarded to V1G2.");
+        /*
+        Serial.print("Command forwarded to V1G2: ");
+        for (char c : cmd) Serial.printf("%02X ", (uint8_t)c);
+        Serial.println();
+        */
       } else {
         Serial.println("Failed to forward command.");
       }
