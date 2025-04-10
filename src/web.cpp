@@ -56,6 +56,9 @@ LockoutEntry savedLockoutLocations[] = {
 
 unsigned long rebootTime = 0;
 bool isRebootPending = false;
+float batteryPercentage = 0.0f;
+float voltageInMv = 0.0f;
+uint16_t vBusVoltage = 0;
 
 std::string manufacturerName, modelNumber, serialNumber, softwareRevision;
 

@@ -54,6 +54,15 @@ enum Direction {
     DIR_REAR  = 3
 };
 
+enum Band {
+    BAND_NONE = 0,
+    BAND_LASER = 1,
+    BAND_KA = 2,
+    BAND_KU = 3,
+    BAND_K = 4,
+    BAND_X = 5
+};
+
 using alertsVector = std::vector<std::string>;
 
 class PacketDecoder {
@@ -62,8 +71,8 @@ private:
 public:
     PacketDecoder(const std::string& packet);
 
-    std::string decode(int lowSpeedThreshold, int currentSpeed);
-    void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int curentSpeed);
+    std::string decode(int lowSpeedThreshold, uint8_t currentSpeed);
+    void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, uint8_t curentSpeed);
     void clearInfAlerts();
     void clearTableAlerts();
 };

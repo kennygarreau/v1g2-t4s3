@@ -6,12 +6,9 @@
 #include "ui/actions.h"
 #include <set>
 
-static std::string dirValue, bandValue;
 static std::string lastinfPayload = "";
-int frontStrengthVal, rearStrengthVal;
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
 static int alertCountValue, alertIndexValue;
-float freqGhz;
 alertsVector alertTable;
 Config globalConfig;
 std::string prio_alert_freq = "";
@@ -344,13 +341,16 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
 /* 
 Execute if we successfully write reqStartAlertData to clientWriteUUID
 */
-void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, int currentSpeed) {
+void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, uint8_t currentSpeed) {
     unsigned long startTimeMicros = micros();
-
-    frontStrengthVal = 0;
-    rearStrengthVal = 0;
+    
+    std::string dirValue, bandValue;
+    int frontStrengthVal = 0;
+    int rearStrengthVal = 0;
     int freqMhz = 0;
+    float freqGhz;
     Direction dir;
+    Band bnd;
 
     std::vector<AlertTableData> alertDataList;
     AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
@@ -376,11 +376,11 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
             dirValue = "Unknown";
         
             switch (bandArrow & 0b00011111) { // Mask the band bits
-                case 0b00000001: bandValue = "LASER"; break;
-                case 0b00000010: bandValue = "Ka"; break;
-                case 0b00000100: bandValue = "K"; break;
-                case 0b00001000: bandValue = "X"; break;
-                case 0b00010000: bandValue = "Ku"; break;
+                case 0b00000001: bandValue = "LASER"; bnd = BAND_LASER; break;
+                case 0b00000010: bandValue = "Ka"; bnd = BAND_KA; break;
+                case 0b00000100: bandValue = "K"; bnd = BAND_K; break;
+                case 0b00001000: bandValue = "X"; bnd = BAND_X; break;
+                case 0b00010000: bandValue = "Ku"; bnd = BAND_KU; break;
             }
         
             switch (bandArrow & 0b11100000) { // Mask the direction bits
@@ -397,20 +397,20 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
         /* after this there should be no substring processing; we should only focus on painting the display */
         // paint the alert table arrows
-        if (bandValue == "X" && globalConfig.xBand) {
+        if (bnd == BAND_X && globalConfig.xBand) {
             frontStrengthVal = mapXToBars(frontStrength);
             rearStrengthVal = mapXToBars(rearStrength);
         } 
-        else if (bandValue == "K" || bandValue == "Ku") {
+        else if (bnd == BAND_K || bnd == BAND_KU) {
             frontStrengthVal = mapKToBars(frontStrength);
             rearStrengthVal = mapKToBars(rearStrength);
         }
-        else if (bandValue == "Ka") {
+        else if (bnd == BAND_KA) {
             frontStrengthVal = mapKaToBars(frontStrength);
             rearStrengthVal = mapKaToBars(rearStrength);        
         }
         
-        if (bandValue != "LASER") {
+        if (bnd != BAND_LASER) {
             std::string freqMSB = alerts[i].substr(2, 2);
             std::string freqLSB = alerts[i].substr(4, 2);
     
@@ -419,9 +419,9 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
         
         // paint the priority alert
-        if (priority && bandValue != "LASER") {
+        if (priority && bnd != BAND_LASER) {
             if (!muted && gpsAvailable && currentSpeed <= lowSpeedThreshold) {
-                Serial.println("SilentRide requesting mute");
+                //Serial.println("SilentRide requesting mute");
                 requestMute();
                 muted = true;
             }
@@ -464,7 +464,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
         }
 
         unsigned long elapsedTimeMicros = micros() - startTimeMicros;
-        if (freqGhz > 0 || bandValue == "LASER") {
+        if (freqGhz > 0 || bnd == BAND_LASER) {
             LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                                 max(frontStrengthVal, rearStrengthVal), dir, freqMhz};
             Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
@@ -536,7 +536,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
     ID 31 (infDisplayData): route to decodeDisplayData
     ID 43 (respAlertData): direct decode 
 */
-std::string PacketDecoder::decode(int lowSpeedThreshold, int currentSpeed) {
+std::string PacketDecoder::decode(int lowSpeedThreshold, uint8_t currentSpeed) {
     //unsigned long startTimeMillis = millis();
 
     if (packet.compare(0, 2, "AA") != 0) {

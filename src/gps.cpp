@@ -7,7 +7,8 @@
 HardwareSerial gpsSerial(1);
 TinyGPSPlus gps;
 GPSData gpsData;
-int currentSpeed = 0;
+Timezone tz;
+uint8_t currentSpeed = 0;
 unsigned long lastValidGPSUpdate = 0;
 
 SemaphoreHandle_t gpsDataMutex;
@@ -112,13 +113,13 @@ void gpsTask(void *parameter)
 
           if (settings.unitSystem == "Metric")
           {
-            gpsData.speed = static_cast<int>(round(gps.speed.kmph()));
+            gpsData.speed = static_cast<uint8_t>(round(gps.speed.kmph()));
             gpsData.altitude = gps.altitude.meters();
             currentSpeed = gpsData.speed;
           }
           else
           {
-            gpsData.speed = static_cast<int>(round(gps.speed.mph()));
+            gpsData.speed = static_cast<uint8_t>(round(gps.speed.mph()));
             gpsData.altitude = gps.altitude.feet();
             currentSpeed = gpsData.speed;
           }

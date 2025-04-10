@@ -31,16 +31,12 @@ std::vector<LockoutEntry> *lockoutList;
 
 LilyGo_AMOLED amoled;
 
-float batteryPercentage = 0.0f;
 bool batteryConnected, batteryCharging, isVBusIn, wifiConnecting, webStarted;
-float voltageInMv = 0.0f;
-uint16_t vBusVoltage = 0;
 bool gpsAvailable, wifiConnected, v1le;
 
 v1Settings settings;
 lockoutSettings autoLockoutSettings;
 Preferences preferences;
-Timezone tz;
 Stats stats;
 
 int loopCounter = 0;

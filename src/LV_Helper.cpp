@@ -73,6 +73,7 @@ static void touchpad_read( lv_indev_drv_t *indev_driver, lv_indev_data_t *data )
 #error "Please turn on PSRAM to OPI !"
 #else
 static lv_color_t *buf = NULL;
+static lv_color_t *buf2 = NULL;
 #endif
 
 #if LV_USE_LOG
@@ -144,11 +145,14 @@ void beginLvglHelper(LilyGo_Display &board, bool debug) {
     }
 #endif
 
-    size_t lv_buffer_size = board.width() * board.height() * sizeof(lv_color_t);
+    size_t lv_buffer_size = (board.width() * board.height() / 10) * sizeof(lv_color_t);
     buf = (lv_color_t *)ps_malloc(lv_buffer_size);
-    assert(buf);
+    buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
+    assert(buf && buf2);
 
-    lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
+    //lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
+    lv_disp_draw_buf_init( &draw_buf, buf, buf2, (board.width() * board.height() / 10));
+
 
     /*Initialize the display*/
     lv_disp_drv_init( &disp_drv );

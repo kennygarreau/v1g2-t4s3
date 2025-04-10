@@ -32,7 +32,8 @@ extern LilyGo_AMOLED amoled;
 extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
 
-extern int currentSpeed, alertTableSize;
+extern int alertTableSize;
+extern uint8_t currentSpeed;
 extern SemaphoreHandle_t xWiFiLock;
 extern SemaphoreHandle_t gpsDataMutex;
 
@@ -68,7 +69,7 @@ struct LockoutEntry {
     bool entryType; // 0: auto 1: manual
     uint32_t timestamp;
     uint32_t lastSeen;
-    int counter;
+    uint8_t counter;
     double latitude;
     double longitude;
     int speed;
@@ -94,7 +95,7 @@ struct LogEntry {
     uint32_t timestamp;
     double latitude;
     double longitude;
-    int speed;
+    uint8_t speed;
     int course;
     int strength;
     int direction;
@@ -183,7 +184,7 @@ extern Config globalConfig;
 struct GPSData {
   double latitude;
   double longitude;
-  int speed;
+  uint8_t speed;
   double altitude;
   double course;
   double hdop;
@@ -269,8 +270,8 @@ extern std::string manufacturerName, modelNumber, serialNumber, softwareRevision
 
 extern Preferences preferences;
 extern bool isVBusIn, batteryCharging, isPortraitMode;
-extern uint16_t vBusVoltage, batteryVoltage;
-extern float voltageInMv, batteryPercentage;
+//extern uint16_t vBusVoltage, batteryVoltage;
+//extern float voltageInMv, batteryPercentage;
 extern unsigned long bootMillis;
 
 // int alertCount, float frequencies[5], std::string direction[5], int barCount, int freqCount

@@ -1,10 +1,8 @@
 #include "v1_config.h"
 #include <ESPAsyncWebServer.h>
-//#include "lvgl.h"
 #include "ui/ui.h"
 #include "ui/actions.h"
 #include "tft_v2.h"
-//#include <vector>
 #include "wifi.h"
 #include "v1_packet.h"
 #include "math.h"
@@ -17,10 +15,10 @@ const char* frequency_ptrs[MAX_ALERTS];
 const char* direction_ptrs[MAX_ALERTS]; 
 int alertCount = 0;
 int prio_bars = 0;
-int locationCount = 0;
 int alertTableSize = 0;
 bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
+//int locationCount = 0;
 /*
 void checkProximityForMute(double currentLat, double currentLon) {
     if (locationCount == 0) return;
@@ -403,7 +401,7 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
     int index = 0;
     for (const auto& alertData : alertDataList) {
         constexpr int MAX_FREQ_COUNT = 4;
-        Serial.printf("Alert #%d - alertCount: %d, freqCount: %d\n", index + 1, alertData.alertCount, alertData.freqCount);
+        //Serial.printf("Alert #%d - alertCount: %d, freqCount: %d\n", index + 1, alertData.alertCount, alertData.freqCount);
 
         for (int i = 0; i < alertData.freqCount && i < MAX_FREQ_COUNT && index < MAX_ALERTS; i++) {
             snprintf(alert_frequencies[index], sizeof(alert_frequencies[index]), "%.3f", alertData.frequencies[i]);
@@ -413,7 +411,7 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
             alert_directions[index][sizeof(alert_directions[index]) - 1] = '\0';
             direction_ptrs[index] = alert_directions[index];
 
-            Serial.printf(" -> Freq[%d]: %s, Dir[%d]: %s\n", i, alert_frequencies[index], i, alert_directions[index]);
+            //Serial.printf(" -> Freq[%d]: %s, Dir[%d]: %s\n", i, alert_frequencies[index], i, alert_directions[index]);
 
             index++;
         }
