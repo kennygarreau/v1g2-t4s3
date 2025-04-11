@@ -1,6 +1,8 @@
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
+#include "esp_bt_device.h"
+
 
 bool serialReceived = false;
 bool versionReceived = false;
@@ -152,7 +154,8 @@ class MyServerCallbacks : public NimBLEServerCallbacks {
   }
 
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
-    Serial.println("BLE client disconnected from server");
+    Serial.println("BLE client disconnected, restart advertising");
+    NimBLEDevice::startAdvertising();
   }
 };
 

@@ -1083,26 +1083,22 @@ void tick_screen_settings() {
     {
         if (!objects.switch_v1cle) return;
 
-        bool v1cle_present = get_var_v1clePresent();
+        //bool v1cle_present = get_var_v1clePresent();
         bool usev1cle = get_var_usev1cle();
         bool switch_checked = lv_obj_has_state(objects.switch_v1cle, LV_STATE_CHECKED);
 
-        if (!v1cle_present) {
-            // TODO: fix BLE scan timer to capture this in case v1g is found first
-            //lv_obj_add_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
-            //lv_obj_add_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
+        if (usev1cle && !switch_checked) {
+            lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_state(objects.switch_v1cle, LV_STATE_CHECKED);
+        }
+        else if (usev1cle && switch_checked) {
+            lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
+            //lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
         }
         else {
-            if (usev1cle && !switch_checked) {
-                lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_state(objects.switch_v1cle, LV_STATE_CHECKED);
-            }
-            else if (usev1cle && switch_checked) {
-                lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
-                //lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
-            }
+            lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
         }
     }
     // RSSI vals

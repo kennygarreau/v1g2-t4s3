@@ -51,20 +51,10 @@ int combineMSBLSB(const std::string& msb, const std::string& lsb) {
     return (msbDecimal << 8) | lsbDecimal;
 }
 
-std::string hexToAscii(const std::string& hexStr) {
-    std::string asciiStr;
-    for (size_t i = 0; i < hexStr.length(); i += 2) {
-        // Convert each pair of hex characters to a byte (uint8_t)
-        std::string byteStr = hexStr.substr(i, 2);
-        char byte = static_cast<char>(std::stoi(byteStr, nullptr, 16));
-        
-        if (std::isprint(byte)) {
-            asciiStr += byte;  // Append the ASCII character to the result string
-        } else {
-            asciiStr += '.';  // Replace non-printable characters with a dot
-        }
-    }
-    return asciiStr;
+std::string hexToAscii(const char* hexPtr) {
+    char byteStr[3] = { hexPtr[0], hexPtr[1], '\0' };
+    char byte = static_cast<char>(std::strtol(byteStr, nullptr, 16));
+    return std::string(1, std::isprint(byte) ? byte : '.');
 }
 
 void updateActiveBands(uint8_t band) {
@@ -467,7 +457,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
 
         unsigned long elapsedTimeMicros = micros() - startTimeMicros;
         if (freqGhz > 0 || bnd == BAND_LASER) {
-            if (settings.enableGPS) {    
+            if (gpsAvailable && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
                 const uint32_t now = gpsData.rawTime;
                 const uint32_t timeWindow = 10;
                 int strength = std::max(frontStrengthVal, rearStrengthVal);
@@ -493,6 +483,7 @@ void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThre
                                     newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
                                     newEntry.strength, newEntry.direction, newEntry.frequency);
                 }
+                xSemaphoreGive(gpsDataMutex);
             }
 
             /*
@@ -695,21 +686,24 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, uint8_t currentSpeed) {
     // respVersion
     else if (packetID == "02"){
         try {
-            std::string versionID = hexToAscii(packet.substr(10, 2));
-            std::string majorVersion = hexToAscii(packet.substr(12, 2));
-            std::string minorVersion = hexToAscii(packet.substr(16, 2));
-            std::string revisionDigitOne = hexToAscii(packet.substr(18, 2));
-            std::string revisionDigitTwo = hexToAscii(packet.substr(20, 2));
-            std::string controlNumber = hexToAscii(packet.substr(22, 2));
+            char versionID        = hexToAscii(packet.c_str() + 10)[0];
+            char majorVersion     = hexToAscii(packet.c_str() + 12)[0];
+            char minorVersion     = hexToAscii(packet.c_str() + 16)[0];
+            char revisionDigitOne = hexToAscii(packet.c_str() + 18)[0];
+            char revisionDigitTwo = hexToAscii(packet.c_str() + 20)[0];
+            char controlNumber    = hexToAscii(packet.c_str() + 22)[0];
 
-            if (versionID == "V") {
-                std::string versionString = majorVersion + "." + minorVersion + revisionDigitOne + revisionDigitTwo + controlNumber;
+            if (versionID == 'V') {
+                char versionString[8];
+                snprintf(versionString, sizeof(versionString), "%c.%c%c%c%c",
+                         majorVersion, minorVersion, revisionDigitOne,
+                         revisionDigitTwo, controlNumber);
                 softwareRevision = versionString;
-                Serial.printf("Software Version: %s\n", versionString.c_str());
+                Serial.printf("Software Version: %s\n", versionString);
                 versionReceived = true;
-            } else if (versionID == "R") {
+            } else if (versionID == 'R') {
                 remoteAudio = true;
-            } else if (versionID == "S") {
+            } else if (versionID == 'S') {
                 savvy = true;
             } else {
                 Serial.printf("Found component: %s", versionID);
@@ -719,19 +713,13 @@ std::string PacketDecoder::decode(int lowSpeedThreshold, uint8_t currentSpeed) {
     // respSerialNumber
     else if (packetID == "04"){
         try {
-            std::string serialNum1 = hexToAscii(packet.substr(10, 2));
-            std::string serialNum2 = hexToAscii(packet.substr(12, 2));
-            std::string serialNum3 = hexToAscii(packet.substr(14, 2));
-            std::string serialNum4 = hexToAscii(packet.substr(16, 2));
-            std::string serialNum5 = hexToAscii(packet.substr(18, 2));
-            std::string serialNum6 = hexToAscii(packet.substr(20, 2));
-            std::string serialNum7 = hexToAscii(packet.substr(22, 2));
-            std::string serialNum8 = hexToAscii(packet.substr(24, 2));
-            std::string serialNum9 = hexToAscii(packet.substr(26, 2));
-            std::string serialNum10 = hexToAscii(packet.substr(28, 2));
+            std::string serialString;
+            serialString.reserve(10);  // Reserve to avoid reallocations
 
-            std::string serialString = serialNum1 + serialNum2 + serialNum3 + serialNum4 + serialNum5 + serialNum6 + 
-                serialNum7 + serialNum8 + serialNum9 + serialNum10;
+            for (size_t i = 10; i <= 28; i += 2) {
+                serialString += hexToAscii(packet.c_str() + i);
+            }
+
             serialNumber = serialString;
             Serial.printf("Serial Number: %s\n", serialString.c_str());
             serialReceived = true;
