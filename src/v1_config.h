@@ -7,9 +7,8 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.2.1"
+#define FIRMWARE_VERSION "1.2.2a"
 #define BAUD_RATE 9600
-//#define WIFI_MODE WIFI_STA
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
 #define MAX_ALERTS 4
@@ -98,7 +97,7 @@ struct lockoutSettings {
 extern lockoutSettings autoLockoutSettings;
 
 struct v1Settings {
-  int displayOrientation;
+  uint8_t displayOrientation;
   uint8_t brightness;
   uint32_t textColor;
   std::vector<WiFiCredential> wifiCredentials;
@@ -117,11 +116,11 @@ struct v1Settings {
   bool onlyDisplayBTIcon;
   bool useDefaultV1Mode;
   bool showBogeyCount;
-  int lowSpeedThreshold;
+  uint8_t lowSpeedThreshold;
   bool muteToGray;
   bool colorBars;
   String timezone;
-  int networkCount;
+  uint8_t networkCount;
 };
 
 extern v1Settings settings;
@@ -251,17 +250,15 @@ extern std::string manufacturerName, modelNumber, serialNumber, softwareRevision
 
 extern Preferences preferences;
 extern bool isVBusIn, batteryCharging, isPortraitMode;
-//extern uint16_t vBusVoltage, batteryVoltage;
-//extern float voltageInMv, batteryPercentage;
 extern unsigned long bootMillis;
 
 // int alertCount, float frequencies[5], std::string direction[5], int barCount, int freqCount
 struct AlertTableData {
-    int alertCount; // this might be spurious
+    uint8_t alertCount; // this might be spurious
     float frequencies[MAX_ALERTS + 1];
     std::string direction[MAX_ALERTS + 1];
-    int barCount; // TODO: convert to array
-    int freqCount;
+    uint8_t barCount; // TODO: convert to array
+    uint8_t freqCount;
 };
 
 #endif // V1_CONFIG_H

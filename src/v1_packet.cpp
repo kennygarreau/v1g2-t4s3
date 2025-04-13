@@ -9,7 +9,7 @@
 static std::string lastinfPayload = "";
 std::vector<uint8_t> lastRawInfPayload;
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
-static int alertCountValue, alertIndexValue;
+static uint8_t alertCountValue, alertIndexValue;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];
 static int num_current_alerts = 0;
@@ -112,14 +112,14 @@ int mapXToBars(const std::string& hex) {
     return -1;
 }
 
-int mapXToBars(uint8_t value) {
+uint8_t mapXToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x95, 0x9F, 0xA9, 0xB3, 0xBC, 0xC4, 0xCF, 0xFF};
 
     for (int i = 0; i < 8; ++i) {
         if (value <= thresholds[i]) return i;
     }
 
-    return -1; // Should never hit this unless value > 0xCF and <= 0xFF
+    return -1;
 }
 
 int mapKToBars(const std::string& hex) {
@@ -137,14 +137,14 @@ int mapKToBars(const std::string& hex) {
     return -1;
 }
 
-int mapKToBars(uint8_t value) {
+uint8_t mapKToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x87, 0x8F, 0x99, 0xA3, 0xAD, 0xB7, 0xC1, 0xFF};
 
     for (int i = 0; i < 8; ++i) {
         if (value <= thresholds[i]) return i;
     }
 
-    return -1; // Should never happen unless there's data corruption
+    return -1;
 }
 
 int mapKaToBars(const std::string& hex) {
@@ -162,14 +162,14 @@ int mapKaToBars(const std::string& hex) {
     return -1;
 }
 
-int mapKaToBars(uint8_t value) {
+uint8_t mapKaToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x8F, 0x96, 0x9D, 0xA4, 0xAB, 0xB2, 0xB9, 0xFF};
 
     for (int i = 0; i < 8; ++i) {
         if (value <= thresholds[i]) return i;
     }
 
-    return -1; // Should never hit this with valid 0x00–0xFF input
+    return -1;
 }
 
 void processSection_v2(std::vector<uint8_t> packet, uint8_t offset) {
@@ -510,7 +510,7 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
 
         unsigned long elapsedTimeMicros = micros() - startTimeMicros;
         if (freqGhz > 0 || bnd == BAND_LASER) {
-            int strength = std::max(frontStrengthVal, rearStrengthVal);
+            uint8_t strength = std::max(frontStrengthVal, rearStrengthVal);
             if (bnd == BAND_LASER) { freqMhz = 3012; strength = 6; }
 
             if (gpsAvailable && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
@@ -547,8 +547,8 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                                     newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros);
             }
         }
-        yield();
     }
+
     if (alertCountValue > 1) {
 
         for (auto& alertData : alertDataList) {

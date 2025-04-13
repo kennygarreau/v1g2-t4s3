@@ -1,8 +1,6 @@
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
-//#include "esp_bt_device.h"
-
 
 bool serialReceived = false;
 bool versionReceived = false;
@@ -16,9 +14,9 @@ std::vector<uint8_t> latestRawData;
 std::vector<uint8_t> previousRawData;
 
 //std::string hexData = "";
-std::string latestHexData;
-std::string previousHexData = "";
-std::string lastPacket = "";
+//std::string latestHexData;
+//std::string previousHexData = "";
+//std::string lastPacket = "";
 static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
@@ -180,7 +178,7 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   }
 }
 
-// TODO: remove the conversion dependency
+/*
 static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
 
@@ -213,6 +211,7 @@ static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, u
     Serial.printf("Warning: HEX decode time: %d us\n", bleCallbackLength);
   }
 }
+*/
 
 void displayReader(NimBLEClient* pClient) {
 
@@ -363,15 +362,15 @@ void initBLE() {
 
 void initBLEServer() {
   pServer = NimBLEDevice::createServer();
-  pRadarService = pServer->createService("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
+  pRadarService = pServer->createService(bmeServiceUUID);
 
   pAlertNotifyChar = pRadarService->createCharacteristic(
-    "92A0B2CE-9E05-11E2-AA59-F23C91AEC05E",
+    infDisplayDataUUID,
     NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
   );
 
   pCommandWriteChar = pRadarService->createCharacteristic(
-    "92A0B6D4-9E05-11E2-AA59-F23C91AEC05E",
+    clientWriteUUID,
     NIMBLE_PROPERTY::WRITE
   );
 

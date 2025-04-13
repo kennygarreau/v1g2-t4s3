@@ -18,8 +18,8 @@ lv_obj_t* alert_directions[MAX_ALERT_ROWS];
 
 lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Store elements to blink
 bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should blink
-int blink_count = 0;
-int cur_bars = 0;
+uint8_t blink_count = 0;
+uint8_t cur_bars = 0;
 //int cur_alert_count = 0;
 
 static uint32_t last_blink_time = 0;
@@ -507,7 +507,7 @@ void tick_status_bar() {
                 }
             }
             else if (value && laserAlert) {
-                lv_label_set_text(objects.custom_freq_en, "");
+                //lv_label_set_text(objects.custom_freq_en, "");
                 lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
             } 
             else {
@@ -611,7 +611,6 @@ void tick_screen_main() {
         }
         // Side Arrow
         { 
-            //uint32_t now = lv_tick_get();
             bool should_blink = blink_enabled[BLINK_SIDE];
             if (should_blink) {
                 LV_LOG_INFO("paint side blink");
@@ -640,7 +639,6 @@ void tick_screen_main() {
         }
         // Rear Arrow
         {
-            //uint32_t now = lv_tick_get();
             bool should_blink = blink_enabled[BLINK_REAR];
             if (should_blink) {
                 LV_LOG_INFO("paint rear blink");
@@ -820,20 +818,17 @@ void tick_screen_main() {
             lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
             lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
         }
-        else if (alertPresent || laserAlert) {
+        else if (alertPresent && laserAlert) {
             lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-        } 
-        else {
+            lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+        } else {
             if (lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
             }
+            if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) {
+                lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+            }
         }
-        /*
-        else {
-            lv_label_set_text(objects.default_mode, new_val);
-            lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
-        }
-        */
         tick_value_change_obj = NULL;
     }
 }

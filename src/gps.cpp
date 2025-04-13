@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <ezTime.h>
 #include "gps.h"
 #include "v1_config.h"
 #include <TinyGPS++.h>

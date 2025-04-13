@@ -107,16 +107,16 @@ void loadSettings() {
   // selectedConstants = settings.isPortraitMode ? portraitConstants : landscapeConstants;
 
   settings.wifiCredentials.clear();
-  int networkCount = preferences.getInt("networkCount", 0);
+  uint8_t networkCount = preferences.getInt("networkCount", 0);
 
   for (int i = 0; i < networkCount; i++) {
-      String ssid = preferences.getString(("wifi_ssid_" + String(i)).c_str(), "");
-      String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
+    String ssid = preferences.getString(("wifi_ssid_" + String(i)).c_str(), "");
+    String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
 
-      if (ssid.length() > 0) {
-        Serial.printf("Saved network %d: %s\n", i, ssid.c_str());
-        settings.wifiCredentials.push_back({ssid, password});
-      }
+    if (ssid.length() > 0) {
+      Serial.printf("Saved network %d: %s\n", i, ssid.c_str());
+      settings.wifiCredentials.push_back({ssid, password});
+    }
   }
   preferences.end();
 
