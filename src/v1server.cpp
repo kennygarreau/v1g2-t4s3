@@ -42,7 +42,7 @@ Stats stats;
 int loopCounter = 0;
 unsigned long bootMillis = 0;
 unsigned long lastMillis = 0;
-const unsigned long uiTickInterval = 5;
+const unsigned long uiTickInterval = 16;
 const unsigned long atTickInterval = 250;
 
 SPIFFSFileManager fileManager;
@@ -258,8 +258,9 @@ void loop() {
   if (newDataAvailable) {
     newDataAvailable = false;
 
-    PacketDecoder decoder(latestHexData);
-    std::string decoded = decoder.decode(settings.lowSpeedThreshold, currentSpeed);
+    //PacketDecoder decoder(latestHexData);
+    PacketDecoder decoder(latestRawData);
+    std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
   }
 
   /*
@@ -325,15 +326,14 @@ void loop() {
     checkReboot();
   }
 
-  
   unsigned long now = millis();
   if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
     ui_tick();
     lv_task_handler();
-    unsigned long elapsed = millis() - now;
-    if (elapsed > 16) {
-      Serial.printf("Warning: screen draw time: %u ms\n", elapsed);
+    unsigned long elapsedHandler = millis() - now;
+    if (elapsedHandler > 16) {
+      Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
     }
   }
 
@@ -344,6 +344,8 @@ void loop() {
   }
 
   loopCounter++;
+  /*
   delayMicroseconds(10);
   yield();
+  */
 }

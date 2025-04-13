@@ -1,12 +1,12 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-//#include <TinyGPS++.h>
 #include <Update.h>
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "web.h"
 #include "tft_v2.h"
+#include "ble.h"
 
 const char *lockoutFieldNames[] = {
     "act",
@@ -87,7 +87,7 @@ void getDeviceStats() {
     if (isVBusIn) {
       vBusVoltage = amoled.getVbusVoltage();
     }
-    if (bt_connected && clientWriteCharacteristic) {
+    if (bt_connected) {
       stats.btStr = getBluetoothSignalStrength();
     }
     

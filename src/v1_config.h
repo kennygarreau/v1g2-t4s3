@@ -26,8 +26,6 @@
 //#define KBLOCK4 24.072 // +/- .003 (3 MHz) GM
 //#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
 
-extern NimBLEClient* pClient;
-extern NimBLERemoteCharacteristic* clientWriteCharacteristic;
 extern LilyGo_AMOLED amoled;
 extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
@@ -265,25 +263,5 @@ struct AlertTableData {
     int barCount; // TODO: convert to array
     int freqCount;
 };
-
-// Bluetooth service configurations
-static NimBLEUUID deviceInfoUUID("180A");
-static NimBLEUUID bmeServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
-
-// Device Information Service characteristics
-// static BLEUUID manufacturerUUID("2A29");
-// static BLEUUID modelUUID("2A24");
-// static BLEUUID serialUUID("2A25");
-// static BLEUUID hardwareUUID("2A27");
-// static BLEUUID firmwareUUID("2A26");
-// static BLEUUID softwareUUID("2A28");
-
-// V1 Service characteristics
-static NimBLEUUID infDisplayDataUUID("92A0B2CE-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in SHORT - notify for alerts
-//static BLEUUID char2UUID("92A0B4E0-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in LONG
-//static BLEUUID char5UUID("92A0BCE0-9E05-11E2-AA59-F23C91AEC05E"); // notify
-static NimBLEUUID clientWriteUUID("92A0B6D4-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in SHORT
-//static BLEUUID char4UUID("92A0B8D2-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in LONG
-//static BLEUUID char6UUID("92A0BAD4-9E05-11E2-AA59-F23C91AEC05E"); // write and write without response 
 
 #endif // V1_CONFIG_H

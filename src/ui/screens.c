@@ -824,8 +824,16 @@ void tick_screen_main() {
             lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
         } 
         else {
-            //lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+            if (lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
+                lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+            }
         }
+        /*
+        else {
+            lv_label_set_text(objects.default_mode, new_val);
+            lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+        }
+        */
         tick_value_change_obj = NULL;
     }
 }
@@ -1137,6 +1145,9 @@ void create_screen_dispSettings() {
     lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_event_cb(objects.dispSettings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+
+    lv_obj_set_scroll_dir(obj, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_AUTO);
 
     {
         lv_obj_t *parent_obj = obj;

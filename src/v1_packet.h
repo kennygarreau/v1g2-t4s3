@@ -64,16 +64,21 @@ enum Band {
 };
 
 using alertsVector = std::vector<std::string>;
+using alertsVectorRaw = std::vector<std::vector<uint8_t>>;
 extern std::vector<LogEntry> logHistory;
 
 class PacketDecoder {
 private:
     std::string packet;
+    std::vector<uint8_t> rawpacket;
 public:
     PacketDecoder(const std::string& packet);
+    PacketDecoder(const std::vector<uint8_t>& rawpacket);
 
     std::string decode(int lowSpeedThreshold, uint8_t currentSpeed);
-    void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, uint8_t curentSpeed);
+    std::string decode_v2(int lowSpeedThreshold, uint8_t currentSpeed);
+    void decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, uint8_t currentSpeed);
+    void decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed);
     void clearInfAlerts();
     void clearTableAlerts();
 };

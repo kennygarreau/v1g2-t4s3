@@ -7,6 +7,7 @@
 #include "v1_packet.h"
 #include "math.h"
 #include "time.h"
+#include "ble.h"
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";

@@ -1,7 +1,7 @@
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
-#include "esp_bt_device.h"
+//#include "esp_bt_device.h"
 
 
 bool serialReceived = false;
@@ -12,14 +12,17 @@ bool sweepSectionsReceived = false;
 bool maxSweepIndexReceived = false;
 bool allSweepDefinitionsReceived = false;
 
-std::string hexData = "";
+std::vector<uint8_t> latestRawData;
+std::vector<uint8_t> previousRawData;
+
+//std::string hexData = "";
+std::string latestHexData;
 std::string previousHexData = "";
 std::string lastPacket = "";
 static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
 bool newDataAvailable = false;
-std::string latestHexData;
 
 NimBLERemoteService* dataRemoteService = nullptr;
 NimBLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
@@ -159,11 +162,29 @@ class MyServerCallbacks : public NimBLEServerCallbacks {
   }
 };
 
+static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+  if (!pData) return;
+  
+  std::vector<uint8_t> tempRawData(pData, pData + length);
+  tempRawData.assign(pData, pData + length);
 
+  if (tempRawData != previousRawData) {
+    previousRawData = tempRawData;
+    latestRawData = std::move(tempRawData);
+    newDataAvailable = true;
+  }
+
+  if (pAlertNotifyChar) {
+    pAlertNotifyChar->setValue(pData, length);
+    pAlertNotifyChar->notify();
+  }
+}
 
 // TODO: remove the conversion dependency
 static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
+
+  latestRawData.assign(pData, pData + length);
 
   unsigned long bleCallbackStart = micros();
 
@@ -200,7 +221,7 @@ void displayReader(NimBLEClient* pClient) {
       infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
       if (infDisplayDataCharacteristic) {
         if (infDisplayDataCharacteristic->canNotify()) {
-          infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallback);
+          infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallbackv2);
           Serial.println("Subscribed to alert notifications.");
         } else {
           Serial.println("Characteristic does not support notifications.");
