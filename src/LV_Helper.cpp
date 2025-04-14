@@ -22,7 +22,7 @@ static lv_indev_t  *mouse_indev = NULL;
 static lv_indev_t  *kb_indev = NULL;
 static lv_indev_drv_t indev_mouse;
 static lv_indev_drv_t indev_keypad;
-static struct InputParams params_copy;
+//static struct InputParams params_copy;
 
 
 /* Display flushing */
@@ -84,6 +84,7 @@ void lv_log_print_g_cb(const char *buf)
 }
 #endif
 
+/*
 static void mouse_read(lv_indev_drv_t *indev, lv_indev_data_t *data)
 {
     static int16_t last_x;
@@ -120,7 +121,7 @@ static void keypad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
     data->state = LV_INDEV_STATE_REL;
     data->key = last_key;
 }
-
+*/
 
 static void lv_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
 {
@@ -236,12 +237,13 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
     lv_group_set_default(lv_group_create());
 }
 
+/*
 void beginLvglInputDevice(struct InputParams prams)
 {
     memcpy(&params_copy, &prams, sizeof(struct InputParams));
 
     if (!mouse_indev) {
-        /*Register a mouse input device*/
+        //Register a mouse input device
         lv_indev_drv_init( &indev_mouse );
         indev_mouse.type = LV_INDEV_TYPE_POINTER;
         indev_mouse.read_cb = mouse_read;
@@ -252,7 +254,7 @@ void beginLvglInputDevice(struct InputParams prams)
     lv_img_set_src(cursor, params_copy.icon);
     lv_indev_set_cursor(mouse_indev, cursor);
 
-    /*Register a keypad input device*/
+    //Register a keypad input device 
     if (!kb_indev) {
         lv_indev_drv_init(&indev_keypad);
         indev_keypad.type = LV_INDEV_TYPE_KEYPAD;
@@ -261,5 +263,5 @@ void beginLvglInputDevice(struct InputParams prams)
         lv_indev_set_group(kb_indev, lv_group_get_default());
     }
 }
-
+*/
 

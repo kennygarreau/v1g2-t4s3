@@ -262,12 +262,6 @@ void loop() {
     PacketDecoder decoder(latestRawData);
     std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
   }
-
-  /*
-  if (settings.displayTest) {
-    displayTest();
-  }
-  */
   
   unsigned long currentMillis = millis();
   if (currentMillis - lastMillis >= 2000) {

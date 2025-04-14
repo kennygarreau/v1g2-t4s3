@@ -79,9 +79,7 @@ LilyGo_AMOLED::~LilyGo_AMOLED()
 
 const char *LilyGo_AMOLED::getName()
 {
-    if (boards == &BOARD_AMOLED_147) {
-        return "1.47 inch";
-    } else if (boards == &BOARD_AMOLED_191 ) {
+    if (boards == &BOARD_AMOLED_191 ) {
         return "1.91 inch";
     } else if (boards == &BOARD_AMOLED_241) {
         return "2.41 inch";
@@ -93,9 +91,7 @@ const char *LilyGo_AMOLED::getName()
 
 uint8_t LilyGo_AMOLED::getBoardID()
 {
-    if (boards == &BOARD_AMOLED_147) {
-        return LILYGO_AMOLED_147;
-    } else if (boards == &BOARD_AMOLED_191 ) {
+    if (boards == &BOARD_AMOLED_191 ) {
         return LILYGO_AMOLED_191;
     } else if (boards == &BOARD_AMOLED_241) {
         return LILYGO_AMOLED_241;
@@ -132,9 +128,7 @@ void inline LilyGo_AMOLED::clrCS()
 
 bool LilyGo_AMOLED::isPressed()
 {
-    if (boards == &BOARD_AMOLED_147) {
-        return TouchDrvCHSC5816::isPressed();
-    } else if (boards == &BOARD_AMOLED_191 || boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
+    if (boards == &BOARD_AMOLED_191 || boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
         return TouchDrvCSTXXX::isPressed();
     }
     return false;
@@ -153,9 +147,7 @@ void LilyGo_AMOLED::enableTouch()
 uint8_t LilyGo_AMOLED::getPoint(int16_t *x, int16_t *y, uint8_t get_point )
 {
     uint8_t point = 0;
-    if (boards == &BOARD_AMOLED_147) {
-        point =  TouchDrvCHSC5816::getPoint(x, y);
-    } else if (boards == &BOARD_AMOLED_191 || boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
+    if (boards == &BOARD_AMOLED_191 || boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
         point =  TouchDrvCSTXXX::getPoint(x, y);
     }
 
@@ -172,9 +164,7 @@ uint16_t LilyGo_AMOLED::getBattVoltage(void)
     if (boards) {
         if (boards->pmu) {
             if (boards->pmu) {
-                if (boards == &BOARD_AMOLED_147) {
-                    return XPowersAXP2101::getBattVoltage();
-                } else  if (boards == &BOARD_AMOLED_241) {
+                if (boards == &BOARD_AMOLED_241) {
                     return SY.getBattVoltage();
                 } else if (boards == &BOARD_AMOLED_191_SPI) {
                     return BQ.getBattVoltage();
@@ -205,9 +195,7 @@ uint16_t LilyGo_AMOLED::getVbusVoltage(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                return XPowersAXP2101::getVbusVoltage();
-            } else  if (boards == &BOARD_AMOLED_241) {
+            if (boards == &BOARD_AMOLED_241) {
                 return SY.getVbusVoltage();
             } else if (boards == &BOARD_AMOLED_191_SPI) {
                 return BQ.getVbusVoltage();
@@ -221,9 +209,7 @@ bool LilyGo_AMOLED::isBatteryConnect(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                return XPowersAXP2101::isBatteryConnect();
-            } else  if (boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
+            if (boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
                 return getVbusVoltage() != 0;
             }
         }
@@ -235,9 +221,7 @@ uint16_t LilyGo_AMOLED::getSystemVoltage(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                return XPowersAXP2101::getSystemVoltage();
-            } else  if (boards == &BOARD_AMOLED_241) {
+            if (boards == &BOARD_AMOLED_241) {
                 return SY.getSystemVoltage();
             } else if (boards == &BOARD_AMOLED_191_SPI) {
                 return BQ.getSystemVoltage();
@@ -251,9 +235,7 @@ bool LilyGo_AMOLED::isCharging(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                return XPowersAXP2101::isCharging();
-            } else  if (boards == &BOARD_AMOLED_241) {
+            if (boards == &BOARD_AMOLED_241) {
                 return SY.isCharging();
             } else  if (boards == &BOARD_AMOLED_191_SPI) {
                 return BQ.isCharging();
@@ -267,9 +249,7 @@ bool LilyGo_AMOLED::isVbusIn(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                return XPowersAXP2101::isVbusIn();
-            } else  if (boards == &BOARD_AMOLED_241 ) {
+            if (boards == &BOARD_AMOLED_241 ) {
                 return SY.isVbusIn();
             } else  if (boards == &BOARD_AMOLED_191_SPI) {
                 return BQ.isVbusIn();
@@ -283,9 +263,7 @@ void LilyGo_AMOLED::disableCharge(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                XPowersAXP2101::setChargerConstantCurr(XPOWERS_AXP2101_CHG_CUR_0MA);
-            } else  if (boards == &BOARD_AMOLED_241 ) {
+            if (boards == &BOARD_AMOLED_241 ) {
                 SY.disableCharge();
             } else  if (boards == &BOARD_AMOLED_191_SPI) {
                 BQ.disableCharge();
@@ -298,9 +276,7 @@ void LilyGo_AMOLED::enableCharge(void)
 {
     if (boards) {
         if (boards->pmu) {
-            if (boards == &BOARD_AMOLED_147) {
-                XPowersAXP2101::setChargerConstantCurr(XPOWERS_AXP2101_CHG_CUR_200MA);
-            } else  if (boards == &BOARD_AMOLED_241 ) {
+            if (boards == &BOARD_AMOLED_241 ) {
                 SY.enableCharge();
             } else  if (boards == &BOARD_AMOLED_191_SPI) {
                 BQ.enableCharge();
@@ -479,20 +455,6 @@ bool LilyGo_AMOLED::initBUS(DriverBusType type)
 
 bool LilyGo_AMOLED::begin()
 {
-    //Try find 1.47 inch i2c devices
-    Wire.begin(1, 2);
-    Wire.beginTransmission(AXP2101_SLAVE_ADDRESS);
-    if (Wire.endTransmission() == 0) {
-        return beginAMOLED_147();
-    }
-
-    log_e("Unable to detect 1.47-inch board model!");
-
-
-    Wire.end();
-
-    delay(10);
-
     // Try find 1.91 inch i2c devices
     Wire.begin(3, 2);
     Wire.beginTransmission(CSTXXX_SLAVE_ADDRESS);
@@ -708,10 +670,6 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
 #define AMOLED_191_DEFAULT_SCLK  14
 #define AMOLED_191_DEFAULT_CS    11
 
-#define AMOLED_147_DEFAULT_MISO  47
-#define AMOLED_147_DEFAULT_MOSI  39
-#define AMOLED_147_DEFAULT_SCLK  38
-#define AMOLED_147_DEFAULT_CS    9
 /**
  * @brief   Hang on SD card
  * @note   If the specified Pin is not passed in, the default Pin will be used as the SPI
@@ -728,11 +686,6 @@ bool LilyGo_AMOLED::installSD(int miso, int mosi, int sclk, int cs)
         mosi = boards->sd->mosi;
         sclk = boards->sd->sck;
         cs = boards->sd->cs;
-    } else if (boards == &BOARD_AMOLED_147) {
-        sclk = (sclk == -1)  ? AMOLED_147_DEFAULT_SCLK : sclk;
-        miso = (miso == -1) ? AMOLED_147_DEFAULT_MISO : miso;
-        mosi = (mosi == -1) ? AMOLED_147_DEFAULT_MOSI : mosi;
-        cs = (cs == -1)   ? AMOLED_147_DEFAULT_CS : cs;
     } else if (boards == &BOARD_AMOLED_191) {
         sclk = (sclk == -1)  ? AMOLED_191_DEFAULT_SCLK : sclk;
         miso = (miso == -1) ? AMOLED_191_DEFAULT_MISO : miso;
@@ -757,67 +710,6 @@ bool LilyGo_AMOLED::installSD(int miso, int mosi, int sclk, int cs)
 void LilyGo_AMOLED::uninstallSD()
 {
     SD.end();
-}
-
-bool LilyGo_AMOLED::beginAMOLED_147()
-{
-    boards = &BOARD_AMOLED_147;
-
-    if (!initPMU()) {
-        log_e("Failed to find AXP2101 - check your wiring!");
-        return false;
-    }
-
-    if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
-        deviceScan(&Wire, &Serial);
-    }
-
-    initBUS();
-
-
-    if (boards->display.frameBufferSize) {
-        if (psramFound()) {
-            pBuffer = (uint16_t *)ps_malloc(boards->display.frameBufferSize);
-            Serial.printf("allocating PSRAM framebuffer with size: %u KB", boards->display.frameBufferSize);
-        } else {
-            pBuffer = (uint16_t *)malloc(boards->display.frameBufferSize);
-            Serial.printf("allocating internal framebuffer with size: %u KB", boards->display.frameBufferSize);
-        }
-        assert(pBuffer);
-    }
-
-    TouchDrvCHSC5816::setPins(boards->touch->rst, boards->touch->irq);
-    _touchOnline = TouchDrvCHSC5816::begin(Wire, CHSC5816_SLAVE_ADDRESS, boards->touch->sda, boards->touch->scl);
-    if (!_touchOnline) {
-        log_e("Failed to find CHSC5816 - check your wiring!");
-        // return false;
-    } else {
-        TouchDrvCHSC5816::setMaxCoordinates(_width, _height);
-        TouchDrvCHSC5816::setSwapXY(true);
-        TouchDrvCHSC5816::setMirrorXY(false, true);
-    }
-
-    // Share I2C Bus
-    bool res = SensorCM32181::begin(Wire, CM32181_SLAVE_ADDRESS, boards->sensor->sda, boards->sensor->scl);
-    if (!res) {
-        log_e("Failed to find CM32181 - check your wiring!");
-        // return false;
-    } else {
-        /*
-            Sensitivity mode selection
-                SAMPLING_X1
-                SAMPLING_X2
-                SAMPLING_X1_8
-                SAMPLING_X1_4
-        */
-        SensorCM32181::setSampling(SensorCM32181::SAMPLING_X2),
-                      powerOn();
-    }
-
-    // Temperature detect
-    beginCore();
-
-    return true;
 }
 
 void LilyGo_AMOLED::writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length)
@@ -1137,46 +1029,6 @@ void LilyGo_AMOLED::attachPMU(void(*cb)(void))
     }
 }
 
-uint64_t LilyGo_AMOLED::readPMU()
-{
-    assert(boards);
-    if (!boards->pmu) {
-        return 0;
-    }
-    if (boards == &BOARD_AMOLED_147) {
-        return XPowersAXP2101::getIrqStatus();
-    }
-    return 0;
-}
-
-void LilyGo_AMOLED::clearPMU()
-{
-    if (boards) {
-        if (boards->pmu && (boards == &BOARD_AMOLED_147)) {
-            log_i("clearPMU");
-            XPowersAXP2101::clearIrqStatus();
-        }
-    }
-}
-
-void LilyGo_AMOLED::enablePMUInterrupt(uint32_t params)
-{
-    if (boards) {
-        if (boards->pmu && (boards == &BOARD_AMOLED_147)) {
-            XPowersAXP2101::enableIRQ(params);
-        }
-    }
-}
-void LilyGo_AMOLED::disablePMUInterrupt(uint32_t params)
-{
-    if (boards) {
-        if (boards->pmu && (boards == &BOARD_AMOLED_147)) {
-            XPowersAXP2101::disableIRQ(params);
-        }
-    }
-}
-
-
 void LilyGo_AMOLED::sleep(bool touchpad_sleep_enable)
 {
     assert(boards);
@@ -1204,37 +1056,8 @@ void LilyGo_AMOLED::sleep(bool touchpad_sleep_enable)
                 TouchDrvCSTXXX::sleep();
             }
 
-        } else if (boards == &BOARD_AMOLED_147) {
-            log_i("PMU Disable AMOLED Power");
-
-            // Turn off Sensor
-            SensorCM32181::powerDown();
-
-            // Turn off ADC data monitoring to save power
-            disableTemperatureMeasure();
-            disableBattDetection();
-            disableVbusVoltageMeasure();
-            disableBattVoltageMeasure();
-            disableSystemVoltageMeasure();
-            setChargingLedMode(XPOWERS_CHG_LED_OFF);
-
-            // Disable amoled power
-            disableBLDO1();
-            disableALDO3();
-
-            // Don't turn off ALDO1
-            // disableALDO1();
-
-            // Keep touch reset to HIGH
-            if (touchpad_sleep_enable) {
-                digitalWrite(boards->touch->rst, HIGH);
-                gpio_hold_en((gpio_num_t )boards->touch->rst);
-                gpio_deep_sleep_hold_en();
-                // Enter sleep mode
-                TouchDrvCHSC5816::sleep();
-            }
-
-        } else {
+        } 
+        else {
             if (boards->PMICEnPins != -1) {
                 // Disable amoled power
                 digitalWrite(boards->PMICEnPins, LOW);

@@ -6,18 +6,15 @@
 #include "ui/actions.h"
 #include <set>
 
-static std::string lastinfPayload = "";
 std::vector<uint8_t> lastRawInfPayload;
 bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
 static uint8_t alertCountValue, alertIndexValue;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];
-static int num_current_alerts = 0;
 uint8_t activeBands = 0;
 uint8_t lastReceivedBands = 0;
 
 std::vector<LogEntry> logHistory;
-alertsVector alertTable;
 alertsVectorRaw alertTableRaw;
 Config globalConfig;
 
@@ -28,44 +25,15 @@ static bool zero_rcvd = false;
 extern void requestMute();
 uint8_t packet[10];
 
-PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
+//PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
 PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket) { this->rawpacket = rawpacket; }
 
 int combineMSBLSB_v2(uint8_t msb, uint8_t lsb) {
     return (static_cast<int>(msb) << 8) | lsb;
 }
 
-int combineMSBLSB(const std::string& msb, const std::string& lsb) {
-    auto hexToDecimal = [](const std::string& hex) -> int {
-        int decimalValue = 0;
-        for (char c : hex) {
-            int digit = (c >= '0' && c <= '9') ? (c - '0') :
-                        (c >= 'A' && c <= 'F') ? (c - 'A' + 10) :
-                        (c >= 'a' && c <= 'f') ? (c - 'a' + 10) : -1;
-            if (digit == -1) return -1;
-            decimalValue = (decimalValue << 4) | digit;
-        }
-        return decimalValue;
-    };
-
-    int msbDecimal = hexToDecimal(msb);
-    int lsbDecimal = hexToDecimal(lsb);
-
-    if (msbDecimal == -1 || lsbDecimal == -1) {
-        return 0;
-    }
-
-    return (msbDecimal << 8) | lsbDecimal;
-}
-
 char byteToAscii(uint8_t byte) {
     return std::isprint(byte) ? byte : '.';
-}
-
-std::string hexToAscii(const char* hexPtr) {
-    char byteStr[3] = { hexPtr[0], hexPtr[1], '\0' };
-    char byte = static_cast<char>(std::strtol(byteStr, nullptr, 16));
-    return std::string(1, std::isprint(byte) ? byte : '.');
 }
 
 void updateActiveBands(uint8_t band) {
@@ -97,21 +65,6 @@ void PacketDecoder::clearInfAlerts() {
     lv_task_handler();
 }
 
-int mapXToBars(const std::string& hex) {
-    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        //Serial.println("Invalid X hex strength input");
-        return 0;
-    }
-
-    int decimalValue = std::stoi(hex, 0, 16);
-    static constexpr uint8_t thresholds[] = {0x00, 0x95, 0x9F, 0xA9, 0xB3, 0xBC, 0xC4, 0xCF, 0xFF};
-
-    for (int i = 0; i < 8; ++i) {
-        if (decimalValue <= thresholds[i]) return i;
-    }
-    return -1;
-}
-
 uint8_t mapXToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x95, 0x9F, 0xA9, 0xB3, 0xBC, 0xC4, 0xCF, 0xFF};
 
@@ -122,21 +75,6 @@ uint8_t mapXToBars(uint8_t& value) {
     return -1;
 }
 
-int mapKToBars(const std::string& hex) {
-    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        //Serial.printf("Invalid K hex strength input: %s", hex.c_str());
-        return 0;
-    }
-
-    int decimalValue = std::stoi(hex, 0, 16);
-    static constexpr uint8_t thresholds[] = {0x00, 0x87, 0x8F, 0x99, 0xA3, 0xAD, 0xB7, 0xC1, 0xFF};
-    
-    for (int i = 0; i < 8; ++i) {
-        if (decimalValue <= thresholds[i]) return i;
-    }
-    return -1;
-}
-
 uint8_t mapKToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x87, 0x8F, 0x99, 0xA3, 0xAD, 0xB7, 0xC1, 0xFF};
 
@@ -144,21 +82,6 @@ uint8_t mapKToBars(uint8_t& value) {
         if (value <= thresholds[i]) return i;
     }
 
-    return -1;
-}
-
-int mapKaToBars(const std::string& hex) {
-    if (hex.empty() || hex.length() > 2 || !std::all_of(hex.begin(), hex.end(), ::isxdigit)) {
-        //Serial.println("Invalid Ka hex strength input");
-        return 0;
-    }
-
-    int decimalValue = std::stoi(hex, 0, 16);
-    static constexpr uint8_t thresholds[] = {0x00, 0x8F, 0x96, 0x9D, 0xA4, 0xAB, 0xB2, 0xB9, 0xFF};
-    
-    for (int i = 0; i < 8; ++i) {
-        if (decimalValue <= thresholds[i]) return i;
-    }
     return -1;
 }
 
@@ -184,94 +107,6 @@ void processSection_v2(std::vector<uint8_t> packet, uint8_t offset) {
     globalConfig.sections.emplace_back(lowerBound, upperBound);
 }
 
-void processSection(const std::string& packet, int offset) {
-    int sweepDefIndexNum = std::stoi(packet.substr(offset, 2), nullptr, 16);
-    int sectionCount = sweepDefIndexNum & 0b00001111;
-    int sectionIndex = (sweepDefIndexNum & 0b11110000) >> 4;
-
-    int upperBound = combineMSBLSB(packet.substr(offset + 2, 2), packet.substr(offset + 4, 2));
-    int lowerBound = combineMSBLSB(packet.substr(offset + 6, 2), packet.substr(offset + 8, 2));
-
-    Serial.printf("section %d: lower edge: %d, upper edge: %d\n", sectionIndex, lowerBound, upperBound);
-    globalConfig.sections.emplace_back(lowerBound, upperBound);
-}
-
-// User Bytes here are valid from V4.1018+
-void decodeByteZero(const std::string& userByte) {
-    if (!userByte.empty()) {
-        uint8_t byteValue = (uint8_t) strtol(userByte.c_str(), nullptr, 16);
-
-        globalConfig.xBand = byteValue & 0b00000001;
-        globalConfig.kBand = byteValue & 0b00000010;
-        globalConfig.kaBand = byteValue & 0b00000100;
-        globalConfig.laserBand = byteValue & 0b00001000;
-        globalConfig.muteTo = (byteValue & 0b00010000) ? "Muted Volume" : "Zero";
-        globalConfig.bogeyLockLoud = byteValue & 0b00100000;
-        globalConfig.rearMute = byteValue & 0b01000000;
-        globalConfig.kuBand = byteValue & 0b10000000;
-    }
-}
-
-void decodeByteOne(const std::string& userByte) {
-    if (!userByte.empty()) {
-        uint8_t byteValue = (uint8_t) strtol(userByte.c_str(), nullptr, 16);
-        
-        globalConfig.euro = byteValue & 0b00000001;
-        globalConfig.kVerifier = byteValue & 0b00000010;
-        globalConfig.rearLaser = byteValue & 0b00000100;
-        globalConfig.customFreqEnabled = byteValue & 0b00001000;
-        globalConfig.kaAlwaysPrio = byteValue & 0b00010000;
-        globalConfig.fastLaserDetection = byteValue & 0b00100000;
-        globalConfig.kaSensitivityBit0 = (byteValue & 0b01000000) ? 1 : 0;
-        globalConfig.kaSensitivityBit1 = (byteValue & 0b10000000) ? 2 : 0;
-
-        int kaSensitivity = globalConfig.kaSensitivityBit0 + globalConfig.kaSensitivityBit1;
-        switch (kaSensitivity) {
-            case 0:
-                globalConfig.kaSensitivity = "Max Range*";
-                break;
-            case 1:
-                globalConfig.kaSensitivity = "Relaxed";
-                break;
-            case 2:
-                globalConfig.kaSensitivity = "2020 Original";
-                break;
-            case 3:
-                globalConfig.kaSensitivity = "Max Range";
-                break;
-        }
-    }
-}
-
-void decodeByteTwo(const std::string& userByte) {
-    if (!userByte.empty()) {
-        uint8_t byteValue = (uint8_t) strtol(userByte.c_str(), nullptr, 16);
-        
-        globalConfig.startupSequence = byteValue & 0b00000001;
-        globalConfig.restingDisplay = byteValue & 0b00000010;
-        globalConfig.bsmPlus = byteValue & 0b00000100;
-        globalConfig.autoMuteBit0 = (byteValue & 0b00001000) ? 1 : 0;
-        globalConfig.autoMuteBit1 = (byteValue & 0b00010000) ? 2 : 0;
-
-        int autoMute = globalConfig.autoMuteBit0 + globalConfig.autoMuteBit1;
-        switch (autoMute) {
-            case 0:
-                globalConfig.autoMute = "Off*";
-                break;
-            case 1:
-                globalConfig.autoMute = "On";
-                break;
-            case 2:
-                globalConfig.autoMute = "On with Unmute 5+";
-                break;
-            case 3:
-                globalConfig.autoMute = "Off";
-                break;
-        }
-        userBytesReceived = true;
-    }
-}
-
 BandArrowData processBandArrow_v2(uint8_t& bandArrow) {
     BandArrowData data = {false};
 
@@ -289,34 +124,6 @@ BandArrowData processBandArrow_v2(uint8_t& bandArrow) {
     return data;
 }
 
-BandArrowData processBandArrow(const std::string& bandArrow) {
-    BandArrowData data = {false};
-
-    try {
-        if (!bandArrow.empty()) {
-            int bandArrowInt = std::stoi(bandArrow, nullptr, 16);
-
-            data.laser = (bandArrowInt & 0b00000001) != 0;
-            data.ka = (bandArrowInt & 0b00000010) != 0;
-            data.k = (bandArrowInt & 0b00000100) != 0;
-            data.x = (bandArrowInt & 0b00001000) != 0;
-            data.muteIndicator = (bandArrowInt & 0b00010000) != 0;
-            data.front = (bandArrowInt & 0b00100000) != 0;
-            data.side = (bandArrowInt & 0b01000000) != 0;
-            data.rear = (bandArrowInt & 0b10000000) != 0;
-
-            clearInactiveBands(bandArrowInt);
-        } else {
-            Serial.println("Error: Invalid bandArrow length");
-        }
-        } catch (const std::exception& e) {
-        // Serial.print("Error in processBandArrow: ");
-        // Serial.println(e.what());
-    }
-    
-    return data;
-}
-
 void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2) {
     set_var_muted(arrow1.muteIndicator);
 
@@ -325,7 +132,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     if (arrow1.ka != arrow2.ka) {
         enable_blinking(BLINK_KA);
         //Serial.print("== blink ka ");
-        //updateActiveBands(0b00000010);
+        updateActiveBands(0b00000010);
     }
     if (!blink_enabled[BLINK_KA] && arrow1.ka) {
         set_var_kaAlert(arrow1.ka);
@@ -336,7 +143,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     if (arrow1.k != arrow2.k) {
         enable_blinking(BLINK_K);
         //Serial.print("== blink k ");
-        //updateActiveBands(0b00000100);
+        updateActiveBands(0b00000100);
     }
     if (!blink_enabled[BLINK_K] && arrow1.k) {
         set_var_kAlert(arrow1.k);
@@ -347,7 +154,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     if (arrow1.x != arrow2.x && globalConfig.xBand) {
         enable_blinking(BLINK_X);
         //Serial.print("== blink x ");
-        //updateActiveBands(0b00001000);
+        updateActiveBands(0b00001000);
     }
     if (!blink_enabled[BLINK_X] && arrow1.x && globalConfig.xBand) {
         set_var_xAlert(arrow1.x);
@@ -528,6 +335,8 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                         it->timestamp = gpsData.rawTime;
                         Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d", now, gpsData.latitude, gpsData.longitude,
                                     strength, freqMhz);
+                        Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
+
                     }
                 } else {
                     LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
@@ -536,8 +345,8 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                     Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d", 
                                     newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
                                     newEntry.strength, newEntry.direction, newEntry.frequency);
+                    Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
                 }
-                Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
                 xSemaphoreGive(gpsDataMutex);
             } else {
                 LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
@@ -586,227 +395,6 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     set_var_alertTableSize(tableSize); // should be no larger than 4
     if (tableSize > 0) {
         set_var_showAlertTable(true);
-        set_var_frequencies(alertDataList);
-    } else {
-        set_var_showAlertTable(false);
-    }
-}
-
-void PacketDecoder::decodeAlertData(const alertsVector& alerts, int lowSpeedThreshold, uint8_t currentSpeed) {
-    unsigned long startTimeMicros = micros();
-    
-    std::string dirValue, bandValue;
-    int frontStrengthVal = 0;
-    int rearStrengthVal = 0;
-    int freqMhz = 0;
-    float freqGhz;
-    Direction dir;
-    Band bnd;
-
-    std::vector<AlertTableData> alertDataList;
-    AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
-
-    for (int i = 0; i < alerts.size(); i++) {
-        std::string alertIndexStr = alerts[i].substr(0, 2);
-
-        try {
-            int alertIndex = std::stoi(alertIndexStr, nullptr, 16);
-
-            alertCountValue = alertIndex & 0b00001111;
-            alertIndexValue = (alertIndex & 0b11110000) >> 4;
-        } catch (const std::exception& e) {}
-
-        std::string frontStrength = alerts[i].substr(6, 2);
-        std::string rearStrength = alerts[i].substr(8, 2);
-        std::string bandArrowDef = alerts[i].substr(10, 2);
-        std::string auxByte = alerts[i].substr(12, 2);
-
-        try {
-            int bandArrow = std::stoi(bandArrowDef, nullptr, 16);
-            bandValue = "Unknown";
-            dirValue = "Unknown";
-        
-            switch (bandArrow & 0b00011111) { // Mask the band bits
-                case 0b00000001: bandValue = "LASER"; bnd = BAND_LASER; break;
-                case 0b00000010: bandValue = "Ka"; bnd = BAND_KA; break;
-                case 0b00000100: bandValue = "K"; bnd = BAND_K; break;
-                case 0b00001000: bandValue = "X"; bnd = BAND_X; break;
-                case 0b00010000: bandValue = "Ku"; bnd = BAND_KU; break;
-            }
-        
-            switch (bandArrow & 0b11100000) { // Mask the direction bits
-                case 0b00100000: dirValue = "FRONT"; dir = DIR_FRONT; break;
-                case 0b01000000: dirValue = "SIDE"; dir = DIR_SIDE; break;
-                case 0b10000000: dirValue = "REAR"; dir = DIR_REAR; break;
-            }
-        } catch (const std::exception& e) {
-            // anything to be done here?
-        }
-
-        priority = (auxByte == "80");
-        junkAlert = (auxByte == "40");
-
-        /* after this there should be no substring processing; we should only focus on painting the display */
-        // paint the alert table arrows
-        if (bnd == BAND_X && globalConfig.xBand) {
-            frontStrengthVal = mapXToBars(frontStrength);
-            rearStrengthVal = mapXToBars(rearStrength);
-        } 
-        else if (bnd == BAND_K || bnd == BAND_KU) {
-            frontStrengthVal = mapKToBars(frontStrength);
-            rearStrengthVal = mapKToBars(rearStrength);
-        }
-        else if (bnd == BAND_KA) {
-            frontStrengthVal = mapKaToBars(frontStrength);
-            rearStrengthVal = mapKaToBars(rearStrength);        
-        }
-        
-        if (bnd != BAND_LASER) {
-            std::string freqMSB = alerts[i].substr(2, 2);
-            std::string freqLSB = alerts[i].substr(4, 2);
-    
-            freqMhz = combineMSBLSB(freqMSB, freqLSB);
-            freqGhz = static_cast<float>(freqMhz) / 1000.0f;
-        }
-        
-        // paint the priority alert
-        if (priority && bnd != BAND_LASER) {
-            if (!muted && gpsAvailable && currentSpeed <= lowSpeedThreshold) {
-                //Serial.println("SilentRide requesting mute");
-                requestMute();
-                muted = true;
-            }
-
-            // paint the main signal bar
-            if (rearStrengthVal > frontStrengthVal) {
-                set_var_prioBars(rearStrengthVal);
-            }
-            else {
-                set_var_prioBars(frontStrengthVal);
-            }
-
-            // paint the frequency of the prio alert
-            if (freqGhz > 0) {
-                char freqStr[16];
-                snprintf(freqStr, sizeof(freqStr), "%.3f", freqGhz);
-                set_var_prio_alert_freq(freqStr); 
-            }
-        }
-        
-        if (alertCountValue > 1) {
-            bool found = false;
-            for (auto& alertData : alertDataList) {
-                if (alertData.alertCount == alertCountValue) {
-                    alertData.frequencies[alertData.freqCount] = freqGhz;
-                    alertData.direction[alertData.freqCount] = dirValue;
-                    alertData.freqCount++;
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (!found && !priority) {
-                AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
-                newAlertData.frequencies[newAlertData.freqCount] = freqGhz;
-                newAlertData.direction[newAlertData.freqCount] = dirValue;
-                newAlertData.freqCount++;
-                alertDataList.push_back(newAlertData);
-            }
-        }
-
-        unsigned long elapsedTimeMicros = micros() - startTimeMicros;
-        if (freqGhz > 0 || bnd == BAND_LASER) {
-            int strength = std::max(frontStrengthVal, rearStrengthVal);
-            if (bnd == BAND_LASER) { freqMhz = 3012; strength = 6; }
-
-            if (gpsAvailable && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
-                const uint32_t now = gpsData.rawTime;
-                const uint32_t timeWindow = 10;
-                
-                auto it = std::find_if(logHistory.begin(), logHistory.end(), [freqMhz, now, timeWindow](const LogEntry& entry) {
-                    return entry.frequency == freqMhz && (now - entry.timestamp) <= timeWindow;});
-                
-                if (it != logHistory.end()) {
-                    if (strength >= it->strength) {
-                        it->strength = strength;
-                        it->latitude = gpsData.latitude;
-                        it->longitude = gpsData.longitude;
-                        it->timestamp = gpsData.rawTime;
-                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d\n", now, gpsData.latitude, gpsData.longitude,
-                                    strength, freqMhz);
-                    }
-                } else {
-                    LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
-                                        strength, dir, freqMhz};
-                    logHistory.push_back(newEntry);
-                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
-                                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency);
-                }
-                xSemaphoreGive(gpsDataMutex);
-            } else {
-                LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
-                    strength, dir, freqMhz};
-                Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d\n", 
-                                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency);
-            }
-
-            /*
-            std::string decodedPayload = "INDX:" + std::to_string(alertIndexValue) +
-                                        " TOTL:" + std::to_string(alertCountValue) +
-                                        " FREQ:" + std::to_string(freqGhz) +
-                                        " FSTR:" + std::to_string(frontStrengthVal) +
-                                        " RSTR:" + std::to_string(rearStrengthVal) +
-                                        " BAND:" + bandValue +
-                                        " BDIR:" + dirValue +
-                                        " PRIO:" + std::to_string(priority) +
-                                        " JUNK:" + std::to_string(junkAlert) +
-                                        " SPEED: " + std::to_string(currentSpeed)
-                                        + " decodeAlert(us): " + std::to_string(elapsedTimeMicros);                      
-            Serial.println(("respAlertData: " + decodedPayload).c_str());
-            */
-        }
-        yield();
-    }
-
-    if (alertCountValue > 1) {
-
-        for (auto& alertData : alertDataList) {
-            std::vector<float> uniqueFrequencies;
-            std::vector<std::string> uniqueDirections;
-        
-            for (int i = 0; i < alertData.freqCount; i++) {
-                bool freqExists = false;
-                for (auto& uniqueFreq : uniqueFrequencies) {
-                    if (alertData.frequencies[i] == uniqueFreq) {
-                        freqExists = true;
-                        break;
-                    }
-                }
-        
-                if (!freqExists) {
-                    uniqueFrequencies.push_back(alertData.frequencies[i]);
-                    uniqueDirections.push_back(alertData.direction[i]);
-                }
-            }
-        
-            alertData.freqCount = uniqueFrequencies.size();
-            for (int i = 0; i < alertData.freqCount; i++) {
-                alertData.frequencies[i] = uniqueFrequencies[i];
-                alertData.direction[i] = uniqueDirections[i];
-            }
-        }
-    }
-
-    set_var_alertCount(alertCountValue); // sets the bogey counter
-    //int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
-    int tableSize = alertCountValue - 1;
-    if (tableSize > MAX_ALERTS) {tableSize = MAX_ALERTS;}
-    
-    set_var_alertTableSize(tableSize); // should be no larger than 4
-    if (tableSize > 0) {
-        set_var_showAlertTable(true);  // moved from decode()
         set_var_frequencies(alertDataList);
     } else {
         set_var_showAlertTable(false);
@@ -1100,365 +688,6 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         uint8_t p1 = rawpacket[5];
         Serial.printf("infV1Busy; pending packets: %d, first packet ID: 0x%02X\n", pendingPackets, p1);
     }
-    return "";
-}
-
-std::string PacketDecoder::decode(int lowSpeedThreshold, uint8_t currentSpeed) {
-    //unsigned long startTimeMillis = millis();
-
-    if (packet.compare(0, 2, "AA") != 0) {
-        return "err SOF";
-    }
-    
-    if (packet.compare(packet.size() - 2, 2, "AB") != 0) {
-        return "err EOF";
-    }
-
-    std::string packetID = packet.substr(6, 2);
-
-    // infDisplayData
-    if (packetID == "31") {
-        /*  
-            infDisplayData
-            Packet length: 28
-            Control main arrow paint and blink
-        */
-       std::string payload = packet.substr(10, 16);
-
-       if (settings.displayTest || payload != lastinfPayload) {
-        std::string bandArrow1 = (payload.length() >= 8) ? payload.substr(6, 2) : "";
-        std::string bandArrow2 = (payload.length() >= 10) ? payload.substr(8, 2) : "";
-
-        if (!bandArrow1.empty() && !bandArrow2.empty()) {
-            BandArrowData arrow1Data = processBandArrow(bandArrow1);
-            BandArrowData arrow2Data = processBandArrow(bandArrow2);
-
-            compareBandArrows(arrow1Data, arrow2Data);
-        }
-        else {
-            Serial.println("DEBUG: bandArrow empty");
-            //clearInfAlerts();
-            //clearTableAlerts();
-            //alertPresent = false;
-        }
-
-        std::string auxByte0 = packet.substr(packet.length() - 10, 2);
-        std::string auxByte1 = packet.substr(packet.length() - 8, 2);
-        std::string auxByte2 = packet.substr(packet.length() - 6, 2);
-        if (!auxByte0.empty()) {
-            try {
-                int auxByte0Int = std::stoi(auxByte0, nullptr, 16);
-                bool softMute = (auxByte0Int & 0b00000001) ? 1 : 0;
-                // TODO: figure out what to do here, if anything
-                /*
-                if (softMute) {
-                    Serial.printf("soft mute status: %d | muted set to: %d\n", softMute, muted);
-                }
-                */
-            } catch (const std::exception& e) {}
-        }
-        if (!auxByte1.empty()) {
-            try {
-                int auxByte1Int = std::stoi(auxByte1, nullptr, 16);
-
-                int modeBit0 = (auxByte1Int & 0b00000100) ? 1 : 0;
-                int modeBit1 = (auxByte1Int & 0b00001000) ? 2 : 0;
-                int mode = modeBit0 + modeBit1;
-                int mutedReason = (auxByte1Int & 0b00010000) ? 1 : 0;
-                //Serial.printf("Muted reason: %d\n", mutedReason);
-
-                switch(mode) {
-                    case 0:
-                        globalConfig.mode = "Invalid Mode";
-                        globalConfig.defaultMode = "I";
-                        break;
-                    case 1:
-                        globalConfig.mode = "ALL BOGEYS";
-                        globalConfig.defaultMode = "A";
-                        break;
-                    case 2:
-                        globalConfig.mode = "LOGIC";
-                        globalConfig.defaultMode = "c";
-                        break;
-                    case 3:
-                        globalConfig.mode = "ADV LOGIC";
-                        globalConfig.defaultMode = "L";
-                        break;
-                }
-            } catch (const std::exception& e) {}
-        }
-        //Serial.printf("infDisplayData loop time: %lu\n", millis() - startTimeMillis);
-        lastinfPayload = payload;
-    }
-    }
-    // respAlertData
-    else if (packetID == "43") {
-        /*  
-            respAlertData
-            Packet length: 26
-            Alert table, priority frequency & bars
-        */
-        std::string payload = packet.substr(10, packet.length() - 12);
-        std::string alertC = payload.substr(0, 2);
-        
-        if (alertC == "00") {
-            if (alertPresent) {
-                Serial.println("alertC 00 && alertPresent, clearing alerts");
-                clearTableAlerts();
-                clearInfAlerts();
-                alertPresent = false;
-            }
-            return "";
-        } 
-        else {
-            //lastPayload = payload;
-            std::string alertIndexStr = packet.substr(10, 2);
-
-            if (!alertIndexStr.empty()) {
-                try {
-                    int alertIndex = std::stoi(alertIndexStr, nullptr, 16);
-
-                    alertCountValue = alertIndex & 0b00001111;
-                    alertIndexValue = (alertIndex & 0b11110000) >> 4;
-                } catch (const std::exception& e) {}
-            } else {
-                Serial.println("Warning: alertIndexStr is empty!");
-            }
-            alertTable.push_back(payload);
-
-            // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
-            if (alertTable.size() >= alertCountValue || alertTable.size() == MAX_ALERTS + 1) {
-                alertPresent = true;
-                decodeAlertData(alertTable, lowSpeedThreshold, currentSpeed);
-                alertTable.clear();
-                //Serial.printf("respAlertData loop time: %lu\n", millis() - startTimeMillis);
-            } 
-        }
-    }
-    // respVersion
-    else if (packetID == "02"){
-        try {
-            char versionID        = hexToAscii(packet.c_str() + 10)[0];
-            char majorVersion     = hexToAscii(packet.c_str() + 12)[0];
-            char minorVersion     = hexToAscii(packet.c_str() + 16)[0];
-            char revisionDigitOne = hexToAscii(packet.c_str() + 18)[0];
-            char revisionDigitTwo = hexToAscii(packet.c_str() + 20)[0];
-            char controlNumber    = hexToAscii(packet.c_str() + 22)[0];
-
-            if (versionID == 'V') {
-                char versionString[8];
-                snprintf(versionString, sizeof(versionString), "%c.%c%c%c%c",
-                         majorVersion, minorVersion, revisionDigitOne,
-                         revisionDigitTwo, controlNumber);
-                softwareRevision = versionString;
-                Serial.printf("Software Version: %s\n", versionString);
-                versionReceived = true;
-            } else if (versionID == 'R') {
-                remoteAudio = true;
-            } else if (versionID == 'S') {
-                savvy = true;
-            } else {
-                Serial.printf("Found component: %s", versionID);
-            }
-        } catch (const std::exception& e) {}
-    }
-    // respSerialNumber
-    else if (packetID == "04"){
-        try {
-            std::string serialString;
-            serialString.reserve(10);  // Reserve to avoid reallocations
-
-            for (size_t i = 10; i <= 28; i += 2) {
-                serialString += hexToAscii(packet.c_str() + i);
-            }
-
-            serialNumber = serialString;
-            Serial.printf("Serial Number: %s\n", serialString.c_str());
-            serialReceived = true;
-        } catch (const std::exception& e) {
-            // anything to be done here?
-        }
-    }
-    // respUserBytes
-    else if (packetID == "12") {
-        std::string userByteZero = packet.substr(10, 2);
-        std::string userByteOne = packet.substr(12, 2);
-        std::string userByteTwo = packet.substr(14, 2);
-
-        decodeByteZero(userByteZero);
-        decodeByteOne(userByteOne);
-        decodeByteTwo(userByteTwo);
-    }
-    // respSweepDefinition
-    else if (packetID == "17") {
-        std::string aux0 = packet.substr(10, 2);
-        std::string msbUpper = packet.substr(12, 2);
-        std::string lsbUpper = packet.substr(14, 2);
-        std::string msbLower = packet.substr(16, 2);
-        std::string lsbLower = packet.substr(18, 2);
-        std::set<int> receivedSweeps; 
-        static int zeroes = 0;
-    
-        try {
-            int sweepIndex = std::stoi(aux0, nullptr, 16);
-            sweepIndex -= 128;
-            int upperBound = combineMSBLSB(msbUpper, lsbUpper);
-            int lowerBound = combineMSBLSB(msbLower, lsbLower);
-    
-            Serial.printf("sweepIndex received: %d | lowerBound: %d | upperBound: %d\n", sweepIndex, lowerBound, upperBound);
-    
-            auto exists = std::any_of(globalConfig.sweeps.begin(), globalConfig.sweeps.end(),
-                [&](const std::pair<int, int>& sweep) {
-                    return sweep.first == lowerBound && sweep.second == upperBound;
-                });
-    
-            if (!exists) {
-                if ((lowerBound > 23800 && upperBound < 24300) || 
-                    (lowerBound > 33300 && upperBound < 36100) || 
-                    (lowerBound == 0 && upperBound == 0)) {
-                    
-                    if (!lowerBound == 0 || !upperBound == 0) {
-                        globalConfig.sweeps.emplace_back(lowerBound, upperBound);
-                    }
-    
-                    if (lowerBound > 23800 && upperBound < 24300) {
-                        k_rcvd = true;
-                    } else if (lowerBound > 33300 && upperBound < 36100) {
-                        ka_rcvd = true;
-                    } else if (lowerBound == 0 && upperBound == 0) {
-                        zeroes++;
-                        zero_rcvd = true;
-                    }
-                }
-            }
-        }
-        catch (const std::exception& e) {
-            Serial.printf("caught exception processing allSweepDefinitions: %s\n", e.what());
-        }
-
-        if (globalConfig.sweeps.size() < globalConfig.maxSweepIndex - zeroes) {
-            //Serial.printf("Not all sweeps received (%d/%d), retrying...\n", globalConfig.sweeps.size(), globalConfig.maxSweepIndex + 1);
-        } else {
-            allSweepDefinitionsReceived = k_rcvd && ka_rcvd && zero_rcvd;
-
-            if (allSweepDefinitionsReceived) {
-                unsigned long elapsedMillis = millis() - bootMillis;
-                Serial.printf("informational boot complete: %.2f seconds\n", elapsedMillis / 1000.0);
-            }
-        }     
-    }    
-    // respMaxSweepIndex
-    else if (packetID == "20") {
-        std::string maxSweepIndex = packet.substr(10, 2);
-        try {
-            int maxSweepIndexInt = std::stoi(maxSweepIndex, nullptr, 16);
-            globalConfig.maxSweepIndex = maxSweepIndexInt + 1;
-            maxSweepIndexReceived = true;
-        }
-        catch (const std::exception& e) {
-        } 
-    }
-    // respSweepSections
-    else if (packetID == "23") {
-        int value;
-        std::string numSections = packet.substr(8, 2);
-        
-        try {
-            int numSectionsInt = std::stoi(numSections, nullptr, 16);
-            switch (numSectionsInt) {
-                case 6: {
-                    value = 1;
-                    processSection(packet, 10);
-                    break;
-                }
-                case 11: {
-                    value = 2;
-                    processSection(packet, 10);
-                    processSection(packet, 20);
-                    break;
-                }
-                case 16: {
-                    value = 3;
-                    processSection(packet, 10);
-                    processSection(packet, 20);
-                    processSection(packet, 30);
-                    break;
-                }
-                default: {
-                    value = 0;
-                }
-            }
-            
-            globalConfig.sweepSections = value;
-            sweepSectionsReceived = true;
-        }
-        catch (const std::exception& e) {
-        } 
-    }
-    // respCurrentVolume
-    else if (packetID == "38") {
-        int mainVol = 0, mutedVol = 0;
-        try {
-            std::string mainV = packet.substr(10, 2);
-            std::string mutedV = packet.substr(12, 2);
-
-            if (!mainV.empty() && !mutedV.empty()) {
-                mainVol = std::stoi(mainV, nullptr, 16);
-                mutedVol = std::stoi(mutedV, nullptr, 16);
-                globalConfig.mainVolume = mainVol;
-                globalConfig.mutedVolume = mutedVol;
-                volumeReceived = true;
-            }
-        } catch (const std::exception& e) {}
-    }
-    // respBatteryVoltage
-    else if (packetID == "63") {
-        int voltageInt = 0, voltageDec = 0;
-        try {
-            std::string intPart = packet.substr(10, 2);
-            std::string decPart = packet.substr(12, 2);
-        
-            if (!intPart.empty() && !decPart.empty()) {
-                voltageInt = std::stoi(intPart, nullptr, 16);
-                voltageDec = std::stoi(decPart, nullptr, 16);
-                stats.voltage = voltageInt + (voltageDec / 100.0f);
-            }
-        } catch (const std::exception& e) {
-            Serial.println("caught an exception during respBatteryVoltage");
-        }
-    }
-    // respUnsupportedPacket
-    else if (packetID == "64") {
-        Serial.println("respUnsupportedPacket");
-    }
-    // respRequestNotProcessed
-    else if (packetID == "65") {
-        Serial.println("respRequestNotProcessed");
-    }
-    // infV1Busy
-    else if (packetID == "66") {
-        std::string pl = packet.substr(8, 2);
-        try {
-            int plInt = std::stoi(pl, nullptr, 10) - 1;
-            std::string pendingPacket = packet.substr(10, 2);
-            Serial.printf("infV1Busy; pending packets: %d, first packet ID: %s\n", plInt, pendingPacket.c_str());
-        }
-        catch (const std::exception& e) {
-        }   
-    }
-    // respDataError
-    else if (packetID == "67") {
-        Serial.println("respDataError encountered");
-    }
-    // respSavvyStatus
-    else if (packetID == "72") {
-        Serial.println("respSavvyStatus encountered");
-    }
-    // respVehicleSpeed
-    else if (packetID == "74") {
-        Serial.println("respVehicleSpeed encountered");
-    }
-    yield();
     return "";
 }
 

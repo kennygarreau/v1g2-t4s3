@@ -581,12 +581,19 @@ extern "C" bool get_var_gpsAvailable() {
 }
 
 void displayTestTask(void *pvParameters) {
-    std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
+    //std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
 
+    std::vector<std::vector<uint8_t>> packets = {
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x13, 0x29, 0x1D, 0x21, 0x85, 0x88, 0x00, 0xE8, 0xAB},
+        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x5B, 0x1F, 0x38, 0x28, 0x0C, 0x00, 0x00, 0xE7, 0xAB},
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x00, 0x00, 0xAB},
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x33, 0x87, 0x8C, 0xB6, 0x81, 0x22, 0x80, 0x30, 0xAB}
+    };
+    
     while (true) {
-        for (const std::string& packet : packets) {
+        for (const std::vector<uint8_t>& packet : packets) {
             PacketDecoder decoder(packet);
-            decoder.decode(settings.lowSpeedThreshold, 20);
+            decoder.decode_v2(settings.lowSpeedThreshold, 20);
         }
 
         vTaskDelay(pdMS_TO_TICKS(500));

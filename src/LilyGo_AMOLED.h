@@ -53,9 +53,9 @@
 
 
 #define BOARD_NONE_PIN      (-1)
-#define BOARD_PIXELS_PIN    (18)        //only 1.47 inch
-#define BOARD_PIXELS_NUM    (1)
-#define DEFAULT_SCK_SPEED   (30 * 1000 * 1000)
+//#define BOARD_PIXELS_PIN    (18)        //only 1.47 inch
+//#define BOARD_PIXELS_NUM    (1)
+//#define DEFAULT_SCK_SPEED   (30 * 1000 * 1000)
 
 typedef struct __DisplayConfigure {
     int d0;
@@ -121,26 +121,26 @@ typedef struct __BoardsConfigure {
 
 // LILYGO 1.47 Inch AMOLED(SH8501) S3R8
 // https://www.lilygo.cc/products/t-display-amoled
-static const DisplayConfigure_t SH8501_AMOLED  = {
-    7, //BOARD_DISP_DATA0,
-    10,//BOARD_DISP_DATA1,
-    11,//BOARD_DISP_DATA2,
-    12,//BOARD_DISP_DATA3,
-    5,//BOARD_DISP_SCK,
-    4,//BOARD_DISP_CS,
-    BOARD_NONE_PIN,//DC
-    40,//BOARD_DISP_RESET,
-    6,//BOARD_DISP_TE,
-    8,//command bit
-    24,//address bit
-    30000000,
-    (lcd_cmd_t *)sh8501_cmd,
-    SH8501_INIT_SEQUENCE_LENGTH,
-    SH8501_WIDTH, //width
-    SH8501_HEIGHT, //height
-    SH8501_WIDTH *SH8501_HEIGHT * sizeof(uint16_t), //frameBufferSize
-    true //fullRefresh
-};
+// static const DisplayConfigure_t SH8501_AMOLED  = {
+//     7, //BOARD_DISP_DATA0,
+//     10,//BOARD_DISP_DATA1,
+//     11,//BOARD_DISP_DATA2,
+//     12,//BOARD_DISP_DATA3,
+//     5,//BOARD_DISP_SCK,
+//     4,//BOARD_DISP_CS,
+//     BOARD_NONE_PIN,//DC
+//     40,//BOARD_DISP_RESET,
+//     6,//BOARD_DISP_TE,
+//     8,//command bit
+//     24,//address bit
+//     30000000,
+//     (lcd_cmd_t *)sh8501_cmd,
+//     SH8501_INIT_SEQUENCE_LENGTH,
+//     SH8501_WIDTH, //width
+//     SH8501_HEIGHT, //height
+//     SH8501_WIDTH *SH8501_HEIGHT * sizeof(uint16_t), //frameBufferSize
+//     true //fullRefresh
+// };
 
 static const int AMOLED_147_BUTTONTS[2] = {0, 21};
 static const BoardTouchPins_t AMOLED_147_TOUCH_PINS = {1/*SDA*/, 2/*SCL*/, 13/*IRQ*/, 14/*RST*/};
@@ -258,23 +258,6 @@ static const  BoardsConfigure_t BOARD_AMOLED_191_SPI = {
     false,//framebuffer
 };
 
-// T-Display AMOLED H593
-// https://www.lilygo.cc/products/t-display-amoled
-static const  BoardsConfigure_t BOARD_AMOLED_147 = {
-    SH8501_AMOLED,
-    &AMOLED_147_TOUCH_PINS,     //Touch
-    &AMOLED_147_PMU_PINS,       //PMU
-    &AMOLED_147_SENSOR_PINS,    //SENSOR
-    NULL,//SDCard
-    AMOLED_147_BUTTONTS, //Button Pins
-    2,  //Button Number
-    18, // pixelsPins
-    -1, //adcPins
-    -1,//PMICEnPins
-    true,//framebuffer
-};
-
-
 // T-Display AMOLED 2.41 Inch
 // https://www.lilygo.cc/
 static const  BoardsConfigure_t BOARD_AMOLED_241 = {
@@ -334,10 +317,6 @@ public:
 
     // LILYGO 1.91 Inc AMOLED(RM67162 SPI Interface) S3R8
     bool beginAMOLED_191_SPI(bool touchFunc = true);
-
-    // LILYGO 1.47 Inc AMOLED(SH8501) S3R8
-    // https://www.lilygo.cc/products/t-display-amoled
-    bool beginAMOLED_147();
 
     // LILYGO 2.41 Inc AMOLED(RM690B0) S3R8
     // https://www.lilygo.cc/products/t4-s3
