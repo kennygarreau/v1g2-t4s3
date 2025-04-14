@@ -26,7 +26,9 @@ extern void requestMute();
 uint8_t packet[10];
 
 //PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
-PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket) { this->rawpacket = rawpacket; }
+//PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket) { this->rawpacket = rawpacket; }
+PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket)
+  : rawpacket(rawpacket) {}
 
 int combineMSBLSB_v2(uint8_t msb, uint8_t lsb) {
     return (static_cast<int>(msb) << 8) | lsb;

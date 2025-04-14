@@ -68,7 +68,7 @@ extern std::vector<LogEntry> logHistory;
 
 class PacketDecoder {
 private:
-    std::vector<uint8_t> rawpacket;
+    const std::vector<uint8_t>& rawpacket;
 public:
     PacketDecoder(const std::vector<uint8_t>& rawpacket);
 
