@@ -18,13 +18,6 @@ typedef struct {
 
 #define AMOLED_DEFAULT_BRIGHTNESS               175
 
-/*
-#define SH8501_INIT_SEQUENCE_LENGTH             407
-extern const lcd_cmd_t sh8501_cmd[SH8501_INIT_SEQUENCE_LENGTH];
-#define SH8501_WIDTH                            368
-#define SH8501_HEIGHT                           194
-*/
-
 #define RM67162_INIT_SEQUENCE_LENGTH            12
 extern const lcd_cmd_t rm67162_cmd[RM67162_INIT_SEQUENCE_LENGTH];
 #define RM67162_WIDTH                           240

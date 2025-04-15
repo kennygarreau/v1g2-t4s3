@@ -292,9 +292,10 @@ void update_alert_display(bool muted) {
     if (muted == last_muted_state) return;
 
     lv_color_t text_color = muted ? lv_color_hex(gray_color) : lv_color_hex(default_color);
-    const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
-    const void* side_arrow_src = muted ? &img_arrow_side_gray : &img_arrow_side;
-    const void* rear_arrow_src = muted ? &img_arrow_rear_gray : &img_arrow_rear;
+    //const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
+    const void* front_arrow_src = muted ? &img_arrow_front_gray_4bit : &img_arrow_front_4bit;
+    const void* side_arrow_src = muted ? &img_arrow_side_gray_4bit : &img_arrow_side_4bit;
+    const void* rear_arrow_src = muted ? &img_arrow_rear_gray_4bit : &img_arrow_rear_4bit;
 
     //lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT); // use if testing
     lv_obj_set_style_text_color(objects.prioalertfreq, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);

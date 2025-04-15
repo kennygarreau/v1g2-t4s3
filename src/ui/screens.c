@@ -360,7 +360,8 @@ void create_screen_main() {
             // front arrow
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.front_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front);
+            //lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front_4bit);
             lv_img_set_src(obj, psram_img);
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, -70);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -369,7 +370,7 @@ void create_screen_main() {
             // side arrow
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.side_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_side);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_side_4bit);
             lv_img_set_src(obj, psram_img);
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, 0);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
@@ -378,7 +379,7 @@ void create_screen_main() {
             // rear arrow
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.rear_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_rear);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_rear_4bit);
             lv_img_set_src(obj, psram_img);
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, 50);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
