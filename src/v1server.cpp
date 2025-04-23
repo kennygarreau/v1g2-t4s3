@@ -338,8 +338,4 @@ void loop() {
   }
 
   loopCounter++;
-  /*
-  delayMicroseconds(10);
-  yield();
-  */
 }

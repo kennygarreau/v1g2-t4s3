@@ -573,11 +573,15 @@ void tick_screen_main() {
     bool laserAlert = get_var_laserAlert();
     if (alertPresent) {
         uint32_t now = lv_tick_get();
+        static bool lastColorState = false;
+        
         bool muted = get_var_muted();
         bool muteToGray = get_var_muteToGray();
+        bool displayGray = (muted && muteToGray);
 
-        if (muteToGray) {
-            update_alert_display(muted);
+        if (displayGray != lastColorState) {
+            update_alert_display(displayGray);
+            lastColorState = displayGray;
         }
 
         // Front Arrow

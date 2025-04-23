@@ -288,8 +288,8 @@ void show_popup(const char * message) {
 }
 
 void update_alert_display(bool muted) {
-    static bool last_muted_state = false;
-    if (muted == last_muted_state) return;
+    // static bool last_muted_state = false;
+    // if (muted == last_muted_state) return;
 
     lv_color_t text_color = muted ? lv_color_hex(gray_color) : lv_color_hex(default_color);
     //const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
@@ -308,7 +308,7 @@ void update_alert_display(bool muted) {
     lv_img_set_src(objects.side_arrow, side_arrow_src);
     lv_img_set_src(objects.rear_arrow, rear_arrow_src);
 
-    last_muted_state = muted;
+    //last_muted_state = muted;
 }
 
 lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img) {
