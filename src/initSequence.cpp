@@ -71,6 +71,7 @@ const lcd_cmd_t rm690b0_cmd[RM690B0_INIT_SEQUENCE_LENGTH] = {
     {0x51, {0xFF}, 0x01},           //Write Display Brightness  MAX_VAL=0XFF
 };
 
+/*
 const lcd_cmd_t jd9613_cmd[JD9613_INIT_SEQUENCE_LENGTH] = {
     {0xfe, {0x01}, 0x02},
     {0xf7, {0x96, 0x13, 0xa9}, 0x04},
@@ -160,7 +161,7 @@ const lcd_cmd_t jd9613_cmd[JD9613_INIT_SEQUENCE_LENGTH] = {
     {0x51, {0xff}, 0x02},
     {0, {0}, 0xff},
 };
-
+*/
 
 
 

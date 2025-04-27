@@ -12,6 +12,7 @@ extern const lv_font_t ui_font_alarmclock_36;
 extern const lv_font_t ui_font_alarmclock_48;
 extern const lv_font_t ui_font_alarmclock_96;
 extern const lv_font_t ui_font_alarmclock_112;
+extern const lv_font_t ui_font_alarmclock_128;
 
 #ifdef __cplusplus
 }

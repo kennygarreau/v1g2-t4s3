@@ -42,11 +42,12 @@ extern const lcd_cmd_t rm690b0_cmd[RM690B0_INIT_SEQUENCE_LENGTH];
 #define RM690B0_MADCTL_MH                       0x04
 #define RM690B0_MADCTL_BGR                      0x08
 
+/*
 #define JD9613_INIT_SEQUENCE_LENGTH             88
 extern const lcd_cmd_t jd9613_cmd[JD9613_INIT_SEQUENCE_LENGTH];
 #define JD9613_WIDTH                            294
 #define JD9613_HEIGHT                           126
-
+*/
 
 #define RM67162_INIT_SPI_SEQUENCE_LENGTH        18
 extern const lcd_cmd_t rm67162_spi_cmd[RM67162_INIT_SPI_SEQUENCE_LENGTH];

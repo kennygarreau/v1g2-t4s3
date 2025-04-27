@@ -70,7 +70,7 @@ void set_var_prio_alert_freq(const char *value);
 bool get_showAlertTable();
 void set_var_showAlertTable(bool value);
 void set_var_alertCount(int value);
-int get_var_alertCount();
+uint8_t get_var_alertCount();
 void set_var_alertTableSize(int value);
 int get_var_alertTableSize();
 const char** get_var_frequencies();

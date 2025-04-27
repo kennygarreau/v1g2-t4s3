@@ -20,7 +20,6 @@ lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Store elements to blink
 bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should blink
 uint8_t blink_count = 0;
 uint8_t cur_bars = 0;
-//int cur_alert_count = 0;
 
 static uint32_t last_blink_time = 0;
 static bool blink_state = false;
@@ -220,8 +219,8 @@ void create_screen_main() {
 
     {
         lv_obj_t *parent_obj = obj;
+        // prioalertfreq
         {
-            // prioalertfreq
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.prioalertfreq = obj;
             lv_obj_set_pos(obj, 120, 341);
@@ -230,8 +229,8 @@ void create_screen_main() {
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
         }
+        // bt_logo
         {
-            // bt_logo
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.bt_logo = obj;
             lv_obj_set_pos(obj, 534, 0);
@@ -241,8 +240,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // nav_logo_enabled
         {
-            // nav_logo_enabled
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.nav_logo_enabled = obj;
             lv_obj_set_pos(obj, 466, 0);
@@ -252,8 +251,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // nav_logo_disabled
         {
-            // nav_logo_disabled
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.nav_logo_disabled = obj;
             lv_obj_set_pos(obj, 466, 0);
@@ -263,8 +262,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // wifi
         {
-            // wifi
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.wifi_logo = obj;
             lv_obj_set_pos(obj, 502, 0);
@@ -274,8 +273,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // wifi_local
         {
-            // wifi_local
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.wifi_local_logo = obj;
             lv_obj_set_pos(obj, 502, 0);
@@ -285,8 +284,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // mute_logo
         {
-            // mute_logo
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.mute_logo = obj;
             lv_obj_set_pos(obj, 432, 0);
@@ -296,8 +295,8 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // mode_type
         {
-            // mode_type
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.mode_type = obj;
             lv_obj_set_pos(obj, 17, 16);
@@ -307,14 +306,14 @@ void create_screen_main() {
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // default v1 mode
         {
-            // default v1 mode
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.default_mode = obj;
             lv_obj_set_pos(obj, 17, 341);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
 
@@ -324,23 +323,23 @@ void create_screen_main() {
             lv_obj_set_pos(overlay, 17, 341); // Same position as default_mode
             lv_obj_set_size(overlay, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(overlay, "");
-            lv_obj_set_style_text_font(overlay, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(overlay, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(overlay, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
         }
+        // custom freqs enabled
         {
-            // custom freqs enabled
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.custom_freq_en = obj;
             lv_obj_set_pos(obj, 60, 341);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_112, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // alert_table
         {
-            // alert_table
             lv_obj_t *obj = lv_obj_create(parent_obj);
             objects.alert_table = obj;
             lv_obj_set_pos(obj, 398, 72);
@@ -352,22 +351,21 @@ void create_screen_main() {
 
             create_alert_rows(obj, MAX_ALERT_ROWS);
         }
+        // main_signal_bars
         {
-            // main_signal_bars
             create_signal_bars(parent_obj, MAX_BARS);
         }
-        {
-            // front arrow
+        // front arrow
+        { 
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.front_arrow = obj;
-            //lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front);
             lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front_4bit);
             lv_img_set_src(obj, psram_img);
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, -70);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // side arrow
         {
-            // side arrow
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.side_arrow = obj;
             lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_side_4bit);
@@ -375,8 +373,8 @@ void create_screen_main() {
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, 0);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // rear arrow
         {
-            // rear arrow
             lv_obj_t *obj = lv_img_create(parent_obj);
             objects.rear_arrow = obj;
             lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_rear_4bit);
@@ -384,28 +382,6 @@ void create_screen_main() {
             lv_obj_align(obj, LV_ALIGN_CENTER, -24, 50);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
-        // {
-        //     // vehiclespeed
-        //     lv_obj_t *obj = lv_label_create(parent_obj);
-        //     objects.vehiclespeed = obj;
-        //     lv_obj_set_pos(obj, 32, 351);
-        //     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-        //     lv_label_set_text(obj, "");
-        //     lv_obj_set_style_text_font(obj, &ui_font_noto_speed_48, LV_PART_MAIN | LV_STATE_DEFAULT);
-        //     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-        //     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        // }
-        // {
-        //     // band_laser
-        //     lv_obj_t *obj = lv_label_create(parent_obj);
-        //     objects.band_laser = obj;
-        //     lv_obj_set_pos(obj, 14, 108);
-        //     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-        //     lv_label_set_text(obj, "L");
-        //     lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
-        //     lv_obj_set_style_text_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-        //     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        // }
         {
             // band_ka
             lv_obj_t *obj = lv_label_create(parent_obj);
@@ -568,7 +544,7 @@ void tick_alertTable() {
 
 void tick_screen_main() {
     bool alertPresent = get_var_alertPresent();
-    int alertCount = get_var_alertCount();
+    uint8_t alertCount = get_var_alertCount();
     bool showBogeys = get_var_showBogeys();
     bool laserAlert = get_var_laserAlert();
     if (alertPresent) {
@@ -706,23 +682,6 @@ void tick_screen_main() {
                 tick_value_change_obj = NULL;
             }
         }
-        // Laser alert
-        // {
-        //     bool new_val = get_var_laserAlert(); // true if enabled
-        //     bool is_hidden = lv_obj_has_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN); // true if hidden
-        //     if (new_val == is_hidden) {
-        //         LV_LOG_INFO("paint laser");
-        //         tick_value_change_obj = objects.band_laser;
-        //         if (new_val) { 
-        //             lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-        //         }
-        //         else {
-        //             lv_obj_add_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-        //         }
-        //         tick_value_change_obj = NULL;
-        //     }
-        // }
-
         // KA alert
         {
             bool new_val = get_var_kaAlert();  // true if enabled
@@ -736,7 +695,6 @@ void tick_screen_main() {
                 tick_value_change_obj = NULL;
             }
         }
-
         // K alert
         {
             bool new_val = get_var_kAlert(); // true if enabled
@@ -771,16 +729,6 @@ void tick_screen_main() {
                 tick_value_change_obj = NULL;
             }
         }
-        // {
-        //  TODO: anything related to vehicle speed?
-        //     const char *new_val = get_var_lowspeedthreshold();
-        //     const char *cur_val = lv_label_get_text(objects.vehiclespeed);
-        //     if (strcmp(new_val, cur_val) != 0) {
-        //         tick_value_change_obj = objects.vehiclespeed;
-        //         lv_label_set_text(objects.vehiclespeed, new_val);
-        //         tick_value_change_obj = NULL;
-        //     }
-        // }
     }
     // Logic Mode
     {
@@ -821,18 +769,23 @@ void tick_screen_main() {
 
         if (alertPresent && showBogeys && alertCount > 0 && !laserAlert) {
             lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_pos(objects.default_mode, 17, 50);
+            lv_obj_set_pos(objects.custom_freq_en, 60, 50);
             lv_label_set_text_fmt(objects.default_mode, "%d", alertCount);
         }
         else if (alertPresent && laserAlert) {
             lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        } 
+        else {
             if (lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
             }
             if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
             }
+            lv_obj_set_pos(objects.default_mode, 17, 341);
+            lv_obj_set_pos(objects.custom_freq_en, 60, 341);
         }
         tick_value_change_obj = NULL;
     }

@@ -436,9 +436,26 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
             bool softMute = (aux0 & 0b00000001) ? 1 : 0;
             uint8_t mutedReason = (aux1 & 0b00010000) ? 1 : 0;
 
+            /*
             uint8_t modeBit0 = (aux1 & 0b00000100) ? 1 : 0;
             uint8_t modeBit1 = (aux1 & 0b00001000) ? 2 : 0;
             uint8_t mode = modeBit0 + modeBit1;
+            */
+
+            uint8_t mode = ((aux1 >> 2) & 0x03);
+
+            struct ModeInfo {
+                uint8_t rawMode;
+                const char* mode;
+                const char* defaultMode;
+            };
+            
+            const ModeInfo modeTable[4] = {
+                {0, "Invalid Mode", "I"},
+                {1, "ALL BOGEYS", "A"},
+                {2, "LOGIC", "c"},
+                {3, "ADV LOGIC", "L"}
+            };
 
             switch(mode) {
                 case 0:
@@ -446,14 +463,17 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
                     globalConfig.defaultMode = "I";
                     break;
                 case 1:
+                    globalConfig.rawMode = 1;
                     globalConfig.mode = "ALL BOGEYS";
                     globalConfig.defaultMode = "A";
                     break;
                 case 2:
+                    globalConfig.rawMode = 2;
                     globalConfig.mode = "LOGIC";
                     globalConfig.defaultMode = "c";
                     break;
                 case 3:
+                    globalConfig.rawMode = 3;
                     globalConfig.mode = "ADV LOGIC";
                     globalConfig.defaultMode = "L";
                     break;
@@ -789,6 +809,12 @@ uint8_t* Packet::reqMuteOff() {
     uint8_t payloadData[] = {0x01};
     uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
     return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQMUTEOFF, const_cast<uint8_t*>(payloadData), payloadLength, packet);
+}
+
+uint8_t* Packet::reqChangeMode(uint8_t mode) {
+    uint8_t payloadData[] = {mode, mode};
+    uint8_t payloadLength = sizeof(payloadData) / sizeof(payloadData[0]);
+    return constructPacket(DEST_V1, REMOTE_SENDER, PACKET_ID_REQCHANGEMODE, const_cast<uint8_t*>(payloadData), payloadLength, packet);
 }
 
 uint8_t* Packet::reqBatteryVoltage() {

@@ -151,6 +151,7 @@ struct Config {
     std::string autoMute;
     const char* mode;
     const char* defaultMode;
+    uint8_t rawMode;
     int mainVolume;
     int mutedVolume;
     int sweepSections;

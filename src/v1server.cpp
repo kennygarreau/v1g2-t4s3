@@ -42,6 +42,7 @@ Stats stats;
 int loopCounter = 0;
 unsigned long bootMillis = 0;
 unsigned long lastMillis = 0;
+unsigned long lastWifiReconnect = 0;
 const unsigned long uiTickInterval = 16;
 const unsigned long atTickInterval = 250;
 
@@ -109,7 +110,7 @@ void loadSettings() {
   settings.wifiCredentials.clear();
   uint8_t networkCount = preferences.getInt("networkCount", 0);
 
-  for (int i = 0; i < networkCount; i++) {
+  for (uint8_t i = 0; i < networkCount; i++) {
     String ssid = preferences.getString(("wifi_ssid_" + String(i)).c_str(), "");
     String password = preferences.getString(("wifi_pass_" + String(i)).c_str(), "");
 
@@ -244,16 +245,13 @@ void loop() {
     Serial.printf("processing packets at: %.2f seconds\n", elapsedMillis / 1000.0);
   }
 
-  // in case we get disconnected for a while - this will disconnect the AP client so we should not do this frequently
-  /*
-  if (settings.wifiMode == WIFI_SETTING_STA && WiFi.getMode() == WIFI_MODE_AP) {
-    if (millis() - lastWifiReconnect > 60000) {
+  if (millis() - lastWifiReconnect > 60000) {
+    if (settings.enableWifi && settings.wifiMode == WIFI_SETTING_STA && WiFi.getMode() == WIFI_MODE_AP) {
       Serial.println("WiFi lost. Reconnecting...");
       wifiScan();
       lastWifiReconnect = millis();
     }
   }
-  */
 
   if (newDataAvailable) {
     newDataAvailable = false;

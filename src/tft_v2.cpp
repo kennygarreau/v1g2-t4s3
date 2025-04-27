@@ -189,11 +189,31 @@ extern "C" void main_press_handler(lv_event_t * e) {
 
     lv_dir_t gesture = lv_indev_get_gesture_dir(indev);
 
-    if(code == LV_EVENT_LONG_PRESSED) {
-        LV_LOG_INFO("requesting manual lockout via long press");
+    if (code == LV_EVENT_LONG_PRESSED) {
+        LV_LOG_INFO("long press detected");
         long_press_detected = true;
         Serial.println("long press detected");
+        uint8_t newMode;
 
+        switch (globalConfig.rawMode) {
+            case MODE_ALL_BOGEYS:
+                newMode = MODE_ALL_BOGEYS + 1;
+                break;
+            case MODE_LOGIC:
+                newMode = MODE_LOGIC + 1;
+                break;
+            case MODE_ADVLOGIC:
+                newMode = MODE_ALL_BOGEYS;
+                break;
+        }
+
+        Serial.printf("Changing mode from %d to: %d\n", globalConfig.rawMode, newMode);
+        if (bt_connected && clientWriteCharacteristic && !alertPresent) {
+            clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqChangeMode(newMode), 8, false);
+          }
+        show_popup("Changing Mode...");
+
+        /* // TODO: figure out what to do here
         if (gpsAvailable) {
             LockoutEntry thisLockout;
             if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {
@@ -208,8 +228,9 @@ extern "C" void main_press_handler(lv_event_t * e) {
             Serial.printf("%u: Locking out lat: %f, lon: %f\n", thisLockout.timestamp, thisLockout.latitude, thisLockout.longitude);
             show_popup("Lockout Stored");
         }
+        */
     }
-    else if(code == LV_EVENT_CLICKED && !long_press_detected) {
+    else if (code == LV_EVENT_CLICKED && !long_press_detected) {
         if (gesture == LV_DIR_LEFT) {
             LV_LOG_INFO("Swipe Left - Go to Settings");
             lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
@@ -232,7 +253,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
             }
         }
     }
-    else if(code == LV_EVENT_RELEASED) {
+    else if (code == LV_EVENT_RELEASED) {
         long_press_detected = false;
     }
 }
@@ -391,7 +412,7 @@ extern "C" void set_var_alertCount(int value) {
     alertCount = value;
 }
 
-extern "C" int get_var_alertCount() {
+extern "C" uint8_t get_var_alertCount() {
     return alertCount;
 }
 

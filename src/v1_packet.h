@@ -22,6 +22,7 @@
 #define PACKET_ID_REQTURNONMAINDISPLAY 0x33
 #define PACKET_ID_REQMUTEON 0x34
 #define PACKET_ID_REQMUTEOFF 0x35
+#define PACKET_ID_REQCHANGEMODE 0x36
 #define PACKET_ID_REQCURRENTVOLUME 0x37
 #define PACKET_ID_REQSTARTALERTDATA 0x41
 #define PACKET_ID_REQBATTERYVOLTAGE 0x62
@@ -63,6 +64,12 @@ enum Band {
     BAND_X = 5
 };
 
+enum Modes {
+    MODE_ALL_BOGEYS = 1,
+    MODE_LOGIC = 2,
+    MODE_ADVLOGIC = 3
+};
+
 using alertsVectorRaw = std::vector<std::vector<uint8_t>>;
 extern std::vector<LogEntry> logHistory;
 
@@ -93,6 +100,7 @@ public:
     static uint8_t* reqBatteryVoltage();
     static uint8_t* reqMuteOff();
     static uint8_t* reqMuteOn();
+    static uint8_t* reqChangeMode(uint8_t mode);
     static uint8_t* reqCurrentVolume();
     static uint8_t* reqUserBytes();
     static uint8_t* reqSavvyStatus();
