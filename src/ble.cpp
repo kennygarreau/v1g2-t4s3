@@ -37,10 +37,14 @@ const uint8_t notificationOn[] = {0x1, 0x0};
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient* pClient) override {
-    Serial.printf("BLE Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
-    Serial.printf("BLE Client Connected on core %d\n", xPortGetCoreID());
+    Serial.printf("BLE Connected to: %s on core %d\n", pClient->getPeerAddress().toString().c_str(), xPortGetCoreID());
+    //Serial.printf("BLE Client Connected on core %d\n", xPortGetCoreID());
     bt_connected = true;
     bleInit = true;
+    
+    if (settings.proxyBLE) {
+      NimBLEDevice::startAdvertising();
+    }
   }
 
   void onDisconnect(NimBLEClient* pClient, int reason) override {
@@ -48,6 +52,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
                   pClient->getPeerAddress().toString().c_str(), reason);
 
     bt_connected = false;
+    if (settings.proxyBLE) {
+      NimBLEDevice::stopAdvertising();
+    }
 
     xTaskCreate([](void*){
       vTaskDelay(pdMS_TO_TICKS(2000));
@@ -155,8 +162,10 @@ class MyServerCallbacks : public NimBLEServerCallbacks {
   }
 
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
-    Serial.println("BLE client disconnected, restart advertising");
-    NimBLEDevice::startAdvertising();
+    if (bt_connected) {
+      Serial.println("BLE client disconnected, restart advertising");
+      NimBLEDevice::startAdvertising();
+    }
   }
 };
 
@@ -352,12 +361,24 @@ void reqMuteOff() {
 }
 
 void initBLE() {
-    NimBLEScan* pScan = NimBLEDevice::getScan();
-    pScan->setScanCallbacks(&scanCallbacks);
-    pScan->setInterval(100);
-    pScan->setWindow(75);
-    pScan->setActiveScan(true);
-    pScan->start(scanTimeMs);
+  if (settings.proxyBLE) {
+    NimBLEDevice::init("V1 Proxy");
+    NimBLEDevice::setDeviceName("V1C-LE-T4S3");
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+    initBLEServer();
+    //initBLE();
+  } else {
+    NimBLEDevice::init("V1G2 Client");
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+    //initBLE();
+  }
+
+  NimBLEScan* pScan = NimBLEDevice::getScan();
+  pScan->setScanCallbacks(&scanCallbacks);
+  pScan->setInterval(100);
+  pScan->setWindow(75);
+  pScan->setActiveScan(true);
+  pScan->start(scanTimeMs);
 }
 
 void initBLEServer() {
@@ -381,6 +402,11 @@ void initBLEServer() {
 
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(pRadarService->getUUID());
+  pAdvertising->setName("V1C-LE-T4S3");
   pAdvertising->start();
   Serial.println("Radar BLE proxy server advertising");
+
+  if (!bt_connected) {
+    NimBLEDevice::stopAdvertising();
+  }
 }
