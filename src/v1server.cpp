@@ -190,20 +190,6 @@ void setup()
   Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
 
  if (!settings.disableBLE && !settings.displayTest) {
-    /*
-    if (settings.proxyBLE) {
-      NimBLEDevice::init("V1 Proxy");
-      NimBLEDevice::setDeviceName("V1C-LE-T4S3");
-      NimBLEDevice::setPower(ESP_PWR_LVL_P9);
-      initBLEServer();
-      initBLE();
-    } else {
-      NimBLEDevice::init("V1G2 Client");
-      NimBLEDevice::setPower(ESP_PWR_LVL_P9);
-      initBLE();
-    }
-    */
-   
     initBLE();
     Serial.printf("Free heap after BLE init: %u\n", ESP.getFreeHeap());
   }
