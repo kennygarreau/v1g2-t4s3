@@ -369,7 +369,7 @@ void initBLEServer() {
   NimBLEAdvertisementData advData;
   NimBLEAdvertisementData scanRespData;
   
-  advData.setName("T4S3");
+  advData.setName("V1C-LE-T4S3");
   advData.setCompleteServices(pRadarService->getUUID());
   advData.setAppearance(0x0C80);
   scanRespData.setName("V1C-LE-T4S3");
