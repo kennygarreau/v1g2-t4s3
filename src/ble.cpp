@@ -13,10 +13,6 @@ bool allSweepDefinitionsReceived = false;
 std::vector<uint8_t> latestRawData;
 std::vector<uint8_t> previousRawData;
 
-//std::string hexData = "";
-//std::string latestHexData;
-//std::string previousHexData = "";
-//std::string lastPacket = "";
 static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
@@ -35,15 +31,21 @@ NimBLECharacteristic* pCommandWriteChar;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
+void onProxyReady() {
+  if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
+    NimBLEDevice::startAdvertising();
+    Serial.println("Advertising started after client connection.");
+  }
+}
+
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient* pClient) override {
     Serial.printf("BLE Connected to: %s on core %d\n", pClient->getPeerAddress().toString().c_str(), xPortGetCoreID());
-    //Serial.printf("BLE Client Connected on core %d\n", xPortGetCoreID());
     bt_connected = true;
     bleInit = true;
     
     if (settings.proxyBLE) {
-      NimBLEDevice::startAdvertising();
+      onProxyReady();
     }
   }
 
@@ -186,41 +188,6 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
     pAlertNotifyChar->notify();
   }
 }
-
-/*
-static void notifyDisplayCallback(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-  if (!pData) return;
-
-  latestRawData.assign(pData, pData + length);
-
-  unsigned long bleCallbackStart = micros();
-
-  static const char hexLookup[] = "0123456789ABCDEF";
-  std::string tempHexData;
-  tempHexData.reserve(length * 2);
-
-  for (size_t i = 0; i < length; i++) {
-    tempHexData.push_back(hexLookup[pData[i] >> 4]);
-    tempHexData.push_back(hexLookup[pData[i] & 0x0F]);
-  }
-
-  if (tempHexData != previousHexData) {
-    previousHexData = tempHexData;
-    latestHexData = std::move(tempHexData);
-    newDataAvailable = true;
-  }
-
-  if (pAlertNotifyChar) {
-    pAlertNotifyChar->setValue(pData, length);
-    pAlertNotifyChar->notify();
-  }
-
-  unsigned long bleCallbackLength = micros() - bleCallbackStart;
-  if (bleCallbackLength > 500) {
-    Serial.printf("Warning: HEX decode time: %d us\n", bleCallbackLength);
-  }
-}
-*/
 
 void displayReader(NimBLEClient* pClient) {
 
@@ -366,11 +333,9 @@ void initBLE() {
     NimBLEDevice::setDeviceName("V1C-LE-T4S3");
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);
     initBLEServer();
-    //initBLE();
   } else {
     NimBLEDevice::init("V1G2 Client");
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);
-    //initBLE();
   }
 
   NimBLEScan* pScan = NimBLEDevice::getScan();
@@ -403,19 +368,16 @@ void initBLEServer() {
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   NimBLEAdvertisementData advData;
   NimBLEAdvertisementData scanRespData;
-
-  // pAdvertising->addServiceUUID(pRadarService->getUUID());
-  // pAdvertising->setScanResponse(false);
-  // pAdvertising->setName("V1C-LE-T4S3");
   
-  advData.setName("V1C-LE-T4S3");
+  advData.setName("T4S3");
   advData.setCompleteServices(pRadarService->getUUID());
   advData.setAppearance(0x0C80);
+  scanRespData.setName("V1C-LE-T4S3");
+  
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->setScanResponseData(scanRespData);
 
   pAdvertising->start();
-  Serial.println("Radar BLE proxy server advertising");
 
   if (!bt_connected) {
     NimBLEDevice::stopAdvertising();
