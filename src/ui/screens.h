@@ -15,6 +15,7 @@ typedef struct _objects_t {
     lv_obj_t *v1gen2logo;
     lv_obj_t *prioalertfreq;
     lv_obj_t *bt_logo;
+    lv_obj_t *bt_proxy_logo;
     lv_obj_t *mode_type;
     lv_obj_t *default_mode;
     lv_obj_t *overlay_mode;

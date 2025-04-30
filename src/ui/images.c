@@ -1,8 +1,9 @@
 #include "images.h"
 
-const ext_img_desc_t images[16] = {
+const ext_img_desc_t images[17] = {
     { "v1gen2logo-white", &img_v1gen2logo_white },
     { "bt_logo_small", &img_bt_logo_small },
+    { "bt_proxy", &img_bt_proxy },
     { "location_disabled", &img_location_disabled },
     { "mute_logo_small", &img_mute_logo_small },
     { "location_red", &img_location_red },

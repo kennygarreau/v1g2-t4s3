@@ -240,6 +240,17 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // proxy_logo
+        {
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.bt_proxy_logo = obj;
+            lv_obj_set_pos(obj, 534, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_bt_proxy);
+            lv_img_set_src(obj, psram_img);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
         // nav_logo_enabled
         {
             lv_obj_t *obj = lv_img_create(parent_obj);
@@ -435,13 +446,30 @@ void tick_status_bar() {
 
     // Bluetooth status
     {
-        static bool lastValue = false;
+        static bool last_bt_connected = false;
+        static bool last_proxy_connected = false;
+
         bool bt_connected = get_var_bt_connected(); // true when connected
-        if (lastValue != bt_connected) {
-            lv_obj_clear_flag(objects.bt_logo, bt_connected ? LV_OBJ_FLAG_HIDDEN : 0);
-            lv_obj_add_flag(objects.bt_logo, bt_connected ? 0 : LV_OBJ_FLAG_HIDDEN);
-            LV_LOG_INFO("Updated Bluetooth status");
-            lastValue = bt_connected;
+        bool proxy_connected = get_var_proxyConnected();
+
+        if (bt_connected != last_bt_connected || proxy_connected != last_proxy_connected) {
+            if (!bt_connected) {
+                lv_obj_add_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.bt_proxy_logo, LV_OBJ_FLAG_HIDDEN);
+            } 
+            else {
+                if (proxy_connected) {
+                    lv_obj_clear_flag(objects.bt_proxy_logo, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
+                } else {
+                    lv_obj_clear_flag(objects.bt_logo, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.bt_proxy_logo, LV_OBJ_FLAG_HIDDEN);
+                }
+            }
+
+            LV_LOG_INFO("Updated Bluetooth/proxy status");
+            last_bt_connected = bt_connected;
+            last_proxy_connected = proxy_connected;
         }
     }
     // Wifi status

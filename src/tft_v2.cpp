@@ -17,7 +17,7 @@ const char* direction_ptrs[MAX_ALERTS];
 int alertCount = 0;
 int prio_bars = 0;
 int alertTableSize = 0;
-bool bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
+bool proxyConnected, bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 
 //int locationCount = 0;
 /*
@@ -44,6 +44,10 @@ void checkProximityForMute(double currentLat, double currentLon) {
     }
 }
 */
+
+extern "C" bool get_var_proxyConnected() {
+    return proxyConnected;
+}
 
 extern "C" bool get_var_blankDisplay() {
     return settings.turnOffDisplay;

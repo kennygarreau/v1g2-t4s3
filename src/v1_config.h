@@ -26,7 +26,7 @@
 //#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
 
 extern LilyGo_AMOLED amoled;
-extern bool bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
+extern bool proxyConnected, bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
 
 extern int alertTableSize;

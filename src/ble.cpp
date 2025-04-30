@@ -160,10 +160,13 @@ class CommandWriteCallback : public NimBLECharacteristicCallbacks {
 
 class MyServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
-    Serial.println("BLE client connected to server");
+    unsigned long proxyConnect = millis() - bootMillis;
+    Serial.printf("BLE client connected to proxy after %.2f seconds\n", proxyConnect / 1000.0);
+    proxyConnected = true;
   }
 
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
+    proxyConnected = false;
     if (bt_connected) {
       Serial.println("BLE client disconnected, restart advertising");
       NimBLEDevice::startAdvertising();
