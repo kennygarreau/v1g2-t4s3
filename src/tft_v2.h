@@ -40,6 +40,7 @@ int getWifiRSSI();
 extern unsigned long getMillis();
 void disconnectCurrentDevice();
 const char *get_var_logicmode(bool value);
+bool get_var_wifiClientConnected();
 
 bool get_var_muteToGray();
 void set_var_muteToGray(bool value);

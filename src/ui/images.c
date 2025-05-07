@@ -1,6 +1,6 @@
 #include "images.h"
 
-const ext_img_desc_t images[17] = {
+const ext_img_desc_t images[18] = {
     { "v1gen2logo-white", &img_v1gen2logo_white },
     { "bt_logo_small", &img_bt_logo_small },
     { "bt_proxy", &img_bt_proxy },
@@ -18,4 +18,5 @@ const ext_img_desc_t images[17] = {
     { "small_arrow_side", &img_small_arrow_side },
     { "wifi", &img_wifi },
     { "wifi_local", &img_wifi_local},
+    { "wifi_localConnected", &img_wifi_localConnected },
 };

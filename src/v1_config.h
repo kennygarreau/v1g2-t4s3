@@ -27,7 +27,7 @@
 
 extern LilyGo_AMOLED amoled;
 extern bool proxyConnected, bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
-extern bool wifiConnecting, wifiConnected, localWifiStarted, webStarted;
+extern bool wifiClientConnected, wifiConnecting, wifiConnected, localWifiStarted, webStarted;
 
 extern int alertTableSize;
 extern uint8_t currentSpeed;

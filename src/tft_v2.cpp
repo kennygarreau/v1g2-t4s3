@@ -49,6 +49,10 @@ extern "C" bool get_var_proxyConnected() {
     return proxyConnected;
 }
 
+extern "C" bool get_var_wifiClientConnected() {
+    return wifiClientConnected;
+}
+
 extern "C" bool get_var_blankDisplay() {
     return settings.turnOffDisplay;
 }

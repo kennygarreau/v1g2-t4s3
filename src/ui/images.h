@@ -24,6 +24,7 @@ extern const lv_img_dsc_t img_small_arrow_front;
 extern const lv_img_dsc_t img_small_arrow_side;
 extern const lv_img_dsc_t img_wifi;
 extern const lv_img_dsc_t img_wifi_local;
+extern const lv_img_dsc_t img_wifi_localConnected;
 
 #ifndef EXT_IMG_DESC_T
 #define EXT_IMG_DESC_T
@@ -33,7 +34,7 @@ typedef struct _ext_img_desc_t {
 } ext_img_desc_t;
 #endif
 
-extern const ext_img_desc_t images[17];
+extern const ext_img_desc_t images[18];
 
 
 #ifdef __cplusplus

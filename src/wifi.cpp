@@ -8,68 +8,61 @@ IPAddress gateway(192, 168, 242, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 bool localWifiStarted = false;
+bool wifiClientConnected = false;
 
 void wifiScanTask(void *parameter) {
+    wifiClientConnected = false;
+
     wifiScan();
     vTaskDelete(NULL);
 }
 
 void onWiFiEvent(WiFiEvent_t event) {
     wifi_mode_t currentMode = WiFi.getMode();
-
-    if (currentMode == WIFI_MODE_STA) {
-        switch (event) {
-            case WIFI_EVENT_STA_START:
-                Serial.println("WiFi starting...");
-                break;
-            case WIFI_EVENT_STA_STOP:
-                Serial.println("WiFi stopping...");
-                wifiConnected = false;
-                break;
-            case WIFI_EVENT_STA_DISCONNECTED:
-                wifiConnected = false;
-                Serial.println("WiFi disconnected. Attempting reconnect...");
-                if (!wifiConnecting) {
-                    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
-                }
-                break;
-            case SYSTEM_EVENT_STA_GOT_IP:
-                wifiConnected = true;
-                wifiConnecting = false;
-                Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
-                if (!webStarted) {
-                    setupWebServer();
-                }
-                break;
-            default:
-                Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
-                break;
-        }
-    } else if (currentMode == WIFI_MODE_AP) {
-        switch (event) {
-            case WIFI_EVENT_AP_START:
-                Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
-                if (!webStarted) {
-                    setupWebServer();
-                }
-                break;
-            case WIFI_EVENT_AP_STOP:
-                Serial.println("Access Point stopped.");
-                break;
-            case SYSTEM_EVENT_AP_STACONNECTED:
-                Serial.println("A device connected to the AP.");
-                break;
-            case SYSTEM_EVENT_AP_STADISCONNECTED:
-                Serial.println("A device disconnected from the AP.");
-                break;
-            default:
-                Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
+    switch (event) {
+        case WIFI_EVENT_STA_START:
+            Serial.println("WiFi starting...");
             break;
-        }
-    }
-    else if (currentMode == WIFI_MODE_NULL) {
-        wifiConnected = false;
-        localWifiStarted = false;
+        case WIFI_EVENT_STA_STOP:
+            Serial.println("WiFi stopping...");
+            wifiConnected = false;
+            break;
+        case WIFI_EVENT_STA_DISCONNECTED:
+            wifiConnected = false;
+            Serial.println("WiFi disconnected. Attempting reconnect...");
+            if (!wifiConnecting) {
+                xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
+            }
+            break;
+        case SYSTEM_EVENT_STA_GOT_IP:
+            wifiConnected = true;
+            wifiConnecting = false;
+            Serial.printf("Connected to %s! IP Address: %s\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+            if (!webStarted) {
+                setupWebServer();
+            }
+            break;
+        case WIFI_EVENT_AP_START:
+            Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
+            if (!webStarted) {
+                setupWebServer();
+            }
+            break;
+        case WIFI_EVENT_AP_STOP:
+            Serial.println("Access Point stopped.");
+            wifiClientConnected = false;
+            break;
+        case WIFI_EVENT_AP_STACONNECTED:
+            Serial.println("A device connected to the AP.");
+            wifiClientConnected = true;
+            break;
+        case WIFI_EVENT_AP_STADISCONNECTED:
+            Serial.println("A device disconnected from the AP.");
+            wifiClientConnected = false;
+            break;
+        default:
+            Serial.printf("WiFi Event %d on core %d\n", event, xPortGetCoreID());
+        break;
     }
 }
 

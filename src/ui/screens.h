@@ -36,6 +36,7 @@ typedef struct _objects_t {
     lv_obj_t *band_x;
     lv_obj_t *wifi_logo;
     lv_obj_t *wifi_local_logo;
+    lv_obj_t *wifi_localConnected;
     lv_obj_t *front_arrow;
     lv_obj_t *side_arrow;
     lv_obj_t *rear_arrow;

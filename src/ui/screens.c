@@ -295,6 +295,17 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // wifi local connected client
+        {
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.wifi_localConnected = obj;
+            lv_obj_set_pos(obj, 502, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_wifi_localConnected);
+            lv_img_set_src(obj, psram_img);
+            lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
         // mute_logo
         {
             lv_obj_t *obj = lv_img_create(parent_obj);
@@ -476,7 +487,8 @@ void tick_status_bar() {
     {
         static bool last_wifi_connected = false;
         static bool last_local_wifi = false;
-
+        
+        bool wifiLocalConnected = get_var_wifiClientConnected();
         bool wifi_connected = get_var_wifiConnected(); // true when connected
         bool local_wifi = get_var_localWifi(); // true when local wifi started
 
@@ -489,14 +501,18 @@ void tick_status_bar() {
                 lv_obj_clear_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
             }
-            else if (local_wifi) {
-                lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
-            }
-
             LV_LOG_INFO("Updated WiFi status");
             last_wifi_connected = wifi_connected;
             last_local_wifi = local_wifi;
+        }
+        else if (wifiLocalConnected) {
+            lv_obj_clear_flag(objects.wifi_localConnected, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_localConnected, LV_OBJ_FLAG_HIDDEN);
         }
     }
     // Custom Frequency Notification
