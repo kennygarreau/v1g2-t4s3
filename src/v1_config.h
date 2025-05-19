@@ -33,6 +33,7 @@ extern int alertTableSize;
 extern uint8_t currentSpeed;
 extern SemaphoreHandle_t xWiFiLock;
 extern SemaphoreHandle_t gpsDataMutex;
+extern SemaphoreHandle_t bleMutex;
 
 extern std::vector<std::pair<int, int>> sectionBounds;
 extern std::vector<std::pair<int, int>> sweepBounds;

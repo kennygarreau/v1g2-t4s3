@@ -132,7 +132,7 @@ lv_obj_t* create_signal_bar(lv_obj_t* parent, int x, int y) {
 }
 
 void create_signal_bars(lv_obj_t* parent, int num_bars) {
-    int base_x = 76;       // Base X position for all bars
+    int base_x = 86;       // Base X position for all bars
     int base_y = 264;      // Starting Y position
     int y_step = 30;       // Vertical spacing between bars
 

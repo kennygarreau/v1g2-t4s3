@@ -13,6 +13,9 @@ bool allSweepDefinitionsReceived = false;
 std::vector<uint8_t> latestRawData;
 std::vector<uint8_t> previousRawData;
 
+SemaphoreHandle_t bleMutex;
+SemaphoreHandle_t bleNotifyMutex;
+
 static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
@@ -32,6 +35,7 @@ NimBLECharacteristic* pCommandWriteChar;
 const uint8_t notificationOn[] = {0x1, 0x0};
 
 void onProxyReady() {
+  bleNotifyMutex = xSemaphoreCreateMutex();
   if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
     NimBLEDevice::startAdvertising();
     Serial.println("Advertising started after client connection.");
@@ -187,8 +191,11 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   }
 
   if (pAlertNotifyChar) {
-    pAlertNotifyChar->setValue(pData, length);
-    pAlertNotifyChar->notify();
+    if (xSemaphoreTake(bleNotifyMutex, pdMS_TO_TICKS(50))) {
+      pAlertNotifyChar->setValue(pData, length);
+      pAlertNotifyChar->notify();
+      xSemaphoreGive(bleNotifyMutex);
+    }
   }
 }
 
@@ -276,8 +283,11 @@ void requestVersion() {
 }
 
 void requestVolume() {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-    delay(10);
+    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+      delay(10);
+      xSemaphoreGive(bleMutex);
+    }
 }
 
 void requestUserBytes() {
@@ -308,13 +318,21 @@ void requestAllSweepDefinitions() {
 
 void reqBatteryVoltage() {
   if (bt_connected && clientWriteCharacteristic && !alertPresent) {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
+      delay(10);
+      xSemaphoreGive(bleMutex);
+    }
   }
 }
 
 void reqVolume() {
   if (bt_connected && clientWriteCharacteristic && !alertPresent) {
-    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
+      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+      delay(10);
+      xSemaphoreGive(bleMutex);
+    }
   }
 }
 
@@ -331,6 +349,7 @@ void reqMuteOff() {
 }
 
 void initBLE() {
+  bleMutex = xSemaphoreCreateMutex();
   if (settings.proxyBLE) {
     NimBLEDevice::init("V1 Proxy");
     NimBLEDevice::setDeviceName("V1C-LE-T4S3");
