@@ -67,6 +67,19 @@ void v1cle_switch_event_handler(lv_event_t * e) {
     LV_LOG_INFO("User toggled V1 CLE switch. New state: %d", switch_state);
 }
 
+void proxy_switch_event_handler(lv_event_t * e) {
+    lv_obj_t * obj = lv_event_get_target(e);
+    bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    if (switch_state) {
+        show_popup("Enabling Proxy");
+    } else {
+        show_popup("Disabling Proxy");
+    }
+    set_var_useProxy(switch_state);
+    LV_LOG_INFO("User toggled Proxy switch. New state: %d", switch_state);
+}
+
 void muteToGray_handler(lv_event_t * e) {
     lv_obj_t * obj = lv_event_get_target(e);
     bool switch_state = lv_obj_has_state(obj, LV_STATE_CHECKED);

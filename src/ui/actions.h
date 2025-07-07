@@ -27,6 +27,7 @@ extern uint8_t blink_count;
 
 void main_press_handler(lv_event_t * e);
 void v1cle_switch_event_handler(lv_event_t * e);
+void proxy_switch_event_handler(lv_event_t * e);
 void wifi_switch_event_handler(lv_event_t * e);
 void muteToGray_handler(lv_event_t * e);
 void colorBars_handler(lv_event_t * e);

@@ -979,6 +979,27 @@ void create_screen_settings() {
             //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         {
+            // label_proxy
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.label_proxy = obj;
+            lv_obj_set_pos(obj, 180, 360);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "PROXY");
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xff5bb450), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
+            // switch_proxy
+            lv_obj_t *obj = lv_switch_create(parent_obj);
+            objects.switch_proxy = obj;
+            lv_obj_set_pos(obj, 180, 400);
+            lv_obj_set_size(obj, 76, 48);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xff5bb450), LV_PART_INDICATOR | LV_STATE_CHECKED);
+            lv_obj_add_event_cb(objects.switch_proxy, proxy_switch_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
+            //lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        {
             // label_ble_rssi
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_ble_rssi = obj;
@@ -1104,6 +1125,28 @@ void tick_screen_settings() {
         }
         else {
             lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
+        }
+    }
+    // Proxy enable/disable
+    {
+        if (!objects.switch_proxy) return;
+
+        //bool v1cle_present = get_var_v1clePresent();
+        bool useProxy = get_var_useProxy();
+        bool switch_checked = lv_obj_has_state(objects.switch_proxy, LV_STATE_CHECKED);
+
+        if (useProxy && !switch_checked) {
+            lv_obj_clear_flag(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(objects.switch_proxy, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_state(objects.switch_proxy, LV_STATE_CHECKED);
+        }
+        else if (useProxy && switch_checked) {
+            lv_obj_clear_flag(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(objects.switch_proxy, LV_OBJ_FLAG_HIDDEN);
+            //lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
+        }
+        else {
+            lv_obj_clear_state(objects.switch_proxy, LV_STATE_CHECKED);
         }
     }
     // RSSI vals

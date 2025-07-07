@@ -49,6 +49,25 @@ extern "C" bool get_var_proxyConnected() {
     return proxyConnected;
 }
 
+extern "C" bool get_var_useProxy() {
+    return settings.proxyBLE;
+}
+
+extern "C" void set_var_useProxy(bool value) {
+    preferences.begin("settings", false);
+    if (!value) {
+        settings.proxyBLE = false;
+        Serial.println("Enabling proxy"); 
+    }
+    else {
+        settings.proxyBLE = true;
+        Serial.println("Disabling proxy");
+    }
+
+    preferences.putBool("proxyBLE", settings.proxyBLE);
+    preferences.end();
+}
+
 extern "C" bool get_var_wifiClientConnected() {
     return wifiClientConnected;
 }

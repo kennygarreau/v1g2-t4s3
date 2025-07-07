@@ -72,6 +72,8 @@ typedef struct _objects_t {
     lv_obj_t *blankscreen_button;
     lv_obj_t *show_bt_label;
     lv_obj_t *show_bt_button;
+    lv_obj_t *label_proxy;
+    lv_obj_t *switch_proxy;
 } objects_t;
 
 extern objects_t objects;
