@@ -491,6 +491,7 @@ void tick_status_bar() {
         bool wifiLocalConnected = get_var_wifiClientConnected();
         bool wifi_connected = get_var_wifiConnected(); // true when connected
         bool local_wifi = get_var_localWifi(); // true when local wifi started
+        bool wifi_enabled = get_var_wifiEnabled();
 
         if (wifi_connected != last_wifi_connected || local_wifi != last_local_wifi) {
             if (!wifi_connected && !local_wifi) {
@@ -509,7 +510,13 @@ void tick_status_bar() {
             lv_obj_clear_flag(objects.wifi_localConnected, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        } 
+        else if (!wifi_enabled) {
+            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
+        }
+        else {
             lv_obj_clear_flag(objects.wifi_local_logo, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(objects.wifi_logo, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(objects.wifi_localConnected, LV_OBJ_FLAG_HIDDEN);
