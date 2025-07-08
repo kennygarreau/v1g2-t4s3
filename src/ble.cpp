@@ -34,9 +34,17 @@ NimBLECharacteristic* pCommandWriteChar;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
+void restartAdvertisingTask(void* param) {
+  vTaskDelay(pdMS_TO_TICKS(150));
+  NimBLEDevice::startAdvertising();
+  vTaskDelete(NULL);
+}
+
 void onProxyReady() {
   bleNotifyMutex = xSemaphoreCreateMutex();
   if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
+    xTaskCreate(restartAdvertisingTask, "adv_restart", 2048, NULL, 1, NULL);
+
     if (NimBLEDevice::startAdvertising()) {
       Serial.println("Advertising started after client connection.");
     }
