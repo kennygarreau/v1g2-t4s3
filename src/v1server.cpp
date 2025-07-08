@@ -160,10 +160,11 @@ void setup()
   ui_tick();
   lv_task_handler();
 
+  gpsDataMutex = xSemaphoreCreateMutex();
+
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
     gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
-    gpsDataMutex = xSemaphoreCreateMutex();
     xTaskCreatePinnedToCore(gpsTask, "GPSTask", 4096, NULL, 1, NULL, 1);
   }
 
