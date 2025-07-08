@@ -37,8 +37,9 @@ const uint8_t notificationOn[] = {0x1, 0x0};
 void onProxyReady() {
   bleNotifyMutex = xSemaphoreCreateMutex();
   if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
-    NimBLEDevice::startAdvertising();
-    Serial.println("Advertising started after client connection.");
+    if (NimBLEDevice::startAdvertising()) {
+      Serial.println("Advertising started after client connection.");
+    }
   }
 }
 
@@ -351,11 +352,13 @@ void reqMuteOff() {
 void initBLE() {
   bleMutex = xSemaphoreCreateMutex();
   if (settings.proxyBLE) {
+    Serial.println("initializing as BLE Proxy");
     NimBLEDevice::init("V1 Proxy");
     NimBLEDevice::setDeviceName("V1C-LE-T4S3");
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);
     initBLEServer();
   } else {
+    Serial.println("initializing as BLE client only");
     NimBLEDevice::init("V1G2 Client");
     NimBLEDevice::setPower(ESP_PWR_LVL_P9);
   }
@@ -391,7 +394,7 @@ void initBLEServer() {
   NimBLEAdvertisementData advData;
   NimBLEAdvertisementData scanRespData;
   
-  advData.setName("V1C-LE-T4S3");
+  //advData.setName("V1C-LE-T4S3");
   advData.setCompleteServices(pRadarService->getUUID());
   advData.setAppearance(0x0C80);
   scanRespData.setName("V1C-LE-T4S3");
