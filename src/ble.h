@@ -26,6 +26,7 @@ void requestMute();
 void reqMuteOff();
 void queryDeviceInfo(NimBLEClient* pClient);
 void displayReader(NimBLEClient* pClient);
+void onProxyReady();
 
 // Bluetooth service configurations
 static NimBLEUUID deviceInfoUUID("180A");

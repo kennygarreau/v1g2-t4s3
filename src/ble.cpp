@@ -41,7 +41,6 @@ void restartAdvertisingTask(void* param) {
 }
 
 void onProxyReady() {
-  bleNotifyMutex = xSemaphoreCreateMutex();
   if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
     xTaskCreate(restartAdvertisingTask, "adv_restart", 2048, NULL, 1, NULL);
 
@@ -56,10 +55,11 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     Serial.printf("BLE Connected to: %s on core %d\n", pClient->getPeerAddress().toString().c_str(), xPortGetCoreID());
     bt_connected = true;
     bleInit = true;
-    
-    if (settings.proxyBLE) {
-      onProxyReady();
-    }
+    bleNotifyMutex = xSemaphoreCreateMutex();
+
+    // if (settings.proxyBLE) {
+    //   onProxyReady();
+    // }
   }
 
   void onDisconnect(NimBLEClient* pClient, int reason) override {
@@ -238,6 +238,10 @@ void displayReader(NimBLEClient* pClient) {
           delay(50);
         }
         clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
+      }
+
+      if (settings.proxyBLE) {
+        onProxyReady();
       }
     } else {
       Serial.println("Failed to find bmeServiceUUID!");
