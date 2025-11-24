@@ -714,7 +714,7 @@ void tick_screen_main() {
         // Update Priority Bars
         {
             int numBars = get_var_prioBars();
-            if (numBars != cur_bars) {
+            if (numBars != cur_bars || muteToGray) {
                 tick_value_change_obj = objects.bar_str;
                 LV_LOG_INFO("updating signal bars");
                 update_signal_bars(numBars);
