@@ -159,14 +159,16 @@ uint32_t hexToUint32(const String &hex) {
 
 void setupWebServer()
 {
-    if (!wifiConnected) {
+    if (wifiConnected) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { 
             request->send(200, "text/html", readFileFromSPIFFS("/index.html")); 
         });
+        Serial.println("serving network connected webserver");
     } else {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
             request->send(200, "text/html", readFileFromSPIFFS("/index2.html")); 
         });
+        Serial.println("serving local copy of webserver");
     }
 
     server.on("/firmware", HTTP_GET, [](AsyncWebServerRequest *request) {
