@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.3.1"
+#define FIRMWARE_VERSION "1.4.0"
 #define BAUD_RATE 9600
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
@@ -149,6 +149,19 @@ struct Config {
     bool bsmPlus;
     int autoMuteBit0;
     int autoMuteBit1;
+    int kSensitivityBit0;
+    int kSensitivityBit1;
+    bool mrctPhoto;
+    int xSensitivityBit0;
+    int xSensitivityBit1;
+    bool driveSafe3dPhoto;
+    bool driveSafe3dHdPhoto;
+    bool redflexHaloPhoto;
+    bool redflexNK7Photo;
+    bool ekinPhoto;
+    bool photoVerifier;
+    std::string xSensitivity;
+    std::string kSensitivity;
     std::string autoMute;
     const char* mode;
     const char* defaultMode;

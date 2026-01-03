@@ -70,6 +70,27 @@ enum Modes {
     MODE_ADVLOGIC = 3
 };
 
+enum class PhotoRadarType : uint8_t {
+    None            = 0,
+    MRCT            = 1,
+    DriveSafeType1  = 2,
+    DriveSafeType2  = 3,
+    RedflexHalo     = 4,
+    RedflexNK7      = 5,
+    Ekin            = 6,
+    Unknown         = 0xFF
+};
+
+static constexpr const char* PhotoRadarTypeNames[] = {
+    "Not photo radar",
+    "MRCT",
+    "DriveSafe Type 1",
+    "DriveSafe Type 2",
+    "Redflex Halo",
+    "Redflex NK7",
+    "Ekin"
+};
+
 using alertsVectorRaw = std::vector<std::vector<uint8_t>>;
 extern std::vector<LogEntry> logHistory;
 

@@ -239,6 +239,13 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
         priority = (auxByte & 0b10000000) != 0;
         junkAlert = (auxByte & 0b01000000) != 0;
 
+        uint8_t radarTypeValue = auxByte & 0b00001111;
+
+        const char* radarTypeName =
+            (radarTypeValue < 7)
+                ? PhotoRadarTypeNames[radarTypeValue]
+                : "Unknown";
+
         switch (bandArrow & 0b00011111) { // Mask the band bits
             case 0b00000001: bandValue = "LASER"; bnd = BAND_LASER; break;
             case 0b00000010: bandValue = "Ka"; bnd = BAND_KA; break;
@@ -548,6 +555,7 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         uint8_t userByteZero = rawpacket[5];
         uint8_t userByteOne = rawpacket[6];
         uint8_t userByteTwo = rawpacket[7];
+        uint8_t userByteThree = rawpacket[8];
 
         globalConfig.xBand         = (userByteZero & 0b00000001) != 0;
         globalConfig.kBand         = (userByteZero & 0b00000010) != 0;
@@ -588,6 +596,26 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         globalConfig.bsmPlus = (userByteTwo & 0b00000100) != 0;
         globalConfig.autoMuteBit0 = (userByteTwo & 0b00001000) ? 1 : 0;
         globalConfig.autoMuteBit1 = (userByteTwo & 0b00010000) ? 2 : 0;
+        globalConfig.kSensitivityBit0 = (userByteTwo & 0b00100000) ? 1 : 0;
+        globalConfig.kSensitivityBit1 = (userByteTwo & 0b01000000) ? 2 : 0;
+        globalConfig.mrctPhoto = (userByteTwo & 0b10000000) != 0;
+
+        int kSensitivity = globalConfig.kSensitivityBit0 + globalConfig.kSensitivityBit1;
+
+        switch (kSensitivity) {
+            case 0:
+                globalConfig.kSensitivity = "2020 Original*";
+                break;
+            case 1:
+                globalConfig.kSensitivity = "Relaxed";
+                break;
+            case 2:
+                globalConfig.kSensitivity = "Max Range";
+                break;
+            case 3:
+                globalConfig.kSensitivity = "2020 Original";
+                break;
+        }
 
         uint8_t autoMute = globalConfig.autoMuteBit0 + globalConfig.autoMuteBit1;
         switch (autoMute) {
@@ -604,6 +632,32 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
                 globalConfig.autoMute = "Off";
                 break;
         }
+
+        globalConfig.xSensitivityBit0 = (userByteThree & 0b00000001) ? 1 : 0;
+        globalConfig.xSensitivityBit1 = (userByteThree & 0b00000010) ? 2 : 0;
+        globalConfig.driveSafe3dPhoto = (userByteThree & 0b00000100) != 0;
+        globalConfig.driveSafe3dHdPhoto = (userByteThree & 0b00001000) != 0;
+        globalConfig.redflexHaloPhoto = (userByteThree & 0b00010000) != 0;
+        globalConfig.redflexNK7Photo = (userByteThree & 0b00100000) != 0;
+        globalConfig.ekinPhoto = (userByteThree & 0b01000000) != 0;
+        globalConfig.photoVerifier = (userByteThree & 0b10000000) != 0;
+
+        int xSensitivity = globalConfig.xSensitivityBit0 + globalConfig.xSensitivityBit1;
+        switch (xSensitivity) {
+            case 0:
+                globalConfig.xSensitivity = "2020 Original*";
+                break;
+            case 1:
+                globalConfig.xSensitivity = "Relaxed";
+                break;
+            case 2:
+                globalConfig.xSensitivity = "Max Range";
+                break;
+            case 3:
+                globalConfig.xSensitivity = "2020 Original";
+                break;
+        }
+
         userBytesReceived = true;
     }
     else if (packetID == 0x17) {
