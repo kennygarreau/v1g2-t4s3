@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1g2.display</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="index.js"></script>
+    <nav class="main-navbar">
+        <a href="#">Home</a>
+        <a href="settings.html">Configuration</a>
+        <a href="lockouts.html">Lockouts</a>
+        <a href="status.html">Status</a>
+        <a href="update.html">Update</a>
+    </nav>
+    <div class="side-navbar" id="sideNavbar">
+        <button class="user-settings-btn" onclick="toggleNavbar()">☰</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id="config-table-body">
+            </tbody>
+        </table>
+    </div>
+    <div class="hardware-bar">
+        <span id="manufacturer"></span> |
+        <span id="model"></span> |
+        <span id="serial"></span> |
+        <span id="software-version"></span>
+    </div>
+    <div class="container">
+    </div>
+</body>
+</html>

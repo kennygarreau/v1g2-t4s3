@@ -159,9 +159,15 @@ uint32_t hexToUint32(const String &hex) {
 
 void setupWebServer()
 {
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { 
-        request->send(200, "text/html", readFileFromSPIFFS("/index.html")); 
-    });
+    if (!wifiConnected) {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) { 
+            request->send(200, "text/html", readFileFromSPIFFS("/index.html")); 
+        });
+    } else {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(200, "text/html", readFileFromSPIFFS("/index2.html")); 
+        });
+    }
 
     server.on("/firmware", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "application/json", "{\"version\":\"" + String(FIRMWARE_VERSION) + "\"}");
@@ -175,6 +181,7 @@ void setupWebServer()
     serveStaticFile(server, "/js/chart.js", "application/javascript");
     serveStaticFile(server, "/js/moment.js", "application/javascript");
     serveStaticFile(server, "/js/chartjs-adapter-moment.js", "application/javascript");
+    serveStaticFile(server, "/index2.html", "text/html");
     serveStaticFile(server, "/index.html", "text/html");
     serveStaticFile(server, "/update.html", "text/html");
     serveStaticFile(server, "/settings.html", "text/html");
@@ -349,6 +356,17 @@ void setupWebServer()
         configJson["Resting Display"] = globalConfig.restingDisplay ? "On" : "Off";
         configJson["BSM Plus"] = globalConfig.bsmPlus ? "Off" : "On";
         configJson["Auto Mute"] = globalConfig.autoMute;
+        configJson["K Sensitivity"] = globalConfig.kSensitivity;
+
+        // User Byte 3
+        configJson["X Sensitivity"] = globalConfig.xSensitivity;
+        configJson["MRCT Photo"] = globalConfig.mrctPhoto ? "Off" : "On";
+        configJson["DriveSafe 3D Photo"] = globalConfig.driveSafe3dPhoto ? "Off" : "On";
+        configJson["DriveSafe 3DHD Photo"] = globalConfig.driveSafe3dHdPhoto ? "Off" : "On";
+        configJson["Redflex Halo Photo"] = globalConfig.redflexHaloPhoto ? "Off" : "On";
+        configJson["Redflex NK7 Photo"] = globalConfig.redflexNK7Photo ? "Off" : "On";
+        configJson["Ekin Photo"] = globalConfig.ekinPhoto ? "Off" : "On";
+        configJson["Photo Verifier"] = globalConfig.photoVerifier ? "Off" : "On";
         
         configJson["Main Volume"] = globalConfig.mainVolume;
         configJson["Muted Volume"] = globalConfig.mutedVolume;
