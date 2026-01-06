@@ -7,6 +7,7 @@
 #include "web.h"
 #include "tft_v2.h"
 #include "ble.h"
+#include "ui/actions.h"
 
 const char *lockoutFieldNames[] = {
     "act",
@@ -128,8 +129,10 @@ void serveStaticFile(AsyncWebServer &server, const char *path, const char *mimeT
 }
 
 void checkReboot() {
-    if (isRebootPending && millis() - rebootTime >= 5000) {
+    if (isRebootPending && millis() - rebootTime >= 3000) {
         Serial.println("Rebooting...");
+        show_popup("Rebooting...");
+        delay(3000);
         ESP.restart();
     }
 }
