@@ -40,6 +40,8 @@ int getWifiRSSI();
 extern unsigned long getMillis();
 void disconnectCurrentDevice();
 const char *get_var_logicmode(bool value);
+const char *get_var_photoType();
+void set_var_photoType(const char *value);
 bool get_var_wifiClientConnected();
 bool get_var_useProxy();
 void set_var_useProxy(bool value);
@@ -89,6 +91,8 @@ void set_var_xAlert(bool value);
 bool get_var_laserAlert();
 void set_var_laserAlert(bool value);
 bool get_var_alertPresent();
+void set_var_photoAlertPresent(bool value);
+bool get_var_photoAlertPresent();
 
 void set_var_arrowPrioFront(bool value);
 bool get_var_arrowPrioFront();

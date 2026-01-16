@@ -11,6 +11,7 @@
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";
+std::string photoType = "";
 const char* tableFreqs[MAX_ALERTS];
 const char* frequency_ptrs[MAX_ALERTS];
 const char* direction_ptrs[MAX_ALERTS]; 
@@ -18,6 +19,7 @@ int alertCount = 0;
 int prio_bars = 0;
 int alertTableSize = 0;
 bool proxyConnected, bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
+bool photoAlertPresent;
 
 //int locationCount = 0;
 /*
@@ -70,6 +72,22 @@ extern "C" void set_var_useProxy(bool value) {
 
 extern "C" bool get_var_wifiClientConnected() {
     return wifiClientConnected;
+}
+
+extern "C" void set_var_photoType(const char *value) {
+    photoType = value;
+}
+
+extern "C" const char *get_var_photoType() {
+    return photoType.c_str();
+}
+
+extern "C" void set_var_photoAlertPresent(bool value) {
+    photoAlertPresent = value;
+}
+
+extern "C" bool get_var_photoAlertPresent() {
+    return photoAlertPresent;
 }
 
 extern "C" bool get_var_blankDisplay() {
@@ -634,7 +652,7 @@ void displayTestTask(void *pvParameters) {
     std::vector<std::vector<uint8_t>> packets = {
         {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x13, 0x29, 0x1D, 0x21, 0x85, 0x88, 0x00, 0xE8, 0xAB},
         {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x5B, 0x1F, 0x38, 0x28, 0x0C, 0x00, 0x00, 0xE7, 0xAB},
-        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x00, 0x00, 0xAB},
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x04, 0x00, 0xAB},
         {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x33, 0x87, 0x8C, 0xB6, 0x81, 0x22, 0x80, 0x30, 0xAB}
     };
     

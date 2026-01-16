@@ -26,6 +26,7 @@ static bool blink_state = false;
 
 uint32_t default_color = 0xffff0000;
 uint32_t gray_color = 0xff636363;
+uint32_t yellow_color = 0xffda954b;
 
 uint32_t green_bar = 0xff8cd47e;
 uint32_t yellow_bar = 0xfff8d66d;
@@ -315,6 +316,28 @@ void create_screen_main() {
             lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_mute_logo_small);
             lv_img_set_src(obj, psram_img);
             lv_img_set_zoom(obj, 128);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        // photo_radar_type
+        {
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.photo_type = obj;
+            lv_obj_set_pos(obj, 148, 16);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(yellow_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        // photo_radar_icon
+        {
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.photo_image = obj;
+            lv_obj_set_pos(obj, 7, 332);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&ui_image_photo_camera);
+            lv_img_set_src(obj, psram_img);
+            lv_img_set_zoom(obj, 256);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         // mode_type
@@ -776,6 +799,27 @@ void tick_screen_main() {
                 }
                 else { 
                     lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
+                }
+                tick_value_change_obj = NULL;
+            }
+        }
+        // Photo Alert
+        {
+            bool new_val = get_var_photoAlertPresent(); // true if enabled
+            bool is_hidden = lv_obj_has_flag(objects.photo_type, LV_OBJ_FLAG_HIDDEN);
+            const char* photoType = get_var_photoType();
+
+            if (new_val == is_hidden) {
+                LV_LOG_INFO("paint photo radar");
+                tick_value_change_obj = objects.photo_type;
+                if (new_val) {
+                    lv_obj_clear_flag(objects.photo_image, LV_OBJ_FLAG_HIDDEN);
+                    lv_label_set_text(objects.photo_type, photoType);
+                    lv_obj_clear_flag(objects.photo_type, LV_OBJ_FLAG_HIDDEN);
+                }
+                else {
+                    lv_obj_add_flag(objects.photo_type, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.photo_image, LV_OBJ_FLAG_HIDDEN);
                 }
                 tick_value_change_obj = NULL;
             }

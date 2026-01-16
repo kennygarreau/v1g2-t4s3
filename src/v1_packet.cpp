@@ -25,8 +25,6 @@ static bool zero_rcvd = false;
 extern void requestMute();
 uint8_t packet[10];
 
-//PacketDecoder::PacketDecoder(const std::string& packet) : packet(packet) {}
-//PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket) { this->rawpacket = rawpacket; }
 PacketDecoder::PacketDecoder(const std::vector<uint8_t>& rawpacket)
   : rawpacket(rawpacket) {}
 
@@ -46,9 +44,11 @@ void clearInactiveBands(uint8_t newBandData) {
     activeBands &= (lastReceivedBands | newBandData); 
 }
 
+/*
 void PacketDecoder::clearTableAlerts() {
     set_var_showAlertTable(false);
 }
+*/
 
 void PacketDecoder::clearInfAlerts() {
     set_var_prio_alert_freq("");
@@ -61,6 +61,7 @@ void PacketDecoder::clearInfAlerts() {
     set_var_arrowPrioFront(false);
     set_var_arrowPrioRear(false);
     set_var_arrowPrioSide(false);
+    set_var_showAlertTable(false);
     std::fill(std::begin(blink_enabled), std::end(blink_enabled), false);
 
     ui_tick();
@@ -246,6 +247,11 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                 ? PhotoRadarTypeNames[radarTypeValue]
                 : "Unknown";
 
+        if (strlen(radarTypeName) > 1) {
+            set_var_photoType(radarTypeName);
+            set_var_photoAlertPresent(true);
+        }
+
         switch (bandArrow & 0b00011111) { // Mask the band bits
             case 0b00000001: bandValue = "LASER"; bnd = BAND_LASER; break;
             case 0b00000010: bandValue = "Ka"; bnd = BAND_KA; break;
@@ -397,7 +403,9 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     }
 
     set_var_alertCount(alertCountValue); // sets the bogey counter
-    //int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
+    int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
+    Serial.printf("table size: %i\n", tSize);
+
     int tableSize = alertCountValue - 1;
     if (tableSize > MAX_ALERTS) { tableSize = MAX_ALERTS; }
     
@@ -493,9 +501,10 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         if (alertC == 0x00) {
             if (alertPresent) {
                 Serial.println("alertC 00 && alertPresent, clearing alerts");
-                clearTableAlerts();
+                //clearTableAlerts();
                 clearInfAlerts();
                 alertPresent = false;
+                photoAlertPresent = false;
             }
             return "";
         }

@@ -82,14 +82,16 @@ enum class PhotoRadarType : uint8_t {
 };
 
 static constexpr const char* PhotoRadarTypeNames[] = {
-    "Not photo radar",
-    "MRCT",
+    "",
+    "     MRCT",
     "DriveSafe Type 1",
     "DriveSafe Type 2",
-    "Redflex Halo",
-    "Redflex NK7",
-    "Ekin"
+    "  Redflex Halo",
+    "  Redflex NK7",
+    "     Ekin"
 };
+
+extern bool photoAlertPresent;
 
 using alertsVectorRaw = std::vector<std::vector<uint8_t>>;
 extern std::vector<LogEntry> logHistory;
@@ -103,7 +105,7 @@ public:
     std::string decode_v2(int lowSpeedThreshold, uint8_t currentSpeed);
     void decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed);
     void clearInfAlerts();
-    void clearTableAlerts();
+    //void clearTableAlerts();
 };
 
 class Packet {
