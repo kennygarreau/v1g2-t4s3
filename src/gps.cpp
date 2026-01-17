@@ -12,14 +12,12 @@ unsigned long lastValidGPSUpdate = 0;
 
 SemaphoreHandle_t gpsDataMutex;
 
-const char *formatLocalTime(TinyGPSPlus &gps)
+void formatLocalTime(TinyGPSPlus &gps, char *buffer, size_t bufSize)
 {
-  static char timeBuffer[10];
-
   if (!gps.time.isValid())
   {
-    snprintf(timeBuffer, sizeof(timeBuffer), "00:00:00");
-    return timeBuffer;
+    snprintf(buffer, sizeof(bufSize), "00:00:00");
+    return;
   }
 
   tmElements_t tm;
@@ -33,35 +31,29 @@ const char *formatLocalTime(TinyGPSPlus &gps)
   time_t utcTime = makeTime(tm);
   time_t localTime = tz.tzTime(utcTime, LOCAL_TIME);
 
-  snprintf(timeBuffer, sizeof(timeBuffer), "%02d:%02d:%02d", hour(localTime), minute(localTime), second(localTime));
-
-  return timeBuffer;
+  snprintf(buffer, bufSize, "%02d:%02d:%02d", hour(localTime), minute(localTime), second(localTime));
 }
 
-const char *formatLocalDate(TinyGPSPlus &gps)
+void formatLocalDate(TinyGPSPlus &gps, char *buffer, size_t bufSize)
 {
-  static char dateBuffer[11];
-
   if (!gps.date.isValid())
   {
-    snprintf(dateBuffer, sizeof(dateBuffer), "00/00/0000");
-    return dateBuffer;
+    snprintf(buffer, bufSize, "00/00/0000");
+    return;
   }
 
   tmElements_t tm;
-  tm.Hour = gps.time.hour();
+  tm.Hour   = gps.time.hour();
   tm.Minute = gps.time.minute();
   tm.Second = gps.time.second();
-  tm.Day = gps.date.day();
-  tm.Month = gps.date.month();
-  tm.Year = gps.date.year() - 1970;
+  tm.Day    = gps.date.day();
+  tm.Month  = gps.date.month();
+  tm.Year   = gps.date.year() - 1970;
 
   time_t utcTime = makeTime(tm);
   time_t localTime = tz.tzTime(utcTime);
 
-  snprintf(dateBuffer, sizeof(dateBuffer), "%02d/%02d/%04d", month(localTime), day(localTime), year(localTime));
-
-  return dateBuffer;
+  snprintf(buffer, bufSize, "%02d/%02d/%04d", month(localTime), day(localTime), year(localTime));
 }
 
 uint32_t convertToUnixTimestamp(TinyGPSPlus &gps)
@@ -102,15 +94,23 @@ void gpsTask(void *parameter)
           gpsData.satelliteCount = gps.satellites.value();
           gpsData.course = gps.course.deg();
           gpsData.rawTime = convertToUnixTimestamp(gps);
-          gpsData.date = formatLocalDate(gps);
-          gpsData.time = formatLocalTime(gps);
-          gpsData.hdop = static_cast<double>(gps.hdop.value()) / 100.0;
 
-          gpsData.signalQuality = (gpsData.hdop < 2) ? "excellent" : (gpsData.hdop <= 5) ? "good"
-                                                                : (gpsData.hdop <= 10)  ? "moderate"
-                                                                                        : "poor";
+          char dateBuf[11];
+          formatLocalDate(gps, dateBuf, sizeof(dateBuf));
+          strncpy(gpsData.date, dateBuf, sizeof(gpsData.date));
+          
+          char timeBuf[16];
+          formatLocalTime(gps, timeBuf, sizeof(timeBuf));
+          strncpy(gpsData.time, timeBuf, sizeof(gpsData.time));
+          gpsData.time[sizeof(gpsData.time) - 1] = '\0';
 
-          if (settings.unitSystem == "Metric")
+          gpsData.hdop = static_cast<float>(gps.hdop.value()) / 100.0;
+          if (gpsData.hdop < 2) strcpy(gpsData.signalQuality, "excellent");
+          else if (gpsData.hdop <= 5) strcpy(gpsData.signalQuality, "good");
+          else if (gpsData.hdop <= 10) strcpy(gpsData.signalQuality, "moderate");
+          else strcpy(gpsData.signalQuality, "poor");
+
+          if (settings.unitSystem == METRIC)
           {
             gpsData.speed = static_cast<uint8_t>(round(gps.speed.kmph()));
             gpsData.altitude = gps.altitude.meters();

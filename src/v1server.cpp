@@ -79,7 +79,13 @@ void loadSettings() {
   settings.enableGPS = preferences.getBool("enableGPS", false);
   settings.enableWifi = preferences.getBool("enableWifi", true);
   settings.lowSpeedThreshold = preferences.getInt("lowSpeedThres", 35);
-  settings.unitSystem = preferences.getString("unitSystem", "Imperial");
+  
+  String unitStr = preferences.getString("unitSystem", "Imperial"); // default = "Imperial"
+  if (unitStr == "Metric") {
+    settings.unitSystem = METRIC;
+  } else {
+    settings.unitSystem = IMPERIAL;
+  }
   settings.displayOrientation = preferences.getInt("displayOrient", 0);
   settings.timezone = preferences.getString("timezone", "UTC");
   settings.muteToGray = preferences.getBool("muteToGray", false);

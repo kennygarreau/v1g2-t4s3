@@ -10,10 +10,8 @@ extern "C" {
 
 // enum declarations
 
-
-
 // Flow global variables
-
+/*
 enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_PRIO_ALERT_FREQ = 0,
     FLOW_GLOBAL_VARIABLE_LOGIC_MODE = 1,
@@ -31,6 +29,7 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_K_ALERT = 13,
     FLOW_GLOBAL_VARIABLE_X_ALERT = 14
 };
+*/
 
 // Native global variables
 

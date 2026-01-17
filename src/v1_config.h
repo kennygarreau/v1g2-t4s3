@@ -45,18 +45,20 @@ struct WiFiCredential {
 
 // active, entrytype, timestamp, lastSeen, counter, latitude, longitude, speed, course, strength, direction, frequency
 struct LockoutEntry {
-    bool active; // 0: inactive, 1: active
-    bool entryType; // 0: auto 1: manual
-    uint32_t timestamp;
-    uint32_t lastSeen;
-    uint8_t counter;
     double latitude;
     double longitude;
+    uint32_t timestamp;
+    uint32_t lastSeen;
+
     int speed;
     int course;
     int strength;
     int direction; // 1: front, 2 side, 3: rear
     int frequency;
+
+    uint8_t counter;
+    bool active; // 0: inactive, 1: active
+    bool entryType; // 0: auto 1: manual
 };
 
 /**
@@ -97,6 +99,8 @@ struct lockoutSettings {
 
 extern lockoutSettings autoLockoutSettings;
 
+enum UnitSystem : uint8_t { METRIC = 0, IMPERIAL = 1 };
+
 struct v1Settings {
   uint8_t displayOrientation;
   uint8_t brightness;
@@ -105,7 +109,7 @@ struct v1Settings {
   String localSSID;
   String localPW;
   WiFiModeSetting wifiMode;
-  String unitSystem;
+  UnitSystem unitSystem;
   bool isPortraitMode;
   bool disableBLE;
   bool proxyBLE;
@@ -179,15 +183,15 @@ extern Config globalConfig;
 struct GPSData {
   double latitude;
   double longitude;
+  float altitude;
+  float course;
+  float hdop;
   uint8_t speed;
-  double altitude;
-  double course;
-  double hdop;
   int satelliteCount;
-  String signalQuality;
-  String time;
-  String date;
-  String localtime;
+  char signalQuality[10];
+  char date[11];
+  char time[16];
+  //char localtime[16];
   uint32_t rawTime;
 };
 
@@ -204,13 +208,14 @@ struct Stats {
     uint32_t totalPsram;
     uint32_t totalStorageKB;
     uint32_t usedStorageKB;
-    uint8_t heapFrag;
-    std::string boardType;
-    uint8_t boardRev;
     int connectedWifiClients;
     int btStr;
     int wifiRSSI;
     float voltage;
+
+    std::string boardType;
+    uint8_t heapFrag;
+    uint8_t boardRev;
 };
 
 extern Stats stats;
@@ -270,10 +275,10 @@ extern unsigned long bootMillis;
 // int alertCount, float frequencies[5], std::string direction[5], int barCount, int freqCount
 struct AlertTableData {
     uint8_t alertCount; // this might be spurious
-    float frequencies[MAX_ALERTS + 1];
-    std::string direction[MAX_ALERTS + 1];
     uint8_t barCount; // TODO: convert to array
     uint8_t freqCount;
+    float frequencies[MAX_ALERTS + 1];
+    std::string direction[MAX_ALERTS + 1];
 };
 
 #endif // V1_CONFIG_H

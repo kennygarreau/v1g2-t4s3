@@ -4,8 +4,8 @@
 #include <ezTime.h>
 #include <TinyGPSPlus.h>
 
-const char* formatLocalTime(TinyGPSPlus &gps);
-const char* formatLocalDate(TinyGPSPlus &gps);
+void formatLocalTime(TinyGPSPlus &gps, char *buffer, size_t bufSize);
+void formatLocalDate(TinyGPSPlus &gps, char *buffer, size_t bufSize);
 uint32_t convertToUnixTimestamp(TinyGPSPlus &gps);
 void gpsTask(void *parameter);
 

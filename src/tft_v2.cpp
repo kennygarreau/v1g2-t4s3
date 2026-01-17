@@ -537,7 +537,7 @@ extern "C" bool get_var_muted() {
 }
 
 extern "C" bool get_var_useImperial() {
-    if (settings.unitSystem == "Metric") {
+    if (settings.unitSystem == METRIC) {
         return false;
     }
     return true;
@@ -546,14 +546,15 @@ extern "C" bool get_var_useImperial() {
 extern "C" void set_var_useImperial(bool value) {
     preferences.begin("settings", false);
     if (value) {
-        settings.unitSystem = "Imperial";
+        settings.unitSystem = IMPERIAL;
         Serial.println("Unit system set to Imperial");
+        preferences.putString("unitSystem", "Imperial");
     } else {
-        settings.unitSystem = "Metric";
+        settings.unitSystem = METRIC;
         Serial.println("Unit system set to Metric");
+        preferences.putString("unitSystem", "Metric");
     }
 
-    preferences.putString("unitSystem", settings.unitSystem);
     preferences.end();
 }
 

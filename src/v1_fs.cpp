@@ -52,20 +52,20 @@ uint32_t SPIFFSFileManager::getStorageUsed() {
 }
 
 void SPIFFSFileManager::createTable() {
-    const char *sql = "CREATE TABLE lockouts ("
+    const char *sql = "CREATE TABLE IF NOT EXISTS lockouts ("
         "id INTEGER PRIMARY KEY, "
-        "active INTEGER, "
-        "entryType INTEGER, "
-        "timestamp INTEGER, "
-        "lastSeen INTEGER, "
-        "counter INTEGER, "
-        "latitude REAL, "
-        "longitude REAL, "
-        "speed INTEGER, "
-        "course INTEGER, "
-        "strength INTEGER, "
-        "direction INTEGER, "
-        "frequency INTEGER"
+        "active INTEGER NOT NULL, "
+        "entryType INTEGER NOT NULL, "
+        "timestamp INTEGER NOT NULL, "
+        "lastSeen INTEGER NOT NULL, "
+        "counter INTEGER NOT NULL, "
+        "latitude REAL NOT NULL, "
+        "longitude REAL NOT NULL, "
+        "speed INTEGER NOT NULL, "
+        "course INTEGER NOT NULL, "
+        "strength INTEGER NOT NULL, "
+        "direction INTEGER NOT NULL, "
+        "frequency INTEGER NOT NULL"
         ");";
     
     char *errMsg;

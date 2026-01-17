@@ -30,32 +30,32 @@ const char* logFieldNames[] = {
 
 LockoutEntry savedLockoutLocations[] = {
     {
-        .active = true,
-        .entryType = false, // Auto
-        .timestamp = 1710700000,
-        .lastSeen = 1710705000,
-        .counter = 3,
         .latitude = 37.7749,
         .longitude = -122.4194,
+        .timestamp = 1710700000,
+        .lastSeen = 1710705000,
         .speed = 45,
         .course = 270,
         .strength = 75,
         .direction = false, // Front
-        .frequency = 24125
+        .frequency = 24125,
+        .counter = 3,
+        .active = true,
+        .entryType = false // Auto
     },
     {
-        .active = false,
-        .entryType = true, // Manual
-        .timestamp = 1710600000,
-        .lastSeen = 1710650000,
-        .counter = 5,
         .latitude = 34.0522,
         .longitude = -118.2437,
+        .timestamp = 1710600000,
+        .lastSeen = 1710650000,
         .speed = 60,
         .course = 90,
         .strength = 80,
         .direction = true, // Rear
-        .frequency = 24150
+        .frequency = 24150,
+        .counter = 5,
+        .active = false,
+        .entryType = true // Manual
     }
 };
 
@@ -667,9 +667,14 @@ void setupWebServer()
                 preferences.putBool("turnOffDisplay", settings.turnOffDisplay);
             }
             if (doc.containsKey("unitSystem")) {
-                settings.unitSystem = doc["unitSystem"].as<String>();
+                const char* uStr = doc["unitSystem"];
+                if (strcmp(uStr, "Metric") == 0) {
+                    settings.unitSystem = METRIC;
+                } else {
+                    settings.unitSystem = IMPERIAL;
+                }
                 Serial.println("unitSystem: " + settings.unitSystem);
-                preferences.putString("unitSystem", settings.unitSystem);
+                preferences.putString("unitSystem", uStr);
             }
             if (doc.containsKey("muteToGray")) {
                 settings.muteToGray = doc["muteToGray"].as<bool>();
