@@ -412,7 +412,8 @@ void setupWebServer()
         displaySettingsJson["turnOffDisplay"] = settings.turnOffDisplay;
         displaySettingsJson["onlyDisplayBTIcon"] = settings.onlyDisplayBTIcon;
         displaySettingsJson["displayTest"] = settings.displayTest;
-        displaySettingsJson["unitSystem"] = settings.unitSystem;
+        displaySettingsJson["unitSystem"] =
+            (settings.unitSystem == IMPERIAL) ? "Imperial" : "Metric";
         displaySettingsJson["muteToGray"] = settings.muteToGray;
         displaySettingsJson["colorBars"] = settings.colorBars;
         displaySettingsJson["showBogeys"] = settings.showBogeyCount;
@@ -565,10 +566,17 @@ void setupWebServer()
                 int mode = doc["wifiMode"].as<int>();
             
                 if (mode >= WIFI_SETTING_STA && mode <= WIFI_SETTING_APSTA) {
-                    settings.wifiMode = static_cast<WiFiModeSetting>(mode);
-                    Serial.println("wifiMode: " + String(mode));
-                    preferences.putInt("wifiMode", mode);
-                    isRebootPending = true;
+                    if (settings.wifiMode != static_cast<WiFiModeSetting>(mode)) {
+
+                        settings.wifiMode = static_cast<WiFiModeSetting>(mode);
+                        preferences.putInt("wifiMode", mode);
+
+                        Serial.printf("wifiMode changed → %d, reboot scheduled\n", mode);
+                        isRebootPending = true;
+
+                    } else {
+                        Serial.println("wifiMode unchanged — no reboot");
+                    }
                 } else {
                     Serial.println("Invalid wifiMode received!");
                 }
@@ -652,8 +660,7 @@ void setupWebServer()
                 Serial.println("displayTest: " + String(settings.displayTest));
                 preferences.putBool("displayTest", settings.displayTest);
                 preferences.end();
-                delay(1500);
-                ESP.restart();
+                isRebootPending = true;
             }
             if (doc.containsKey("onlyDisplayBTIcon")) {
                 settings.onlyDisplayBTIcon = doc["onlyDisplayBTIcon"].as<bool>();

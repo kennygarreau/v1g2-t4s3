@@ -66,9 +66,9 @@ async function populateBoardInfo() {
 
             let wifiType, orientation;
 
-            if (boardInfo.displaySettings.wifiMode === 2) {
+            if (boardInfo.displaySettings.wifiMode === 1) {
                 wifiType = "Client";
-            } else if (boardInfo.displaySettings.wifiMode === 1) {
+            } else if (boardInfo.displaySettings.wifiMode === 2) {
                 wifiType = "Access Point";
             } else {
                 wifiType = "Unknown";
