@@ -403,8 +403,8 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     }
 
     set_var_alertCount(alertCountValue); // sets the bogey counter
-    int tSize = alertDataList[0].freqCount; // TODO: test this works to replace tableSize
-    Serial.printf("table size: %i\n", tSize);
+    //int tSize = alertDataList[0].freqCount; // this crashes with a single alert
+    //Serial.printf("table size: %i\n", tSize);
 
     int tableSize = alertCountValue - 1;
     if (tableSize > MAX_ALERTS) { tableSize = MAX_ALERTS; }
@@ -717,6 +717,7 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
             if (allSweepDefinitionsReceived) {
                 unsigned long elapsedMillis = millis() - bootMillis;
                 Serial.printf("informational boot complete: %.2f seconds\n", elapsedMillis / 1000.0);
+                Serial.printf("heap use after informational boot: %u\n", ESP.getFreeHeap());
             }
         }    
     }
