@@ -916,7 +916,7 @@ void create_screen_settings() {
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "0.0.0.0");
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_noto_speed_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_ssid
@@ -940,7 +940,7 @@ void create_screen_settings() {
             lv_label_set_text(obj, "default");
             lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_noto_speed_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // label_pass
@@ -964,7 +964,7 @@ void create_screen_settings() {
             lv_label_set_text(obj, "default");
             lv_obj_set_scroll_dir(obj, LV_DIR_LEFT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(obj, &ui_font_noto_speed_36, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
             // slider_brightness
