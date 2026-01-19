@@ -661,6 +661,7 @@ void displayTestTask(void *pvParameters) {
         for (const std::vector<uint8_t>& packet : packets) {
             PacketDecoder decoder(packet);
             decoder.decode_v2(settings.lowSpeedThreshold, 20);
+            vTaskDelay(pdMS_TO_TICKS(15));
         }
 
         vTaskDelay(pdMS_TO_TICKS(500));

@@ -348,19 +348,19 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                         it->latitude = gpsData.latitude;
                         it->longitude = gpsData.longitude;
                         it->timestamp = gpsData.rawTime;
-                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d", now, gpsData.latitude, gpsData.longitude,
-                                    strength, freqMhz);
-                        Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
+                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u\n", now, gpsData.latitude, gpsData.longitude,
+                                    strength, freqMhz, elapsedTimeMicros);
+                        //Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
 
                     }
                 } else {
                     LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                                         strength, dir, freqMhz};
                     logHistory.push_back(newEntry);
-                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d", 
+                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u\n", 
                                     newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency);
-                    Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
+                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros);
+                    //Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
                 }
                 xSemaphoreGive(gpsDataMutex);
             } else {

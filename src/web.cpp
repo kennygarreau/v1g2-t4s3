@@ -8,6 +8,7 @@
 #include "tft_v2.h"
 #include "ble.h"
 #include "ui/actions.h"
+#include "ui/ui.h"
 
 const char *lockoutFieldNames[] = {
     "act",
@@ -132,6 +133,8 @@ void checkReboot() {
     if (isRebootPending && millis() - rebootTime >= 3000) {
         Serial.println("Rebooting...");
         show_popup("Rebooting...");
+        ui_tick();
+        lv_task_handler();
         delay(3000);
         ESP.restart();
     }
@@ -643,7 +646,7 @@ void setupWebServer()
                 settings.displayOrientation = doc["displayOrientation"].as<int>();
                 Serial.println("displayOrientation: " + String(settings.displayOrientation));
                 preferences.putInt("displayOrient", settings.displayOrientation);
-                isRebootPending = true;
+                //isRebootPending = true;
             }
             if (doc.containsKey("textColor")) {
                 settings.textColor = hexToUint32(doc["textColor"].as<String>());
@@ -659,7 +662,7 @@ void setupWebServer()
                 settings.displayTest = doc["displayTest"].as<bool>();
                 Serial.println("displayTest: " + String(settings.displayTest));
                 preferences.putBool("displayTest", settings.displayTest);
-                preferences.end();
+                //preferences.end();
                 isRebootPending = true;
             }
             if (doc.containsKey("onlyDisplayBTIcon")) {

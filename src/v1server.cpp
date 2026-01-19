@@ -136,11 +136,22 @@ void setup()
   Serial.begin();
   pinMode(8, INPUT_PULLUP);
   analogReadResolution(12);
-
+  
+  Serial.printf("Heap at boot: %u\n", ESP.getFreeHeap());
   Serial.println("Reading initial settings...");
   loadSettings();
 
-  Serial.printf("Heap at boot: %u\n", ESP.getFreeHeap());
+  if (!settings.disableBLE && !settings.displayTest) {
+    initBLE();
+    Serial.printf("Free heap after BLE init: %u\n", ESP.getFreeHeap());
+  }
+
+  Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
+
+  if (settings.enableWifi) {
+    wifiSetup();
+    Serial.printf("Free heap after Wifi startup: %u\n", ESP.getFreeHeap());
+  }
 
   bool rslt = amoled.begin();
   if (rslt) {
@@ -166,14 +177,6 @@ void setup()
   ui_tick();
   lv_task_handler();
 
-  gpsDataMutex = xSemaphoreCreateMutex();
-
-  if (settings.enableGPS) {
-    Serial.println("Initializing GPS...");
-    gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
-    xTaskCreatePinnedToCore(gpsTask, "GPSTask", 4096, NULL, 1, NULL, 1);
-  }
-
   if (!fileManager.init()) {
     Serial.println("Failed to initialize SPIFFS");
     return;
@@ -196,12 +199,14 @@ void setup()
 
   Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
 
- if (!settings.disableBLE && !settings.displayTest) {
-    initBLE();
-    Serial.printf("Free heap after BLE init: %u\n", ESP.getFreeHeap());
-  }
 
-  Serial.println("v1g2 firmware version: " + String(FIRMWARE_VERSION));
+  gpsDataMutex = xSemaphoreCreateMutex();
+
+  if (settings.enableGPS) {
+    Serial.println("Initializing GPS...");
+    gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
+    xTaskCreatePinnedToCore(gpsTask, "GPSTask", 4096, NULL, 1, NULL, 1);
+  }
 
   lv_obj_t * scr = lv_scr_act();
   if (scr) {
@@ -215,11 +220,6 @@ void setup()
   writeVolumeTicker.attach(61, reqVolume);
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
-
-  if (settings.enableWifi) {
-    wifiSetup();
-    Serial.printf("Free heap after Wifi startup: %u\n", ESP.getFreeHeap());
-  }
 
   if (settings.displayTest) {
     xTaskCreate(displayTestTask, "DisplayTestTask", 8192, NULL, 1, NULL);
@@ -321,7 +321,7 @@ void loop() {
     ui_tick();
     lv_task_handler();
     unsigned long elapsedHandler = millis() - now;
-    if (elapsedHandler > 16) {
+    if (elapsedHandler > 25) {
       Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
     }
   }
