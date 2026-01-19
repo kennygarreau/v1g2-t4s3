@@ -8,7 +8,9 @@ TinyGPSPlus gps;
 GPSData gpsData;
 Timezone tz;
 uint8_t currentSpeed = 0;
+uint32_t ttffMs = 0;
 unsigned long lastValidGPSUpdate = 0;
+bool firstFixRecorded;
 
 SemaphoreHandle_t gpsDataMutex;
 
@@ -77,6 +79,7 @@ uint32_t convertToUnixTimestamp(TinyGPSPlus &gps)
 
 void gpsTask(void *parameter)
 {
+  uint32_t gpsStartMs = millis();
   for (;;)
   {
     if (settings.enableGPS)
@@ -88,6 +91,12 @@ void gpsTask(void *parameter)
         gps.encode(c);
       }
       if (gps.location.isUpdated() && gps.location.isValid()) {
+        if (!firstFixRecorded) {
+          firstFixRecorded = true;
+          ttffMs = millis() - gpsStartMs;
+          Serial.printf("Time to first GPS fix: %lu ms\n", ttffMs);
+        }
+
         if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {
           gpsData.latitude = gps.location.lat();
           gpsData.longitude = gps.location.lng();

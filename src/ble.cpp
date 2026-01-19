@@ -30,7 +30,11 @@ NimBLEScan* pBLEScan = nullptr;
 NimBLEServer* pServer;
 NimBLEService* pRadarService;
 NimBLECharacteristic* pAlertNotifyChar;
+NimBLECharacteristic* pAlertNotifyLongChar;
+NimBLECharacteristic* pAlertNotifyAlt;
 NimBLECharacteristic* pCommandWriteChar;
+NimBLECharacteristic* pCommandWriteLongChar;
+NimBLECharacteristic* pCommandWritewithout;
 
 const uint8_t notificationOn[] = {0x1, 0x0};
 
@@ -189,7 +193,6 @@ class MyServerCallbacks : public NimBLEServerCallbacks {
 
 static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
-  
   std::vector<uint8_t> tempRawData(pData, pData + length);
   tempRawData.assign(pData, pData + length);
 
@@ -392,12 +395,34 @@ void initBLEServer() {
     NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
   );
 
+  pAlertNotifyLongChar = pRadarService->createCharacteristic(
+    clientLongOutUUID,
+    NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
+  );
+
+  pAlertNotifyAlt = pRadarService->createCharacteristic(
+    infDisplayDataAltUUID,
+    NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
+  );
+    
   pCommandWriteChar = pRadarService->createCharacteristic(
     clientWriteUUID,
-    NIMBLE_PROPERTY::WRITE
+    NIMBLE_PROPERTY::WRITE_NR // V1 Companion validates this is a no-response property
+  );
+
+  pCommandWriteLongChar = pRadarService->createCharacteristic(
+    clientWriteLongUUID,
+    NIMBLE_PROPERTY::WRITE_NR
+  );
+
+  pCommandWritewithout = pRadarService->createCharacteristic(
+    writewithoutUUID,
+    NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR
   );
 
   pCommandWriteChar->setCallbacks(new CommandWriteCallback());
+  pCommandWriteLongChar->setCallbacks(new CommandWriteCallback());
+  pCommandWritewithout->setCallbacks(new CommandWriteCallback());
   pRadarService->start();
 
   pServer->setCallbacks(new MyServerCallbacks());
