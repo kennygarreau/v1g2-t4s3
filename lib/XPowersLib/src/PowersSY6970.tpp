@@ -60,7 +60,7 @@ public:
         CHARGE_STATE_PRE_CHARGE,
         CHARGE_STATE_FAST_CHARGE,
         CHARGE_STATE_DONE,
-        CHARGE_STATE_UNKOWN,
+        CHARGE_STATE_UNKNOWN,
     } ;
 
     enum NTCStatus {
@@ -205,13 +205,48 @@ public:
 
     bool isChargeDone()
     {
-        return chargeStatus() != CHARGE_STATE_DONE;
+        return chargeStatus() == CHARGE_STATE_DONE;
     }
 
+    /*
     bool isBatteryConnect(void) __attribute__((error("Not implemented")))
     {
         //TODO:
         return false;
+    }
+    */
+
+bool isBatteryConnect() {
+    // Read charging status
+    uint8_t status_reg = readRegister(0x0B);  // REG0B
+    uint8_t chrg_stat = (status_reg >> 3) & 0x03;
+    uint8_t bus_stat = (status_reg >> 5) & 0x07;
+    
+    /*
+    Serial.print("BUS_STAT: ");
+    Serial.println(bus_stat);
+    Serial.print("CHRG_STAT: ");
+    Serial.println(chrg_stat);
+    */
+    
+    // If USB is connected (bus_stat != 0) but NOT charging (chrg_stat == 0)
+    // AND it's been like this for a while, likely no battery
+    // This is still not 100% reliable if battery is full
+    
+    if (bus_stat != 0x00 && chrg_stat == 0x00) {
+        // USB connected but not charging - could be:
+        // 1. No battery connected
+        // 2. Battery is full
+        // Need additional logic to distinguish
+        return false;  // Assume no battery
+    }
+    
+    // If actively charging, battery must be present
+    if (chrg_stat == 0x01 || chrg_stat == 0x02) {
+        return true;
+    }
+    
+    return false;  // Default: assume no battery
     }
 
     bool isPowerGood()
@@ -451,7 +486,7 @@ public:
     ChargeStatus chargeStatus()
     {
         int val =  readRegister(POWERS_PPM_REG_0BH);
-        if (val == -1)return CHARGE_STATE_UNKOWN;
+        if (val == -1)return CHARGE_STATE_UNKNOWN;
         return static_cast<ChargeStatus>((val >> 3) & 0x03);
     }
 

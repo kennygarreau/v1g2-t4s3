@@ -205,8 +205,16 @@ uint16_t LilyGo_AMOLED::getVbusVoltage(void)
     return 0;
 }
 
+const char* LilyGo_AMOLED::getBusStatusString() {
+    const char* busStatus = SY.getBusStatusString();
+    //Serial.print("Bus Status: ");
+    //Serial.println(busStatus);
+    return busStatus;
+}
+
 bool LilyGo_AMOLED::isBatteryConnect(void)
 {
+    /*
     if (boards) {
         if (boards->pmu) {
             if (boards == &BOARD_AMOLED_241 || boards == &BOARD_AMOLED_191_SPI) {
@@ -215,6 +223,12 @@ bool LilyGo_AMOLED::isBatteryConnect(void)
         }
     }
     return false;
+    */
+   if (!boards || !boards->pmu) {
+        return false;
+    }
+
+    return SY.isBatteryConnect();
 }
 
 uint16_t LilyGo_AMOLED::getSystemVoltage(void)

@@ -26,6 +26,7 @@ async function fetchSystemInfo() {
     if (heapFragChart) updateChart(heapFragChart, timestamp, data.heapFrag);
     if (wifiChart) updateChart(wifiChart, timestamp, data.wifiRSSI);
     if (bleChart) updateChart(bleChart, timestamp, data.bluetoothRSSI);
+    if (batteryChart) updateChart(batteryChart, timestamp, data.batteryPercent);
 }
 
 function normalizeRSSI(rssi) {
@@ -64,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctxHeapFrag = document.getElementById('heapFragChart').getContext('2d');
     const ctxWifi = document.getElementById('wifiChart')?.getContext('2d');
     const ctxBle = document.getElementById('bleChart')?.getContext('2d');
+    const ctxBattery = document.getElementById('batteryChart')?.getContext('2d');
     
     const chartOptions = {
         responsive: true,
@@ -144,6 +146,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } else {
         console.error("wifiChart canvas not found.");
+    }
+
+    if (ctxBattery) {
+        batteryChart = new Chart(ctxBattery, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Battery Percentage', data: [], borderColor: '#da954b', borderWidth: 2,
+                fill: true, backgroundColor: 'rgba(237, 189, 16, 0.3)', }] },
+            options: chartOptions
+        });
     }
 
     fetchSystemInfo();

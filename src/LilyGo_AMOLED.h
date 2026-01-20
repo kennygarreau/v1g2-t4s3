@@ -398,6 +398,8 @@ public:
 
 
     bool hasRTC();
+    const char *getBusStatusString();
+    
 private:
 
     enum DriverBusType {

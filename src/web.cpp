@@ -61,7 +61,7 @@ LockoutEntry savedLockoutLocations[] = {
 };
 
 unsigned long rebootTime = 0;
-bool isRebootPending = false;
+bool isRebootPending, usingBattery;
 float batteryPercentage = 0.0f;
 float voltageInMv = 0.0f;
 uint16_t vBusVoltage = 0;
@@ -84,7 +84,7 @@ void getDeviceStats() {
     } else {
       stats.connectedWifiClients = WiFi.softAPgetStationNum();
     }
-
+    
     isVBusIn = amoled.isVbusIn();
     if (isVBusIn) {
       vBusVoltage = amoled.getVbusVoltage();
@@ -93,11 +93,20 @@ void getDeviceStats() {
       stats.btStr = getBluetoothSignalStrength();
     }
     
-    batteryCharging = amoled.isCharging();
-    uint16_t espVoltage = amoled.getBattVoltage();
-    voltageInMv = espVoltage; // cast this to float
-    batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
-    batteryPercentage = constrain(batteryPercentage, 0, 100);
+    if (amoled.getBusStatusString() == "No input") {
+        usingBattery = true;
+    } else {
+        usingBattery = false;
+    }
+
+    if (usingBattery) {
+        batteryCharging = amoled.isCharging();
+        uint16_t espVoltage = amoled.getBattVoltage();
+        voltageInMv = espVoltage; // cast this to float
+        batteryPercentage = ((voltageInMv - EMPTY_VOLTAGE) / (FULLY_CHARGED_VOLTAGE - EMPTY_VOLTAGE)) * 100.0;
+        batteryPercentage = constrain(batteryPercentage, 0, 100);
+    }
+
     uint32_t cpuIdle = lv_timer_get_idle();
     stats.cpuBusy = 100 - cpuIdle;
     stats.freePsram = ESP.getFreePsram();
@@ -315,8 +324,10 @@ void setupWebServer()
         jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
         jsonDoc["bluetoothRSSI"] = stats.btStr;
         jsonDoc["wifiRSSI"] = stats.wifiRSSI;
+        jsonDoc["usingBattery"] = usingBattery;
         jsonDoc["batteryPercent"] = batteryPercentage;
         jsonDoc["espVoltage"] = voltageInMv;
+
         if (isVBusIn) {
             jsonDoc["vBusVoltage"] = vBusVoltage;
         }
