@@ -41,11 +41,11 @@ static NimBLEUUID bmeServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");
 // static BLEUUID softwareUUID("2A28");
 
 // V1 Service characteristics
-static NimBLEUUID infDisplayDataUUID("92A0B2CE-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in SHORT - notify for alerts
-static NimBLEUUID clientLongOutUUID("92A0B4E0-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in LONG
+static NimBLEUUID    infDisplayDataUUID("92A0B2CE-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in SHORT - notify for alerts
+static NimBLEUUID     clientLongOutUUID("92A0B4E0-9E05-11E2-AA59-F23C91AEC05E"); // V1 out client in LONG
 static NimBLEUUID infDisplayDataAltUUID("92A0BCE0-9E05-11E2-AA59-F23C91AEC05E"); // notify
-static NimBLEUUID clientWriteUUID("92A0B6D4-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in SHORT
-static NimBLEUUID clientWriteLongUUID("92A0B8D2-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in LONG
-static NimBLEUUID writewithoutUUID("92A0BAD4-9E05-11E2-AA59-F23C91AEC05E"); // write and write without response 
+static NimBLEUUID       clientWriteUUID("92A0B6D4-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in SHORT
+static NimBLEUUID   clientWriteLongUUID("92A0B8D2-9E05-11E2-AA59-F23C91AEC05E"); // client out V1 in LONG
+static NimBLEUUID      writewithoutUUID("92A0BAD4-9E05-11E2-AA59-F23C91AEC05E"); // write and write without response 
 
 #endif

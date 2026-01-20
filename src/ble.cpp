@@ -404,7 +404,7 @@ void initBLEServer() {
     infDisplayDataAltUUID,
     NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
   );
-    
+
   pCommandWriteChar = pRadarService->createCharacteristic(
     clientWriteUUID,
     NIMBLE_PROPERTY::WRITE_NR // V1 Companion validates this is a no-response property
