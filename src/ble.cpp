@@ -204,8 +204,13 @@ class ProxyServerCallbacks : public NimBLEServerCallbacks {
     Serial.printf("BLE client disconnected. Reason=0x%02X (%d)\n", reason, reason);
     if (bt_connected) {
       Serial.println("BLE client disconnected, restart advertising");
-      NimBLEDevice::startAdvertising();
+      delay(50);
+      pServer->getAdvertising()->start();
     }
+  }
+
+  void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
+    Serial.printf("MTU Changed to: %d for connection %d\n", MTU, desc->conn_handle);
   }
 };
 
@@ -427,6 +432,8 @@ void initBLE() {
 }
 
 void initBLEServer() {
+  NimBLEDevice::setMTU(512);
+
   pServer = NimBLEDevice::createServer();
   pRadarService = pServer->createService(bmeServiceUUID);
 
@@ -480,7 +487,6 @@ void initBLEServer() {
   advData.setFlags(0x06);
   advData.setCompleteServices(pRadarService->getUUID());
   advData.setAppearance(0x0C80);
-  //advData.setName("V1C-LE-T4S3");
 
   pAdvertising->setAdvertisementData(advData);
 
@@ -489,13 +495,6 @@ void initBLEServer() {
 
   pAdvertising->setMinInterval(0x80);
   pAdvertising->setMaxInterval(0xC0);
-  std::vector<uint8_t> advRaw = advData.getPayload();
-  std::vector<uint8_t> scanRaw = scanRespData.getPayload();
-
-  // Print sizes
-  Serial.printf("Adv payload size: %d bytes\n", advRaw.size());
-  Serial.printf("Scan response payload size: %d bytes\n", scanRaw.size());
-
   pAdvertising->start();
   delay(100);
 
@@ -503,5 +502,12 @@ void initBLEServer() {
   if (!bt_connected) {
     NimBLEDevice::stopAdvertising();
   }
+
   */
+  std::vector<uint8_t> advRaw = advData.getPayload();
+  std::vector<uint8_t> scanRaw = scanRespData.getPayload();
+
+  // Print sizes
+  Serial.printf("Adv payload size: %d bytes\n", advRaw.size());
+  Serial.printf("Scan response payload size: %d bytes\n", scanRaw.size());
 }
