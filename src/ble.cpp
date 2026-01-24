@@ -20,6 +20,7 @@ static constexpr uint32_t scanTimeMs = 5 * 1000;
 
 bool bleInit = true;
 bool newDataAvailable = false;
+static bool notifySubscribed = false;
 
 NimBLERemoteService* dataRemoteService = nullptr;
 NimBLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
@@ -175,19 +176,56 @@ class CommandWriteCallback : public NimBLECharacteristicCallbacks {
   }
 };
 
-class MyServerCallbacks : public NimBLEServerCallbacks {
+class ProxyServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
     unsigned long proxyConnect = millis() - bootMillis;
-    Serial.printf("BLE client connected to proxy after %.2f seconds\n", proxyConnect / 1000.0);
+    Serial.printf(
+      "BLE client connected after %.2f s\n"
+      "  Address: %s\n"
+      "  ConnHandle: %d\n"
+      "  MTU: %d\n"
+      "  Encrypted: %s\n"
+      "  Authenticated: %s\n"
+      "  Bonded: %s\n",
+      proxyConnect / 1000.0,
+      connInfo.getAddress().toString().c_str(),
+      connInfo.getConnHandle(),
+      connInfo.getMTU(),
+      connInfo.isEncrypted() ? "yes" : "no",
+      connInfo.isAuthenticated() ? "yes" : "no",
+      connInfo.isBonded() ? "yes" : "no"
+    ); 
     proxyConnected = true;
   }
 
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
     proxyConnected = false;
+
+    Serial.printf("BLE client disconnected. Reason=0x%02X (%d)\n", reason, reason);
     if (bt_connected) {
       Serial.println("BLE client disconnected, restart advertising");
       NimBLEDevice::startAdvertising();
     }
+  }
+};
+
+class NotifyCharCallbacks : public NimBLECharacteristicCallbacks {
+  void onSubscribe(NimBLECharacteristic* pChar,
+                   NimBLEConnInfo& connInfo,
+                   uint16_t subValue) override {
+
+    notifySubscribed = (subValue & 0x01);
+
+    Serial.printf(
+      "Client SUBSCRIBE event\n"
+      "  Char UUID: %s\n"
+      "  subValue: 0x%02X\n"
+      "  Address: %s\n",
+      pChar->getUUID().toString().c_str(),
+      subValue,
+      notifySubscribed ? "yes" : "no",
+      connInfo.getAddress().toString().c_str()
+    );
   }
 };
 
@@ -205,7 +243,9 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   if (pAlertNotifyChar) {
     if (xSemaphoreTake(bleNotifyMutex, pdMS_TO_TICKS(50))) {
       pAlertNotifyChar->setValue(pData, length);
-      pAlertNotifyChar->notify();
+      if (notifySubscribed) {
+        pAlertNotifyChar->notify();
+      }
       xSemaphoreGive(bleNotifyMutex);
     }
   }
@@ -420,28 +460,48 @@ void initBLEServer() {
     NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR
   );
 
-  pCommandWriteChar->setCallbacks(new CommandWriteCallback());
-  pCommandWriteLongChar->setCallbacks(new CommandWriteCallback());
-  pCommandWritewithout->setCallbacks(new CommandWriteCallback());
+  NotifyCharCallbacks* notifyCallbacks = new NotifyCharCallbacks();
+  pAlertNotifyChar->setCallbacks(notifyCallbacks);
+  pAlertNotifyLongChar->setCallbacks(notifyCallbacks);
+  pAlertNotifyAlt->setCallbacks(notifyCallbacks);
+
+  CommandWriteCallback* writeCallbacks = new CommandWriteCallback();
+  pCommandWriteChar->setCallbacks(writeCallbacks);
+  pCommandWriteLongChar->setCallbacks(writeCallbacks);
+  pCommandWritewithout->setCallbacks(writeCallbacks);
   pRadarService->start();
 
-  pServer->setCallbacks(new MyServerCallbacks());
+  pServer->setCallbacks(new ProxyServerCallbacks());
 
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   NimBLEAdvertisementData advData;
   NimBLEAdvertisementData scanRespData;
   
-  //advData.setName("V1C-LE-T4S3");
+  advData.setFlags(0x06);
   advData.setCompleteServices(pRadarService->getUUID());
   advData.setAppearance(0x0C80);
-  scanRespData.setName("V1C-LE-T4S3");
-  
+  //advData.setName("V1C-LE-T4S3");
+
   pAdvertising->setAdvertisementData(advData);
+
+  scanRespData.setName("V1C-LE-S3");
   pAdvertising->setScanResponseData(scanRespData);
 
-  pAdvertising->start();
+  pAdvertising->setMinInterval(0x80);
+  pAdvertising->setMaxInterval(0xC0);
+  std::vector<uint8_t> advRaw = advData.getPayload();
+  std::vector<uint8_t> scanRaw = scanRespData.getPayload();
 
+  // Print sizes
+  Serial.printf("Adv payload size: %d bytes\n", advRaw.size());
+  Serial.printf("Scan response payload size: %d bytes\n", scanRaw.size());
+
+  pAdvertising->start();
+  delay(100);
+
+  /*
   if (!bt_connected) {
     NimBLEDevice::stopAdvertising();
   }
+  */
 }
