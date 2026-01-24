@@ -45,6 +45,42 @@ void restartAdvertisingTask(void* param) {
   vTaskDelete(NULL);
 }
 
+void printAdvertisingDetails() {
+  Serial.println("\n========== ADVERTISING DETAILS ==========");
+  
+  NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  
+  // Check if advertising is running
+  Serial.printf("Advertising active: %s\n", pAdvertising->isAdvertising() ? "YES" : "NO");
+  
+  // Get the advertising data (this works)
+  std::vector<uint8_t> advPayload = pAdvertising->getAdvertisementData().getPayload();
+  
+  Serial.printf("Adv Data Size: %d bytes (max 31)\n", advPayload.size());
+  Serial.print("Adv Data (hex): ");
+  for (uint8_t b : advPayload) {
+    Serial.printf("%02X ", b);
+  }
+  Serial.println();
+  
+  // Print service UUID being advertised
+  if (pRadarService) {
+    Serial.printf("\nService UUID: %s\n", pRadarService->getUUID().toString().c_str());
+    Serial.printf("Service started: %s\n", pRadarService->isStarted() ? "YES" : "NO");
+    
+    // Print all characteristics
+    std::vector<NimBLECharacteristic*> chars = pRadarService->getCharacteristics();
+    Serial.printf("Characteristics count: %d\n", chars.size());
+    for (auto* pChar : chars) {
+      Serial.printf("  - %s (properties: 0x%02X)\n", 
+        pChar->getUUID().toString().c_str(),
+        pChar->getProperties());
+    }
+  }
+  
+  Serial.println("=========================================\n");
+}
+
 void onProxyReady() {
   if (!NimBLEDevice::getAdvertising()->isAdvertising()) {
     xTaskCreate(restartAdvertisingTask, "adv_restart", 2048, NULL, 1, NULL);
@@ -432,9 +468,9 @@ void initBLE() {
 }
 
 void initBLEServer() {
-  NimBLEDevice::setMTU(512);
-
   pServer = NimBLEDevice::createServer();
+  pServer->setCallbacks(new ProxyServerCallbacks());
+
   pRadarService = pServer->createService(bmeServiceUUID);
 
   pAlertNotifyChar = pRadarService->createCharacteristic(
@@ -478,18 +514,19 @@ void initBLEServer() {
   pCommandWritewithout->setCallbacks(writeCallbacks);
   pRadarService->start();
 
-  pServer->setCallbacks(new ProxyServerCallbacks());
+  //pServer->setCallbacks(new ProxyServerCallbacks());
 
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  // Advertising data
   NimBLEAdvertisementData advData;
-  NimBLEAdvertisementData scanRespData;
-  
   advData.setFlags(0x06);
   advData.setCompleteServices(pRadarService->getUUID());
-  advData.setAppearance(0x0C80);
+  //advData.setAppearance(0x0C80);
 
   pAdvertising->setAdvertisementData(advData);
-
+  
+  // Scan response data
+  NimBLEAdvertisementData scanRespData;
   scanRespData.setName("V1C-LE-S3");
   pAdvertising->setScanResponseData(scanRespData);
 
@@ -498,16 +535,5 @@ void initBLEServer() {
   pAdvertising->start();
   delay(100);
 
-  /*
-  if (!bt_connected) {
-    NimBLEDevice::stopAdvertising();
-  }
-
-  */
-  std::vector<uint8_t> advRaw = advData.getPayload();
-  std::vector<uint8_t> scanRaw = scanRespData.getPayload();
-
-  // Print sizes
-  Serial.printf("Adv payload size: %d bytes\n", advRaw.size());
-  Serial.printf("Scan response payload size: %d bytes\n", scanRaw.size());
+  printAdvertisingDetails();
 }
