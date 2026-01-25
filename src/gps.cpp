@@ -8,7 +8,6 @@ TinyGPSPlus gps;
 GPSData gpsData;
 Timezone tz;
 uint8_t currentSpeed = 0;
-uint32_t ttffMs = 0;
 unsigned long lastValidGPSUpdate = 0;
 bool firstFixRecorded;
 
@@ -93,8 +92,8 @@ void gpsTask(void *parameter)
       if (gps.location.isUpdated() && gps.location.isValid()) {
         if (!firstFixRecorded) {
           firstFixRecorded = true;
-          ttffMs = millis() - gpsStartMs;
-          Serial.printf("Time to first GPS fix: %lu ms\n", ttffMs);
+          gpsData.ttffMs = millis() - gpsStartMs;
+          Serial.printf("Time to first GPS fix: %lu ms\n", gpsData.ttffMs);
         }
 
         if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {

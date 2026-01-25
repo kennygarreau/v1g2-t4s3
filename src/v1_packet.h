@@ -11,7 +11,7 @@
 #define REQVERSION 0x01
 #define DEST_V1 0x0A // send packets to the v1 device id
 //#define DEST_V1_LE 0x06
-#define REMOTE_SENDER 0x04 // originate packets from 0x04 - "third party use"
+#define REMOTE_SENDER 0x06 // originate packets from 0x04 - "third party use"
 #define PACKET_ID_REQVERSION 0x01
 #define PACKET_ID_REQSERIALNUMBER 0x03
 #define PACKET_ID_REQUSERBYTES 0x11

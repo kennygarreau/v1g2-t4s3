@@ -31,7 +31,6 @@ extern bool wifiClientConnected, wifiConnecting, wifiConnected, localWifiStarted
 
 extern int alertTableSize;
 extern uint8_t currentSpeed;
-extern uint32_t ttffMs;
 extern SemaphoreHandle_t xWiFiLock;
 extern SemaphoreHandle_t gpsDataMutex;
 extern SemaphoreHandle_t bleMutex;
@@ -194,6 +193,7 @@ struct GPSData {
   char time[16];
   //char localtime[16];
   uint32_t rawTime;
+  uint32_t ttffMs;
 };
 
 extern GPSData gpsData;

@@ -93,6 +93,7 @@ void getDeviceStats() {
       stats.btStr = getBluetoothSignalStrength();
     }
     
+    // we can infer whether the device is on battery if the board is online without USB-C input
     if (amoled.getBusStatusString() == "No input") {
         usingBattery = true;
     } else {
@@ -278,6 +279,7 @@ void setupWebServer()
             jsonDoc["satelliteCount"] = gpsData.satelliteCount;
             jsonDoc["signalQuality"] = gpsData.signalQuality;
             jsonDoc["timezone"] = settings.timezone;
+            jsonDoc["timeToFirstFix"] = gpsData.ttffMs;
 
             xSemaphoreGive(gpsDataMutex);
         }
