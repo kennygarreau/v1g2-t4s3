@@ -286,7 +286,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
             lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
             loadScreen(SCREEN_ID_MAIN);
         }
-        else {
+        else if (alertPresent) {
             LV_LOG_INFO("requesting mute via short press");
             Serial.println("requesting mute via short press");
             if (clientWriteCharacteristic && bt_connected) {
