@@ -521,7 +521,7 @@ void initBLEServer() {
   NimBLEAdvertisementData advData;
   advData.setFlags(0x06);
   advData.setCompleteServices(pRadarService->getUUID());
-  //advData.setAppearance(0x0C80);
+  advData.setAppearance(0x0C80);
 
   pAdvertising->setAdvertisementData(advData);
   
