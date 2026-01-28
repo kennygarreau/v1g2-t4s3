@@ -15,7 +15,7 @@
 #include "v1_fs.h"
 #include "web.h"
 #include <ui/ui.h>
-#include "tft_v2.h"
+#include "utils.h"
 #include "gps.h"
 #include "esp_flash.h"
 
@@ -242,18 +242,9 @@ void loop() {
     Serial.printf("processing packets at: %.2f seconds\n", elapsedMillis / 1000.0);
   }
 
-  if (millis() - lastWifiReconnect > 60000) {
-    if (settings.enableWifi && settings.wifiMode == WIFI_SETTING_STA && WiFi.getMode() == WIFI_MODE_AP) {
-      Serial.println("WiFi lost. Reconnecting...");
-      wifiScan();
-      lastWifiReconnect = millis();
-    }
-  }
-
   if (newDataAvailable) {
     newDataAvailable = false;
 
-    //PacketDecoder decoder(latestHexData);
     PacketDecoder decoder(latestRawData);
     std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
   }

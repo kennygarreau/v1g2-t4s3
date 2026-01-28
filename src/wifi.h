@@ -4,6 +4,8 @@
 #include <ESPAsyncWebServer.h>
 //#include <WiFi.h>
 
+extern TaskHandle_t wifiScanTaskHandle;
+
 enum WiFiModeSetting {
     WIFI_SETTING_STA = 1,
     WIFI_SETTING_AP = 2,  

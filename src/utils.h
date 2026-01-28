@@ -1,5 +1,5 @@
-#ifndef TFT_WRAPPER_H
-#define TFT_WRAPPER_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #ifdef __cplusplus
 
@@ -120,4 +120,4 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList);
 
 #endif
 
-#endif // TFT_WRAPPER_H
+#endif // UTILS_H

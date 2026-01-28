@@ -1,7 +1,7 @@
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
-#include "tft_v2.h"
+#include "utils.h"
 #include "ui/ui.h"
 #include "ui/actions.h"
 #include <set>

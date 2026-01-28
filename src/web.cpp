@@ -5,7 +5,7 @@
 #include "v1_config.h"
 #include "v1_packet.h"
 #include "web.h"
-#include "tft_v2.h"
+#include "utils.h"
 #include "ble.h"
 #include "ui/actions.h"
 #include "ui/ui.h"
@@ -603,6 +603,13 @@ void setupWebServer()
                 
                 Serial.println("Updating WiFi credentials...");
                 
+                int oldNetworkCount = preferences.getInt("networkCount", 0);
+                for (int i = 0; i < MAX_WIFI_NETWORKS; i++) {
+                    preferences.remove(("wifi_ssid_" + String(i)).c_str());
+                    preferences.remove(("wifi_pass_" + String(i)).c_str());
+                }
+                Serial.printf("Cleared %d old WiFi credential slots\n", MAX_WIFI_NETWORKS);
+
                 for (int i = 0; i < networkCount; i++) {
                     JsonObject network = wifiCredentials[i];
                     if (network.containsKey("ssid") && network.containsKey("password")) {
@@ -617,6 +624,13 @@ void setupWebServer()
                 
                 preferences.putInt("networkCount", networkCount);
                 Serial.println("Total networks stored: " + String(networkCount));
+
+                if (settings.enableWifi && wifiScanTaskHandle == NULL) {
+                    Serial.println("Triggering WiFi reconnect with new credentials...");
+                    WiFi.disconnect(true, false);
+                    vTaskDelay(pdMS_TO_TICKS(200));
+                    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, &wifiScanTaskHandle);
+                }
             }
             if (doc.containsKey("localSSID")) {
                 settings.localSSID = doc["ssid"].as<String>();
@@ -659,7 +673,7 @@ void setupWebServer()
                 settings.displayOrientation = doc["displayOrientation"].as<int>();
                 Serial.println("displayOrientation: " + String(settings.displayOrientation));
                 preferences.putInt("displayOrient", settings.displayOrientation);
-                //isRebootPending = true;
+                //isRebootPending = true; // add this back in once multiple orientations is supported
             }
             if (doc.containsKey("textColor")) {
                 settings.textColor = hexToUint32(doc["textColor"].as<String>());
@@ -675,7 +689,6 @@ void setupWebServer()
                 settings.displayTest = doc["displayTest"].as<bool>();
                 Serial.println("displayTest: " + String(settings.displayTest));
                 preferences.putBool("displayTest", settings.displayTest);
-                //preferences.end();
                 isRebootPending = true;
             }
             if (doc.containsKey("onlyDisplayBTIcon")) {

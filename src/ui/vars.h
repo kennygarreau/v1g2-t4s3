@@ -36,10 +36,6 @@ enum FlowGlobalVariables {
 extern const char *get_var_prio_alert_freq();
 extern void set_var_prio_alert_freq(const char *value);
 extern bool get_var_bt_connected();
-//extern const char *get_var_lowspeedthreshold();
-//extern const char *get_var_logicmode();
-//extern void set_var_bt_connected(bool value);
-
 
 #ifdef __cplusplus
 }

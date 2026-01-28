@@ -8,7 +8,7 @@
 #include "vars.h"
 #include "styles.h"
 #include "ui.h"
-#include "tft_v2.h"
+#include "../utils.h"
 
 objects_t objects;
 lv_obj_t *tick_value_change_obj;

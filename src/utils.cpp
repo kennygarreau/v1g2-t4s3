@@ -2,7 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include "ui/ui.h"
 #include "ui/actions.h"
-#include "tft_v2.h"
+#include "utils.h"
 #include "wifi.h"
 #include "v1_packet.h"
 #include "math.h"
@@ -357,21 +357,22 @@ extern "C" void set_var_wifiEnabled(bool enable) {
     if (enable) {
         settings.enableWifi = true;
         Serial.println("WiFi enabled and attempting to connect...");
-        xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, NULL);
+        if (wifiScanTaskHandle == NULL) {
+            xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, &wifiScanTaskHandle);
+        } else {
+            Serial.println("WiFi scan task already running, skipping...");
+        }
     } else {
         settings.enableWifi = false;
         Serial.println("Disabling WiFi...");
 
-        if (WiFi.getMode() == WIFI_MODE_STA) {
-            WiFi.disconnect(true, true);
-            Serial.println("Disconnected from WiFi network.");
-        } 
-        else if (WiFi.getMode() == WIFI_MODE_AP) {
-            WiFi.softAPdisconnect(true);
-            Serial.println("Access Point disabled.");
-        }
+        WiFi.disconnect(true, true);
+        WiFi.softAPdisconnect(true);
 
+        vTaskDelay(pdMS_TO_TICKS(100));
         WiFi.mode(WIFI_MODE_NULL);
+        vTaskDelay(pdMS_TO_TICKS(50));
+
         Serial.println("WiFi module powered down.");
         stats.freeHeap = ESP.getFreeHeap();
         Serial.printf("Free heap after Wifi shutdown: %u\n", stats.freeHeap);
