@@ -1248,17 +1248,23 @@ void tick_screen_settings() {
                     lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
                 }
             } else {
-                const char *password = get_var_password();
-                if (lastPassword != password) 
-                    {
-                        tick_value_change_obj = objects.label_pass_val;
-                        LV_LOG_INFO("updating password");
-                        lv_label_set_text(objects.label_pass_val, password);
-                        lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
-                        tick_value_change_obj = NULL;
-                        lastPassword = password;
+                if (wifi_enabled) {
+                    const char *password = get_var_password();
+                    if (lastPassword != password) 
+                        {
+                            tick_value_change_obj = objects.label_pass_val;
+                            LV_LOG_INFO("updating password");
+                            lv_label_set_text(objects.label_pass_val, password);
+                            lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                            lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+                            tick_value_change_obj = NULL;
+                            lastPassword = password;
+                        }
                     }
+                else {
+                    lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                }
             }
     }
     // IP address
