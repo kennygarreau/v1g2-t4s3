@@ -108,7 +108,7 @@ struct v1Settings {
   std::vector<WiFiCredential> wifiCredentials;
   String localSSID;
   String localPW;
-  WiFiModeSetting wifiMode;
+  wifi_mode_t wifiMode;
   UnitSystem unitSystem;
   bool isPortraitMode;
   bool disableBLE;

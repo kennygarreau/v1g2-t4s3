@@ -363,19 +363,7 @@ extern "C" void set_var_wifiEnabled(bool enable) {
             Serial.println("WiFi scan task already running, skipping...");
         }
     } else {
-        settings.enableWifi = false;
-        Serial.println("Disabling WiFi...");
-
-        WiFi.disconnect(true, true);
-        WiFi.softAPdisconnect(true);
-
-        vTaskDelay(pdMS_TO_TICKS(100));
-        WiFi.mode(WIFI_MODE_NULL);
-        vTaskDelay(pdMS_TO_TICKS(50));
-
-        Serial.println("WiFi module powered down.");
-        stats.freeHeap = ESP.getFreeHeap();
-        Serial.printf("Free heap after Wifi shutdown: %u\n", stats.freeHeap);
+       stopWifi();  
     }
     preferences.putBool("enableWifi", settings.enableWifi);
     preferences.end();

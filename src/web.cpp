@@ -581,10 +581,10 @@ void setupWebServer()
             if (doc.containsKey("wifiMode")) {
                 int mode = doc["wifiMode"].as<int>();
             
-                if (mode >= WIFI_SETTING_STA && mode <= WIFI_SETTING_APSTA) {
-                    if (settings.wifiMode != static_cast<WiFiModeSetting>(mode)) {
+                if (mode >= WIFI_MODE_STA && mode <= WIFI_MODE_APSTA) {
+                    if (settings.wifiMode != static_cast<wifi_mode_t>(mode)) {
 
-                        settings.wifiMode = static_cast<WiFiModeSetting>(mode);
+                        settings.wifiMode = static_cast<wifi_mode_t>(mode);
                         preferences.putInt("wifiMode", mode);
 
                         Serial.printf("wifiMode changed → %d, reboot scheduled\n", mode);

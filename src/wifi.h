@@ -2,19 +2,13 @@
 #define WIFI_H
 
 #include <ESPAsyncWebServer.h>
-//#include <WiFi.h>
 
 extern TaskHandle_t wifiScanTaskHandle;
-
-enum WiFiModeSetting {
-    WIFI_SETTING_STA = 1,
-    WIFI_SETTING_AP = 2,  
-    WIFI_SETTING_APSTA = 3
-};
 
 void onWiFiEvent(WiFiEvent_t event);
 void wifiSetup();
 void wifiScan();
 void wifiScanTask(void* parameter);
+void stopWifi();
 
 #endif

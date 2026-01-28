@@ -64,11 +64,11 @@ void loadSettings() {
   preferences.begin("settings", false);
   settings.brightness = preferences.getUInt("brightness", amoled.getBrightness());
 
-  int mode = preferences.getInt("wifiMode", WIFI_SETTING_STA);
-  if (mode < WIFI_SETTING_AP || mode > WIFI_SETTING_APSTA) {
-      mode = WIFI_SETTING_STA;
+  int mode = preferences.getInt("wifiMode", WIFI_MODE_STA);
+  if (mode < WIFI_MODE_AP || mode > WIFI_MODE_APSTA) {
+      mode = WIFI_MODE_STA;
   }
-  settings.wifiMode = static_cast<WiFiModeSetting>(mode);
+  settings.wifiMode = static_cast<wifi_mode_t>(mode);
 
   settings.localSSID = preferences.getString("localSSID", "v1display");
   settings.localPW = preferences.getString("localPW", "password123");

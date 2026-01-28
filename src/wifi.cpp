@@ -56,7 +56,7 @@ void onWiFiEvent(WiFiEvent_t event) {
         case WIFI_EVENT_AP_START:
             Serial.printf("Access Point started. IP: %s\n", WiFi.softAPIP().toString().c_str());
             localWifiStarted = true;
-            //Serial.printf("DEBUG: localWifiStarted set to TRUE (event)\n");
+            Serial.printf("DEBUG: localWifiStarted set to TRUE (event)\n");
             if (!webStarted) {
                 setupWebServer();
             }
@@ -64,7 +64,7 @@ void onWiFiEvent(WiFiEvent_t event) {
         case WIFI_EVENT_AP_STOP:
             Serial.println("Access Point stopped.");
             wifiClientConnected = false;
-            //Serial.printf("DEBUG: localWifiStarted set to FALSE\n");
+            Serial.printf("DEBUG: localWifiStarted set to FALSE\n");
             localWifiStarted = false;
             break;
         case WIFI_EVENT_AP_STACONNECTED:
@@ -99,13 +99,13 @@ void startLocalWifi() {
         Serial.printf("Fallback AP started. SSID: %s, IP: %s\n", 
             settings.localSSID.c_str(), WiFi.softAPIP().toString().c_str());
         localWifiStarted = true;
-        //Serial.printf("DEBUG: localWifiStarted set to TRUE\n");
+        Serial.printf("DEBUG: localWifiStarted set to TRUE\n");
         if (!webStarted) {
             setupWebServer();
         }
     } else {
         Serial.println("Failed to start fallback Access Point.");
-        //Serial.printf("DEBUG: localWifiStarted remains FALSE\n");
+        Serial.printf("DEBUG: localWifiStarted remains FALSE\n");
     }
 }
 
@@ -116,7 +116,7 @@ void wifiSetup() {
     vTaskDelay(pdMS_TO_TICKS(100));
 
     WiFi.onEvent(onWiFiEvent);
-    if (settings.wifiMode == WIFI_SETTING_STA) {
+    if (settings.wifiMode == WIFI_MODE_STA) {
         if (wifiScanTaskHandle == NULL) {
             xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, &wifiScanTaskHandle);
         }
@@ -124,6 +124,23 @@ void wifiSetup() {
     else {
         startLocalWifi();
     }
+}
+
+void stopWifi() {
+    settings.enableWifi = false;
+    localWifiStarted = false;
+    Serial.println("Disabling WiFi...");
+
+    WiFi.disconnect(true, true);
+    WiFi.softAPdisconnect(true);
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+    WiFi.mode(WIFI_MODE_NULL);
+    vTaskDelay(pdMS_TO_TICKS(50));
+
+    Serial.println("WiFi module powered down.");
+    stats.freeHeap = ESP.getFreeHeap();
+    Serial.printf("Free heap after Wifi shutdown: %u\n", stats.freeHeap);
 }
 
 void wifiScan() {
