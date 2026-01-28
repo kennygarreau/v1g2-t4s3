@@ -1216,6 +1216,7 @@ void create_screen_settings() {
 
 void tick_screen_settings() {
     bool wifi_enabled = get_var_wifiEnabled();
+    bool local_wifi_enabled = get_var_localWifi();
     // WiFi SSID
     {
         const char *new_val = get_var_ssid();
@@ -1248,18 +1249,18 @@ void tick_screen_settings() {
                     lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
                 }
             } else {
-                if (wifi_enabled) {
+                if (wifi_enabled || local_wifi_enabled) {
                     const char *password = get_var_password();
                     if (lastPassword != password) 
                         {
                             tick_value_change_obj = objects.label_pass_val;
                             LV_LOG_INFO("updating password");
                             lv_label_set_text(objects.label_pass_val, password);
-                            lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
-                            lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
                             tick_value_change_obj = NULL;
                             lastPassword = password;
                         }
+                    lv_obj_clear_flag(objects.label_pass_val, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
                     }
                 else {
                     lv_obj_add_flag(objects.label_pass, LV_OBJ_FLAG_HIDDEN);
