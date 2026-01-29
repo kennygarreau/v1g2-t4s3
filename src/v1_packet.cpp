@@ -51,6 +51,7 @@ void PacketDecoder::clearTableAlerts() {
 */
 
 void PacketDecoder::clearInfAlerts() {
+    photoAlertPresent = false;
     set_var_prio_alert_freq("");
     set_var_prioBars(0);
     set_var_kaAlert(false);
