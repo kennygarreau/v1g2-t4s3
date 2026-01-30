@@ -129,7 +129,7 @@ lv_obj_t* create_signal_bar(lv_obj_t* parent, int x, int y) {
 }
 
 void create_signal_bars(lv_obj_t* parent, int num_bars) {
-    int base_x = 92;       // Base X position for all bars
+    int base_x = 100;       // Base X position for all bars
     int base_y = 264;      // Starting Y position
     int y_step = 30;       // Vertical spacing between bars
 
@@ -449,7 +449,7 @@ void create_screen_main() {
             // band_ka
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.band_ka = obj;
-            lv_obj_set_pos(obj, 14, 146);
+            lv_obj_set_pos(obj, 14, 162);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "KA");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -460,7 +460,7 @@ void create_screen_main() {
             // band_k
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.band_k = obj;
-            lv_obj_set_pos(obj, 14, 184);
+            lv_obj_set_pos(obj, 14, 200);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "K");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -471,7 +471,7 @@ void create_screen_main() {
             // band_x
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.band_x = obj;
-            lv_obj_set_pos(obj, 14, 222);
+            lv_obj_set_pos(obj, 14, 238);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "X");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);

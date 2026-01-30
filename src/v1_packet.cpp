@@ -135,30 +135,26 @@ BandArrowData processBandArrow_v2(uint8_t& bandArrow) {
 void updateBandActivity(bool ka, bool k, bool x, bool laser) {
     uint32_t now = millis();
 
-    Serial.printf("updateBandActivity: ka=%d k=%d x=%d laser=%d, now=%u\n", ka, k, x, laser, now);
+    //Serial.printf("updateBandActivity: ka=%d k=%d x=%d laser=%d, now=%u\n", ka, k, x, laser, now);
 
     if (ka) {
         ka_state.last_seen_ms = now;
         ka_state.active = true;
-        Serial.printf("  Ka timestamp updated to %u\n", now);
     }
     
     if (k) {
         k_state.last_seen_ms = now;
         k_state.active = true;
-        Serial.printf("  K timestamp updated to %u\n", now);
     }
     
     if (x) {
         x_state.last_seen_ms = now;
         x_state.active = true;
-        Serial.printf("  X timestamp updated to %u\n", now);
     }
     
     if (laser) {
         laser_state.last_seen_ms = now;
         laser_state.active = true;
-        Serial.printf("  Laser timestamp updated to %u\n", now);
     }
 }
 
@@ -183,43 +179,43 @@ void checkBandTimeouts() {
     uint32_t now = millis();
 
     if (ka_state.active && (now - ka_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.printf("deactivating Ka band, last seen delta: %u\n", now - ka_state.last_seen_ms);
+        //Serial.printf("deactivating Ka band, last seen delta: %u\n", now - ka_state.last_seen_ms);
         ka_state.active = false;
         set_var_kaAlert(false);
         disable_blinking(BLINK_KA);
     }
     if (k_state.active && (now - k_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating K band");
+        //Serial.println("deactivating K band");
         k_state.active = false;
         set_var_kAlert(false);
         disable_blinking(BLINK_K);
     }
     if (x_state.active && (now - x_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating X band");
+        //Serial.println("deactivating X band");
         x_state.active = false;
         set_var_xAlert(false);
         disable_blinking(BLINK_X);
     }
     if (laser_state.active && (now - laser_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating LASER band");
+        //Serial.println("deactivating LASER band");
         laser_state.active = false;
         set_var_laserAlert(false);
         disable_blinking(BLINK_LASER);
     }
     if (front_state.active && (now - front_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating front arrow");
+        //Serial.println("deactivating front arrow");
         front_state.active = false;
         set_var_arrowPrioFront(false);
         disable_blinking(BLINK_FRONT);
     }
     if (side_state.active && (now - side_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating side arrow");
+        //Serial.println("deactivating side arrow");
         side_state.active = false;
         set_var_arrowPrioSide(false);
         disable_blinking(BLINK_SIDE);
     }
     if (rear_state.active && (now - rear_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        Serial.println("deactivating rear arrow");
+        //Serial.println("deactivating rear arrow");
         rear_state.active = false;
         set_var_arrowPrioRear(false);
         disable_blinking(BLINK_REAR);
@@ -227,7 +223,7 @@ void checkBandTimeouts() {
 }
 
 void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2) {
-    Serial.printf("📦 compareBandArrows: Ka=%d K=%d X=%d\n", arrow1.ka, arrow1.k, arrow1.x);
+    //Serial.printf("* compareBandArrows: Ka=%d K=%d X=%d\n", arrow1.ka, arrow1.k, arrow1.x);
 
     updateBandActivity(arrow1.ka, arrow1.k, arrow1.x, arrow1.laser);
     updateArrowActivity(arrow1.front, arrow1.side, arrow1.rear);

@@ -62,6 +62,15 @@ static void blink_toggle_cb(lv_timer_t *timer) {
 }
 
 void disable_blinking(int index) {
+    if (index < 0 || index >= MAX_BLINK_IMAGES) { 
+        return; 
+    }
+    lv_obj_t * obj = blink_images[index];
+    
+    if (obj == NULL) {
+        return; // Don't let LVGL touch a null pointer
+    }
+    
     blink_enabled[index] = false;  // The timer will check this and stop itself
     lv_obj_add_flag(blink_images[index], LV_OBJ_FLAG_HIDDEN);
 }
