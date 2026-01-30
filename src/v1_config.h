@@ -97,6 +97,13 @@ struct lockoutSettings {
     int inactiveTime;
 };
 
+struct RadarPacket {
+    uint8_t data[16];
+    size_t length;
+};
+
+extern QueueHandle_t radarQueue;
+
 extern lockoutSettings autoLockoutSettings;
 
 enum UnitSystem : uint8_t { METRIC = 0, IMPERIAL = 1 };

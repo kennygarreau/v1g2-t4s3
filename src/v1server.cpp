@@ -46,6 +46,8 @@ unsigned long lastWifiReconnect = 0;
 const unsigned long uiTickInterval = 16;
 const unsigned long atTickInterval = 250;
 
+QueueHandle_t radarQueue;
+
 SPIFFSFileManager fileManager;
 
 void loadLockoutSettings() {
@@ -221,8 +223,11 @@ void setup()
   writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
   statusBarTicker.attach(1, ui_tick_statusBar);
 
+  radarQueue = xQueueCreate(10, sizeof(RadarPacket));
+
   if (settings.displayTest) {
-    xTaskCreate(displayTestTask, "DisplayTestTask", 8192, NULL, 1, NULL);
+    xTaskCreate(processingTask, "ProcTask", 4096, NULL, 2, NULL);
+    xTaskCreate(displayTestTask, "DisplayTest", 2048, NULL, 1, NULL);
   }
 
   unsigned long elapsedMillis = millis() - bootMillis;
@@ -314,6 +319,19 @@ void loop() {
     unsigned long elapsedHandler = millis() - now;
     if (elapsedHandler > 25) {
       Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
+    }
+  }
+
+  static uint32_t last_band_check = 0;
+  static uint32_t last_status_print = 0;
+  if (millis() - last_band_check > 100) {
+    checkBandTimeouts();
+    last_band_check = millis();
+    if (millis() - last_status_print > 2000) {
+      Serial.printf("⏱️ Band Status: Ka=%d K=%d X=%d Laser=%d | activeBands=0x%02X\n",
+                    ka_state.active, k_state.active, x_state.active, laser_state.active,
+                    activeBands);
+      last_status_print = millis();
     }
   }
 
