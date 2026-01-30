@@ -22,6 +22,15 @@ static bool k_rcvd = false;
 static bool ka_rcvd = false;
 static bool zero_rcvd = false;
 
+BandState ka_state = {false, 0};
+BandState k_state = {false, 0};
+BandState x_state = {false, 0};
+BandState laser_state = {false, 0};
+
+BandState front_state = {false, 0};
+BandState side_state = {false, 0};
+BandState rear_state = {false, 0};
+
 extern void requestMute();
 uint8_t packet[10];
 
@@ -43,12 +52,6 @@ void updateActiveBands(uint8_t band) {
 void clearInactiveBands(uint8_t newBandData) {
     activeBands &= (lastReceivedBands | newBandData); 
 }
-
-/*
-void PacketDecoder::clearTableAlerts() {
-    set_var_showAlertTable(false);
-}
-*/
 
 void PacketDecoder::clearInfAlerts() {
     photoAlertPresent = false;
@@ -123,9 +126,82 @@ BandArrowData processBandArrow_v2(uint8_t& bandArrow) {
     data.side = (bandArrow & 0b01000000) != 0;
     data.rear = (bandArrow & 0b10000000) != 0;
 
-    clearInactiveBands(bandArrow);
+//    clearInactiveBands(bandArrow);
 
     return data;
+}
+
+void updateBandActivity(bool ka, bool k, bool x, bool laser) {
+    uint32_t now = millis();
+
+    if (ka) ka_state.last_seen_ms = now;
+    if (k) k_state.last_seen_ms = now;
+    if (x) x_state.last_seen_ms = now;
+    if (laser) laser_state.last_seen_ms = now;
+
+    ka_state.active = ka;
+    k_state.active = k;
+    x_state.active = x;
+    laser_state.active = laser;
+}
+
+void updateArrowActivity(bool front, bool side, bool rear) {
+    uint32_t now = millis();
+
+    if (front) front_state.last_seen_ms = now;
+    if (side) side_state.last_seen_ms = now;
+    if (rear) rear_state.last_seen_ms = now;
+
+    front_state.active = front;
+    side_state.active = side;
+    rear_state.active = rear;
+}
+
+void checkBandTimeouts() {
+    uint32_t now = millis();
+
+    if (ka_state.active && (now - ka_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating Ka band");
+        ka_state.active = false;
+        set_var_kaAlert(false);
+        disable_blinking(BLINK_KA);
+    }
+    if (k_state.active && (now - k_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating K band");
+        k_state.active = false;
+        set_var_kAlert(false);
+        disable_blinking(BLINK_K);
+    }
+    if (x_state.active && (now - x_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating X band");
+        x_state.active = false;
+        set_var_xAlert(false);
+        disable_blinking(BLINK_X);
+    }
+    if (laser_state.active && (now - laser_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating LASER band");
+        laser_state.active = false;
+        set_var_laserAlert(false);
+        disable_blinking(BLINK_LASER);
+    }
+    if (front_state.active && (now - front_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating front arrow");
+        front_state.active = false;
+        set_var_arrowPrioFront(false);
+        disable_blinking(BLINK_FRONT);
+    }
+    if (side_state.active && (now - side_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating side arrow");
+        side_state.active = false;
+        set_var_arrowPrioSide(false);
+        disable_blinking(BLINK_SIDE);
+    }
+    if (rear_state.active && (now - rear_state.last_seen_ms > BAND_TIMEOUT_MS)) {
+        Serial.println("deactivating rear arrow");
+        rear_state.active = false;
+        set_var_arrowPrioRear(false);
+        disable_blinking(BLINK_REAR);
+    }
 }
 
 void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2) {

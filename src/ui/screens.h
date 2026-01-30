@@ -23,6 +23,7 @@ typedef struct _objects_t {
     lv_obj_t *default_mode;
     lv_obj_t *overlay_mode;
     lv_obj_t *custom_freq_en;
+    lv_obj_t *bogey_count;
     lv_obj_t *mute_logo;
     lv_obj_t *alert_table;
     lv_obj_t *alert1freq;

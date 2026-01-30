@@ -347,96 +347,6 @@ void create_screen_main() {
             lv_img_set_zoom(obj, 128);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
-        /*
-        // bt_logo
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.bt_logo = obj;
-            lv_obj_set_pos(obj, 534, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_bt_logo_small);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // proxy_logo
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.bt_proxy_logo = obj;
-            lv_obj_set_pos(obj, 534, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_bt_proxy);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // nav_logo_enabled
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.nav_logo_enabled = obj;
-            lv_obj_set_pos(obj, 466, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_location_red);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // nav_logo_disabled
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.nav_logo_disabled = obj;
-            lv_obj_set_pos(obj, 466, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_location_disabled);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // wifi
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.wifi_logo = obj;
-            lv_obj_set_pos(obj, 502, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_wifi);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // wifi_local
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.wifi_local_logo = obj;
-            lv_obj_set_pos(obj, 502, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_wifi_local);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // wifi local connected client
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.wifi_localConnected = obj;
-            lv_obj_set_pos(obj, 502, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_wifi_localConnected);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        // mute_logo
-        {
-            lv_obj_t *obj = lv_img_create(parent_obj);
-            objects.mute_logo = obj;
-            lv_obj_set_pos(obj, 432, 0);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_mute_logo_small);
-            lv_img_set_src(obj, psram_img);
-            lv_img_set_zoom(obj, 128);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-        */
         // photo_radar_type
         {
             lv_obj_t *obj = lv_label_create(parent_obj);
@@ -467,6 +377,17 @@ void create_screen_main() {
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        // bogey count
+        {
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.bogey_count = obj;
+            lv_obj_set_pos(obj, 17, 50);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
@@ -705,6 +626,7 @@ void tick_status_bar() {
     }
 }
 
+/*
 void tick_alertTable() {
     bool muted = get_var_muted();
     bool muteToGray = get_var_muteToGray();
@@ -732,6 +654,44 @@ void tick_alertTable() {
         }
         else { lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN); }
         tick_value_change_obj = NULL;
+    }
+}
+*/
+void tick_alertTable() {
+    // statics that will persist
+    static int lastTableSize = -1;
+    static bool lastVisibility = false;
+    static bool lastMuteState = false;
+
+    // gather current state
+    int currentSize = get_var_alertTableSize();
+    bool currentVisibility = get_showAlertTable();
+    bool currentMute = get_var_muted();
+    bool currentMuteGray = get_var_muteToGray();
+
+    // set visibility
+    if (currentVisibility != lastVisibility) {
+        lastVisibility = currentVisibility;
+        if (currentVisibility) {
+            lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    // update alert table content based on size change OR mute status change
+    if (currentVisibility && (currentSize != lastTableSize || currentMute != lastMuteState)) {
+        lastTableSize = currentSize;
+        lastMuteState = currentMute;
+
+        if (currentSize > 0) {
+            LV_LOG_INFO("update alert table content");
+            const char** frequencies = get_var_frequencies();
+            const char** directions = get_var_directions();
+
+            update_alert_rows(currentSize, frequencies, currentMute, currentMuteGray);
+            update_alert_arrows(currentSize, directions, currentMute, currentMuteGray);
+        }
     }
 }
 
@@ -855,6 +815,20 @@ void tick_screen_main() {
         }
         // Update Priority Bars
         {
+            static int lastBarLevel = -1;
+            static uint32_t lastBarUpdateTime = 0;
+            int numBars = get_var_prioBars();
+
+            if (numBars != lastBarLevel && (getMillis() - lastBarUpdateTime > 200)) {
+                lastBarLevel = numBars;
+                lastBarUpdateTime = getMillis();
+
+                LV_LOG_INFO("updating signal bars");
+                update_signal_bars(numBars);
+            }
+        }
+        /*
+        {
             int numBars = get_var_prioBars();
             if (numBars != cur_bars || muteToGray) {
                 tick_value_change_obj = objects.bar_str;
@@ -863,7 +837,9 @@ void tick_screen_main() {
                 cur_bars = numBars;
                 tick_value_change_obj = NULL;
             }
-        }  
+        }
+        */
+
         // Mute status
         {
             bool cur_val = lv_obj_has_flag(objects.mute_logo, LV_OBJ_FLAG_HIDDEN); // true if hidden
@@ -880,7 +856,7 @@ void tick_screen_main() {
             bool new_val = get_var_kaAlert();  // true if enabled
             bool is_hidden = lv_obj_has_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
 
-            if (new_val != !is_hidden) {
+            if (new_val == is_hidden) {
                 LV_LOG_INFO("paint ka");
                 tick_value_change_obj = objects.band_ka;
                 new_val ? lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN) 
@@ -944,13 +920,16 @@ void tick_screen_main() {
             }
         }
     }
-    // Logic Mode
+    // Logic Mode OR Bogey Count
     {
         bool useDefault = get_var_useDefaultV1Mode();
-        const char *new_val = get_var_logicmode(useDefault);
+
         lv_obj_t *target = useDefault ? objects.default_mode : objects.mode_type;
         lv_obj_t *target_old = useDefault ? objects.mode_type : objects.default_mode;
         lv_obj_t *overlay = objects.overlay_mode;
+
+        const char *new_val = get_var_logicmode(useDefault); // get the actual name of the logic mode, eg., "ADV LOGIC" or "L"
+        const char *cur_val = lv_label_get_text(target);     // get the current value of the logic mode, eg., "ADV LOGIC", or "L"
         
         if (!target) {
             LV_LOG_ERROR("Error: %s is NULL!", useDefault ? "objects.default_mode" : "objects.mode_type");
@@ -962,6 +941,60 @@ void tick_screen_main() {
             return;
         }
     
+        static int lastAlertCount = -1;
+        // Alert present = show the bogey counter, hide the mode + custom freq indicator
+        if (alertPresent && useDefault && (lastAlertCount != alertCount)) {
+            if (laserAlert) {
+                LV_LOG_INFO("update UI to LASER alert");
+                lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                LV_LOG_INFO("update UI bogey count to %d", alertCount);
+                if (lv_obj_has_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN)) {
+                    lv_obj_clear_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN);
+                }
+                if (!lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
+                    lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+                }
+                lv_label_set_text_fmt(objects.bogey_count, "%d", alertCount);
+            }
+            lastAlertCount = alertCount;
+        }
+        // No alert present = show the mode + custom freq indicator, hide the bogey counter
+        else if (!alertPresent && useDefault) {
+            if (new_val && cur_val && strcmp(new_val, cur_val) != 0 || 
+                lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
+
+                    LV_LOG_INFO("updating mode to %s", new_val);
+                    lv_label_set_text(target, new_val);
+                    lv_label_set_text(target_old, "");
+
+                    if (lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+                    }
+                    if (lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_clear_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
+                    }
+                    if (lv_obj_has_flag(target, LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_clear_flag(target, LV_OBJ_FLAG_HIDDEN);
+                    }
+                    if (!lv_obj_has_flag(target_old, LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
+                    }
+                    // set the overlay for advanced logic mode "small L"
+                    if (new_val == "c") {
+                        lv_label_set_text(overlay, "4");
+                        lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+                    } else {
+                        lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+                    }
+                }
+
+                lastAlertCount = -1;
+        }
+
+        /* old stuff
         const char *cur_val = lv_label_get_text(target);
         if (cur_val && strcmp(new_val, cur_val) != 0) {
             LV_LOG_INFO("update Logic Mode");
@@ -1002,6 +1035,7 @@ void tick_screen_main() {
             lv_obj_set_pos(objects.custom_freq_en, 60, 341);
         }
         tick_value_change_obj = NULL;
+        */
     }
 }
 

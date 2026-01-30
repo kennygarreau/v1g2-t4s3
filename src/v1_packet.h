@@ -28,6 +28,7 @@
 #define PACKET_ID_REQBATTERYVOLTAGE 0x62
 #define PACKET_ID_REQSAVVYSTATUS 0x71
 #define PACKET_ID_REQVEHICLESPEED 0x73
+#define BAND_TIMEOUT_MS 1000
 
 struct BandArrowData {
     bool laser;
@@ -53,6 +54,11 @@ enum Direction {
     DIR_FRONT = 1,
     DIR_SIDE  = 2,
     DIR_REAR  = 3
+};
+
+struct BandState {
+    bool active;
+    uint32_t last_seen_ms;
 };
 
 enum Band {
@@ -92,6 +98,18 @@ static constexpr const char* PhotoRadarTypeNames[] = {
 };
 
 extern bool photoAlertPresent;
+extern BandState ka_state;
+extern BandState k_state;
+extern BandState x_state;
+extern BandState laser_state;
+
+extern BandState front_state;
+extern BandState side_state;
+extern BandState rear_state;
+
+void updateBandActivity(bool ka, bool k, bool x, bool laser);
+void updateArrowActivity(bool front, bool side, bool rear);
+void checkBandTimeouts();
 
 using alertsVectorRaw = std::vector<std::vector<uint8_t>>;
 extern std::vector<LogEntry> logHistory;
