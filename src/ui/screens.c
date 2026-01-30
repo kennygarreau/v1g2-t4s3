@@ -9,17 +9,13 @@
 #include "styles.h"
 #include "ui.h"
 #include "../utils.h"
+#include "blinking.h"
 
 objects_t objects;
 lv_obj_t *tick_value_change_obj;
 lv_obj_t* signal_bars[MAX_BARS];
 lv_obj_t* alert_rows[MAX_ALERT_ROWS];
 lv_obj_t* alert_directions[MAX_ALERT_ROWS];
-
-lv_obj_t *blink_images[MAX_BLINK_IMAGES];  // Store elements to blink
-bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should blink
-uint8_t blink_count = 0;
-uint8_t cur_bars = 0;
 
 static uint32_t last_blink_time = 0;
 static bool blink_state = false;
@@ -167,24 +163,6 @@ void update_signal_bars(int num_visible) {
             lv_obj_add_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
         }
     }
-}
-
-void register_blinking_image(int index, lv_obj_t *obj) {
-    if (index < 0 || index >= MAX_BLINK_IMAGES) return;
-    blink_images[index] = obj;
-}
-
-static void blink_timer_cb(lv_timer_t *timer) {
-    for (int i = 0; i < blink_count; i++) {
-        if (blink_enabled[i]) {
-            bool is_hidden = lv_obj_has_flag(blink_images[i], LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(blink_images[i], is_hidden ? LV_OBJ_FLAG_HIDDEN : 0);
-        } 
-    }
-}
-
-void init_blinking_system() {
-    lv_timer_create(blink_timer_cb, BLINK_FREQUENCY, NULL);
 }
 
 void create_screen_logo_screen() {

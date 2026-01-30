@@ -89,16 +89,6 @@ enum ScreensEnum {
     SCREEN_ID_DISPSETTINGS = 4,
 };
 
-enum BlinkIndices {
-    BLINK_FRONT = 0,
-    BLINK_SIDE = 1,
-    BLINK_REAR = 2,
-    BLINK_X = 3,
-    BLINK_K = 4,
-    BLINK_KA = 5,
-    BLINK_LASER = 6
-};
-
 extern uint32_t default_color;
 extern uint32_t gray_color;
 extern uint32_t green_bar;
@@ -125,8 +115,6 @@ void tick_status_bar();
 
 void update_alert_rows(int num_visible, const char* frequencies[], bool muted, bool muteToGray);
 void update_alert_arrows(int num_alerts, const char* directions[], bool muted, bool muteToGray);
-void register_blinking_image(int index, lv_obj_t *obj);
-void init_blinking_system(void);
 
 #ifdef __cplusplus
 }

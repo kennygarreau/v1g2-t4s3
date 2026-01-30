@@ -2,43 +2,9 @@
 #include "fonts.h"
 #include "images.h"
 #include "../utils.h"
+#include "blinking.h"
 #include "screens.h"
 #include "ui.h"
-
-static void blink_timeout_cb(lv_timer_t *timer) {
-    int index = (int)timer->user_data;
-    blink_enabled[index] = false;
-    lv_timer_del(timer);
-}
-
-static void blink_toggle_cb(lv_timer_t *timer) {
-    int index = (int)timer->user_data;
-
-    if (!blink_enabled[index]) {
-        lv_timer_del(timer);
-        return;
-    }
-
-    lv_obj_t *obj = blink_images[index];
-    if (obj) {
-        bool is_hidden = lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        if (is_hidden) {
-            lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
-    }
-}
-
-void disable_blinking(int index) {
-    blink_enabled[index] = false;  // The timer will check this and stop itself
-    lv_obj_add_flag(blink_images[index], LV_OBJ_FLAG_HIDDEN);
-}
-
-void enable_blinking(int index) {
-    blink_enabled[index] = true;
-    lv_timer_create(blink_timeout_cb, BLINK_DURATION_MS, (void*)index);
-}
 
 void wifi_switch_event_handler(lv_event_t * e) {
     lv_obj_t * obj = lv_event_get_target(e);
@@ -238,34 +204,6 @@ void slider_brightness_event_handler(lv_event_t * e) {
     lv_indev_reset(lv_indev_get_act(), slider);
 }
 
-static void band_update_timer(lv_timer_t * timer) {
-    if (activeBands & 0b00000001) { // Laser
-        lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
-    }
-    if (activeBands & 0b00000010) {  // Ka band
-        lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
-    }
-    if (activeBands & 0b00000100) {  // K band
-        lv_obj_clear_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
-    }
-    if (activeBands & 0b00001000) { // X band
-        lv_obj_clear_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
-    }
-}
-
-void start_band_update_timer() {
-    lv_timer_create(band_update_timer, 500, NULL); // Check every 500ms
-}
-
-static void clear_inactive_bands_timer(lv_timer_t * timer) {
-    activeBands = 0;
-    lv_timer_del(timer);
-}
-
-void start_clear_inactive_bands_timer() {
-    lv_timer_create(clear_inactive_bands_timer, 1000, NULL);
-}
-
 void delete_popup(lv_event_t * e) {
     lv_obj_t * obj = lv_event_get_target(e);
 
@@ -305,7 +243,6 @@ void update_alert_display(bool muted) {
     // if (muted == last_muted_state) return;
 
     lv_color_t text_color = muted ? lv_color_hex(gray_color) : lv_color_hex(default_color);
-    //const void* front_arrow_src = muted ? &img_arrow_front_gray : &img_arrow_front;
     const void* front_arrow_src = muted ? &img_arrow_front_gray_4bit : &img_arrow_front_4bit;
     const void* side_arrow_src = muted ? &img_arrow_side_gray_4bit : &img_arrow_side_4bit;
     const void* rear_arrow_src = muted ? &img_arrow_rear_gray_4bit : &img_arrow_rear_4bit;

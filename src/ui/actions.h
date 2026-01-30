@@ -7,23 +7,8 @@
 extern "C" {
 #endif
 
-#define MAX_BLINK_IMAGES 7
 #define MAX_BARS 6
 #define MAX_ALERT_ROWS 4
-#define BLINK_FREQUENCY 96
-#define BLINK_DURATION_MS BLINK_FREQUENCY * 10
-
-static void blink_timeout_cb(lv_timer_t *timer);
-extern void enable_blinking(int index);
-extern void disable_blinking(int index);
-
-static void clear_inactive_bands_timer(lv_timer_t * timer);
-void start_clear_inactive_bands_timer();
-void start_band_update_timer();
-
-extern lv_obj_t *blink_images[MAX_BLINK_IMAGES];
-extern bool blink_enabled[MAX_BLINK_IMAGES];
-extern uint8_t blink_count;
 
 void main_press_handler(lv_event_t * e);
 void v1cle_switch_event_handler(lv_event_t * e);
