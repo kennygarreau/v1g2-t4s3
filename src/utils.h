@@ -12,6 +12,7 @@ extern "C" {
 
 extern uint8_t activeBands;
 void displayTestTask(void *pvParameters);
+void processingTask(void *pvParameters);
 
 //double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 void main_press_handler(lv_event_t * e);

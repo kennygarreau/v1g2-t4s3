@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include "ui/ui.h"
 #include "ui/actions.h"
+#include "ui/blinking.h"
 #include "utils.h"
 #include "wifi.h"
 #include "v1_packet.h"
@@ -165,7 +166,7 @@ extern "C" void set_var_muteToGray(bool value) {
     preferences.end();
 }
 
-
+// This function is utilized to set the T4 display to NOT use the name of the mode in the upper-left
 extern "C" bool get_var_useDefaultV1Mode() {
     return settings.useDefaultV1Mode;
 }
@@ -423,7 +424,7 @@ extern "C" const char *get_var_logicmode(bool value) {
     if (bt_connected) {
         return result ? result : "U";
     }
-    else return "";
+    else return "L";
 }
 
 extern "C" const char *get_var_prio_alert_freq() {
@@ -595,7 +596,7 @@ extern "C" void set_var_kAlert(bool value) {
 }
 
 extern "C" bool get_var_kAlert() {
-    return kAlert;
+    return k_state.active;
 }
 
 extern "C" void set_var_xAlert(bool value) {
@@ -636,24 +637,56 @@ extern "C" bool get_var_gpsAvailable() {
     return gpsAvailable;
 }
 
-void displayTestTask(void *pvParameters) {
-    //std::string packets[] = {"AAD6EA430713291D21858800E8AB", "AAD8EA31095B1F38280C0000E7AB", "AAD6EA4307235E569283240000AB", "AAD6EA430733878CB681228030AB"};
+void processingTask(void *pvParameters) {
+    Serial.println("Processing Task Started");
+    RadarPacket received;
 
-    std::vector<std::vector<uint8_t>> packets = {
-        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x13, 0x29, 0x1D, 0x21, 0x85, 0x88, 0x00, 0xE8, 0xAB},
-        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x5B, 0x1F, 0x38, 0x28, 0x0C, 0x00, 0x00, 0xE7, 0xAB},
-        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x04, 0x00, 0xAB},
-        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x33, 0x87, 0x8C, 0xB6, 0x81, 0x22, 0x80, 0x30, 0xAB}
-    };
-    
     while (true) {
-        for (const std::vector<uint8_t>& packet : packets) {
-            PacketDecoder decoder(packet);
-            decoder.decode_v2(settings.lowSpeedThreshold, 20);
-            vTaskDelay(pdMS_TO_TICKS(15));
-        }
+        // This blocks and uses 0% CPU until a packet arrives in the queue
+        if (xQueueReceive(radarQueue, &received, portMAX_DELAY)) {
+            //uint32_t start = millis();
+            if (received.length == 0) {Serial.println("error, packet length of 0"); continue; }
+            //Serial.printf("Received packet, len: %d, first byte: 0x%02X\n", received.length, received.data[0]);
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+            // Convert back to vector or pass the raw array to your decoder
+            std::vector<uint8_t> vec(received.data, received.data + received.length);
+            
+            PacketDecoder decoder(vec);
+            decoder.decode_v2(settings.lowSpeedThreshold, 20);
+            //Serial.printf("Decode time: %lu ms\n", millis() - start);
+        }
+    }
+}
+
+void displayTestTask(void *pvParameters) {
+    Serial.println("Test Task Started");
+    const std::vector<std::vector<uint8_t>> syntheticPackets = {
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x13, 0x29, 0x1D, 0x21, 0x85, 0x88, 0x00, 0xE8, 0xAB},
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x00, 0x00, 0xAB}, // bit 11 swap to 0x04 for photoRadar
+        {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x33, 0x87, 0x8C, 0xB6, 0x81, 0x22, 0x80, 0x30, 0xAB},
+        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x00, 0x07, 0x28, 0x28, 0x10, 0x00, 0x00, 0x34, 0xAB}, // X band
+        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x4F, 0x3F, 0x22, 0x00, 0x50, 0x00, 0x35, 0x2A, 0xAB}, // Ka band - Prio + Blink
+        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x4F, 0x0F, 0x24, 0x24, 0x50, 0x00, 0x35, 0x20, 0xAB}, // K band
+    };
+
+    while (true) {
+        for (const auto& rawVector : syntheticPackets) {
+            RadarPacket packet;
+            packet.length = rawVector.size();
+            
+            if (packet.length > 0 && packet.length <= 32) {
+                memcpy(packet.data, rawVector.data(), packet.length);
+
+                if (xQueueSend(radarQueue, &packet, 0) == pdPASS) {
+                    //Serial.printf("Sent packet: %d bytes\n", packet.length);
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+            } else {
+                Serial.printf("Error: Synthetic packet has invalid length: %d\n", packet.length);
+            }
+        }
+        // Pause between loops to let the display "breathe"
+        vTaskDelay(pdMS_TO_TICKS(1200));
     }
 }
 
