@@ -685,8 +685,19 @@ void displayTestTask(void *pvParameters) {
                 Serial.printf("Error: Synthetic packet has invalid length: %d\n", packet.length);
             }
         }
+        // Wait 1.5 seconds, then insert an "all clear"
+        vTaskDelay(pdMS_TO_TICKS(1500));
+        const uint8_t clearBytes[] = {0xAA, 0xD8, 0xEA, 0x43, 0x07, 0x00, 0x00, 0x00, 0x00, 0x2C, 0xCC, 0x43, 0x51, 0xAB};        
+        RadarPacket clearPacket;
+        clearPacket.length = sizeof(clearBytes);
+        memcpy(clearPacket.data, clearBytes, clearPacket.length);
+
+        if (xQueueSend(radarQueue, &clearPacket, 0) == pdPASS) {
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+
         // Pause between loops to let the display "breathe"
-        vTaskDelay(pdMS_TO_TICKS(1200));
+        vTaskDelay(pdMS_TO_TICKS(15000));
     }
 }
 

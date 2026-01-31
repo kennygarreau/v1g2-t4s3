@@ -960,6 +960,9 @@ void tick_screen_main() {
                     if (!lv_obj_has_flag(target_old, LV_OBJ_FLAG_HIDDEN)) {
                         lv_obj_add_flag(target_old, LV_OBJ_FLAG_HIDDEN);
                     }
+                    if (!lv_obj_has_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_add_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN);
+                    }
                     // set the overlay for advanced logic mode "small L"
                     if (new_val == "c") {
                         lv_label_set_text(overlay, "4");
