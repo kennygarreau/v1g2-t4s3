@@ -702,8 +702,10 @@ void tick_screen_main() {
 
                     if (blink_state) {
                         lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_COVER, 0);
                     } else {
                         lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_TRANSP, 0);
                     }
                 }
             } else {
@@ -715,8 +717,10 @@ void tick_screen_main() {
                     tick_value_change_obj = objects.front_arrow;
                     if (new_val) {
                         lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_COVER, 0);
                     }
-                    else lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                    //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_TRANSP, 0);
                     tick_value_change_obj = NULL;
                 }
             }

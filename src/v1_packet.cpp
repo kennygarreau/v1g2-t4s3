@@ -69,7 +69,8 @@ void PacketDecoder::clearInfAlerts() {
     set_var_showAlertTable(false);
     std::fill(std::begin(blink_enabled), std::end(blink_enabled), false);
 
-    ui_tick();
+    lv_task_handler();
+    delay(50);  // 50ms delay
     lv_task_handler();
 }
 

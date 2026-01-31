@@ -697,7 +697,7 @@ void displayTestTask(void *pvParameters) {
         }
 
         // Pause between loops to let the display "breathe"
-        vTaskDelay(pdMS_TO_TICKS(15000));
+        vTaskDelay(pdMS_TO_TICKS(6500));
     }
 }
 
