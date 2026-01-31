@@ -54,26 +54,6 @@ void clearInactiveBands(uint8_t newBandData) {
     activeBands &= (lastReceivedBands | newBandData); 
 }
 
-void PacketDecoder::clearInfAlerts() {
-    photoAlertPresent = false;
-    set_var_prio_alert_freq("");
-    set_var_prioBars(0);
-    set_var_kaAlert(false);
-    set_var_kAlert(false);
-    set_var_xAlert(false);
-    set_var_laserAlert(false);
-    set_var_muted(false);
-    set_var_arrowPrioFront(false);
-    set_var_arrowPrioRear(false);
-    set_var_arrowPrioSide(false);
-    set_var_showAlertTable(false);
-    std::fill(std::begin(blink_enabled), std::end(blink_enabled), false);
-
-    lv_task_handler();
-    delay(50);  // 50ms delay
-    lv_task_handler();
-}
-
 uint8_t mapXToBars(uint8_t& value) {
     static constexpr uint8_t thresholds[] = {0x00, 0x95, 0x9F, 0xA9, 0xB3, 0xBC, 0xC4, 0xCF, 0xFF};
 
@@ -598,8 +578,6 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         uint8_t alertC = payload[0];
         if (alertC == 0x00) {
             if (alertPresent) {
-                Serial.println("alertC 00 && alertPresent, clearing alerts");
-                clearInfAlerts();
                 alertPresent = false;
                 photoAlertPresent = false;
             }

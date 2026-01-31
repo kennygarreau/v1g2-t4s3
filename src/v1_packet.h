@@ -122,8 +122,6 @@ public:
 
     std::string decode_v2(int lowSpeedThreshold, uint8_t currentSpeed);
     void decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed);
-    void clearInfAlerts();
-    //void clearTableAlerts();
 };
 
 class Packet {

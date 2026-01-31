@@ -324,10 +324,10 @@ void loop() {
 
   static uint32_t last_band_check = 0;
   static uint32_t last_status_print = 0;
-  if (millis() - last_band_check > 100) {
+  if (millis() - last_band_check > 200) {
     checkBandTimeouts();
     last_band_check = millis();
-    if (millis() - last_status_print > 2000) {
+    if (millis() - last_status_print > 1000) {
       Serial.printf("⏱️ Band Status: Ka=%d K=%d X=%d Laser=%d | activeBands=0x%02X\n",
                     ka_state.active, k_state.active, x_state.active, laser_state.active,
                     activeBands);
