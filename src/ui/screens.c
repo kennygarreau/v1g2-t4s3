@@ -937,8 +937,6 @@ void tick_screen_main() {
                     lv_label_set_text(target, new_val);
                     lv_label_set_text(target_old, "");
                     lv_label_set_text(objects.prioalertfreq, "");
-                    // update_signal_bars(0);
-                    // barsCleared = true;
 
                     if (lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
                         lv_obj_clear_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);

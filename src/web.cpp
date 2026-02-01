@@ -207,6 +207,7 @@ void setupWebServer()
     serveStaticFile(server, "/status.html", "text/html");
     serveStaticFile(server, "/style.css", "text/css");
     serveStaticFile(server, "/favicon.ico", "image/x-icon");
+    serveStaticFile(server, "/fonts/roboto-regular.woff2", "font/woff2");
 
     server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
