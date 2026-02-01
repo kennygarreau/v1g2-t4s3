@@ -2,6 +2,7 @@
 #define WIFI_H
 
 #include <ESPAsyncWebServer.h>
+#include <WiFi.h>
 
 extern TaskHandle_t wifiScanTaskHandle;
 
