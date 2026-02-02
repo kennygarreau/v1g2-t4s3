@@ -49,11 +49,8 @@ void printAdvertisingDetails() {
   Serial.println("\n========== ADVERTISING DETAILS ==========");
   
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-  
-  // Check if advertising is running
   Serial.printf("Advertising active: %s\n", pAdvertising->isAdvertising() ? "YES" : "NO");
   
-  // Get the advertising data (this works)
   std::vector<uint8_t> advPayload = pAdvertising->getAdvertisementData().getPayload();
   
   Serial.printf("Adv Data Size: %d bytes (max 31)\n", advPayload.size());
@@ -63,7 +60,6 @@ void printAdvertisingDetails() {
   }
   Serial.println();
   
-  // Print service UUID being advertised
   if (pRadarService) {
     Serial.printf("\nService UUID: %s\n", pRadarService->getUUID().toString().c_str());
     Serial.printf("Service started: %s\n", pRadarService->isStarted() ? "YES" : "NO");
@@ -97,10 +93,6 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     bt_connected = true;
     bleInit = true;
     bleNotifyMutex = xSemaphoreCreateMutex();
-
-    // if (settings.proxyBLE) {
-    //   onProxyReady();
-    // }
   }
 
   void onDisconnect(NimBLEClient* pClient, int reason) override {
@@ -129,7 +121,6 @@ class ScanCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
 
     if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(bmeServiceUUID)) {
-      //std::string serviceUuid = advertisedDevice->getServiceUUID().toString(); // service uuid
       std::string deviceName = advertisedDevice->getName(); // common name
       std::string deviceAddrStr = advertisedDevice->getAddress().toString(); // mac
 
@@ -148,7 +139,6 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 
           pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
-            //Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
           }
         } else {
@@ -164,7 +154,6 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 
           pClient = NimBLEDevice::getClientByPeerAddress(advertisedDevice->getAddress());
           if (!pClient) {
-            //Serial.println("No disconnected client available, creating new one...");
             pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
             if (!pClient) {
               Serial.printf("Failed to create client\n");
