@@ -139,6 +139,17 @@ void serveStaticFile(AsyncWebServer &server, const char *path, const char *mimeT
     });
 }
 
+void serveCachedStaticFile(AsyncWebServer &server, const char *path, const char *mimeType)
+{
+    server.on(path, HTTP_GET, [path, mimeType](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse *response =
+            request->beginResponse(SPIFFS, path, mimeType);
+
+        response->addHeader("Cache-Control", "public, max-age=2592000, immutable");
+        request->send(response);
+    });
+}
+
 void checkReboot() {
     if (isRebootPending && millis() - rebootTime >= 3000) {
         Serial.println("Rebooting...");
@@ -196,9 +207,9 @@ void setupWebServer()
     serveStaticFile(server, "/update.js", "application/javascript");
     serveStaticFile(server, "/lockouts.js", "application/javascript");
     serveStaticFile(server, "/status.js", "application/javascript");
-    serveStaticFile(server, "/js/chart.js", "application/javascript");
-    serveStaticFile(server, "/js/moment.js", "application/javascript");
-    serveStaticFile(server, "/js/chartjs-adapter-moment.js", "application/javascript");
+    serveCachedStaticFile(server, "/js/chart.js", "application/javascript");
+    serveCachedStaticFile(server, "/js/moment.js", "application/javascript");
+    serveCachedStaticFile(server, "/js/chartjs-adapter-moment.js", "application/javascript");
     serveStaticFile(server, "/index2.html", "text/html");
     serveStaticFile(server, "/index.html", "text/html");
     serveStaticFile(server, "/update.html", "text/html");
@@ -206,8 +217,8 @@ void setupWebServer()
     serveStaticFile(server, "/lockouts.html", "text/html");
     serveStaticFile(server, "/status.html", "text/html");
     serveStaticFile(server, "/style.css", "text/css");
-    serveStaticFile(server, "/favicon.ico", "image/x-icon");
-    serveStaticFile(server, "/fonts/roboto-regular.woff2", "font/woff2");
+    serveCachedStaticFile(server, "/favicon.ico", "image/x-icon");
+    serveCachedStaticFile(server, "/fonts/roboto-regular.woff2", "font/woff2");
 
     server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
