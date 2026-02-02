@@ -297,3 +297,19 @@ uint32_t get_bar_color(int i) {
         default: return default_color;
     }
 }
+
+static void hide_after_animation_cb(lv_anim_t * a) {
+    lv_obj_add_flag((lv_obj_t *)a->var, LV_OBJ_FLAG_HIDDEN);
+}
+
+void fade_out_and_hide(lv_obj_t * obj, uint32_t delay) {
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_TRANSP); // From 255 to 0 (visible to transparent)
+    lv_anim_set_time(&a, 500); // 500ms duration
+    lv_anim_set_delay(&a, delay);
+    lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+    lv_anim_set_ready_cb(&a, hide_after_animation_cb); // Hide when done
+    lv_anim_start(&a);
+}

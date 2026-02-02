@@ -868,22 +868,29 @@ void tick_screen_main() {
     }
     else if (!idleStateSet) {
         LV_LOG_INFO("No alerts present; set idleState");
+
+        lv_obj_t * objs_to_hide[] = {
+            objects.alert_table, objects.mute_logo, objects.photo_type,
+            objects.photo_image, objects.band_x, objects.band_k, 
+            objects.band_ka, objects.rear_arrow, objects.side_arrow, 
+            objects.front_arrow
+        };
+
+        for(int i = 0; i < 10; i++) {
+            // Option A: Fade all at once (there's a noticeable lag?)
+            //fade_out_and_hide(objs_to_hide[i], 0);
+            
+            // Option B: Staggered effect (too random for me)
+            //fade_out_and_hide(objs_to_hide[i], i * 50);
+
+            // Option C: Immediately hide
+            lv_obj_add_flag(objs_to_hide[i], LV_OBJ_FLAG_HIDDEN);
+        }
+
         update_signal_bars(0);
         barsCleared = true;
         set_var_showAlertTable(false);
-
         lv_label_set_text(objects.prioalertfreq, "");
-
-        lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.mute_logo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.photo_type, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.photo_image, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.band_x, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.band_k, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
 
         idleStateSet = true;
     }
