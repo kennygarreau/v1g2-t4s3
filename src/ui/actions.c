@@ -239,20 +239,18 @@ void show_popup(const char * message) {
 }
 
 void update_alert_display(bool muted) {
-    // static bool last_muted_state = false;
-    // if (muted == last_muted_state) return;
 
     lv_color_t text_color = muted ? lv_color_hex(gray_color) : lv_color_hex(default_color);
     const void* front_arrow_src = muted ? &img_arrow_front_gray_4bit : &img_arrow_front_4bit;
     const void* side_arrow_src = muted ? &img_arrow_side_gray_4bit : &img_arrow_side_4bit;
     const void* rear_arrow_src = muted ? &img_arrow_rear_gray_4bit : &img_arrow_rear_4bit;
 
-    //lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT); // use if testing
     lv_obj_set_style_text_color(objects.prioalertfreq, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_k, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_ka, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.band_x, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.default_mode, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.bogey_count, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(objects.custom_freq_en, text_color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_img_set_src(objects.front_arrow, front_arrow_src);
     lv_img_set_src(objects.side_arrow, side_arrow_src);
