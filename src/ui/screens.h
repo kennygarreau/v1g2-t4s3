@@ -115,6 +115,7 @@ void tick_status_bar();
 
 void update_alert_rows(int num_visible, const char* frequencies[], bool muted, bool muteToGray);
 void update_alert_arrows(int num_alerts, const char* directions[], bool muted, bool muteToGray);
+void update_signal_bars(int num_visible);
 
 #ifdef __cplusplus
 }

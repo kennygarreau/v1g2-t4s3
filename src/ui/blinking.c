@@ -77,6 +77,11 @@ void disable_blinking(int index) {
 
 void enable_blinking(int index) {
     blink_enabled[index] = true;
+    
+    // Timer to toggle visibility at BLINK_FREQUENCY
+    lv_timer_create(blink_toggle_cb, BLINK_FREQUENCY, (void*)index);
+    
+    // Timer to stop blinking after BLINK_DURATION_MS
     lv_timer_create(blink_timeout_cb, BLINK_DURATION_MS, (void*)index);
 }
 

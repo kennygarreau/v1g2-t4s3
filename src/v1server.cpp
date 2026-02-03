@@ -324,7 +324,7 @@ void loop() {
 
   static uint32_t last_band_check = 0;
   static uint32_t last_status_print = 0;
-  if (millis() - last_band_check > 200 && bt_connected) {
+  if (millis() - last_band_check > 100 && bt_connected) {
     checkBandTimeouts();
     last_band_check = millis();
     if (millis() - last_status_print > 1000 && activeBands != 0x00) {

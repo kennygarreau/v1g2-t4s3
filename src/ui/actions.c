@@ -255,8 +255,7 @@ void update_alert_display(bool muted) {
     lv_img_set_src(objects.front_arrow, front_arrow_src);
     lv_img_set_src(objects.side_arrow, side_arrow_src);
     lv_img_set_src(objects.rear_arrow, rear_arrow_src);
-
-    //last_muted_state = muted;
+    
 }
 
 lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img) {

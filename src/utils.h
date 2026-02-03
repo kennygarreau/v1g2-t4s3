@@ -84,24 +84,24 @@ const char** get_var_frequencies();
 const char** get_var_directions();
 
 bool get_var_kAlert();
-void set_var_kAlert(bool value);
 bool get_var_kaAlert();
-void set_var_kaAlert(bool value);
 bool get_var_xAlert();
-void set_var_xAlert(bool value);
 bool get_var_laserAlert();
-void set_var_laserAlert(bool value);
 bool get_var_alertPresent();
 void set_var_photoAlertPresent(bool value);
 bool get_var_photoAlertPresent();
 
-void set_var_arrowPrioFront(bool value);
 bool get_var_arrowPrioFront();
-void set_var_arrowPrioSide(bool value);
 bool get_var_arrowPrioSide();
-void set_var_arrowPrioRear(bool value);
 bool get_var_arrowPrioRear();
 
+//void set_var_arrowPrioRear(bool value);
+//void set_var_arrowPrioSide(bool value);
+//void set_var_arrowPrioFront(bool value);
+//void set_var_laserAlert(bool value);
+//void set_var_xAlert(bool value);
+//void set_var_kaAlert(bool value);
+//void set_var_kAlert(bool value);
 //void update_alert_rows(const char* alerts[], int num_alerts);
 
 //pins

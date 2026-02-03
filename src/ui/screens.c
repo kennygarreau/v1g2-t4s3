@@ -121,8 +121,8 @@ lv_obj_t* create_signal_bar(lv_obj_t* parent, int x, int y) {
     lv_label_set_text(obj, "             ");
     lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(obj, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_border_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_border_width(obj, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(obj, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
     return obj;
@@ -143,7 +143,7 @@ void update_signal_bars(int num_visible) {
     bool muteToGray = get_var_muteToGray();
     bool colorBars = get_var_colorBars();
 
-    LV_LOG_INFO("update_signal_bars to %d", num_visible);
+    //LV_LOG_INFO("update_signal_bars to %d", num_visible);
     for (int i = 0; i < MAX_BARS; ++i) {
         if (signal_bars[i] == NULL) {
             continue;
@@ -577,7 +577,6 @@ void tick_status_bar() {
                 }
             }
             else if (value && laserAlert) {
-                //lv_label_set_text(objects.custom_freq_en, "");
                 lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
             } 
             else {
@@ -645,26 +644,52 @@ void tick_alertTable() {
 void tick_screen_main() {
     bool alertPresent = get_var_alertPresent();
     uint8_t alertCount = get_var_alertCount();
+    int numBars = get_var_prioBars();
     bool showBogeys = get_var_showBogeys();
     bool laserAlert = get_var_laserAlert();
     static bool barsCleared = true;
     static bool idleStateSet = false;
 
-    if (alertPresent) {
-        uint32_t now = lv_tick_get();
-        static bool lastColorState = false;
+    static bool lastColorState = false;
+    static int lastNumBars = -1;    
         
-        bool muted = get_var_muted();
-        bool muteToGray = get_var_muteToGray();
-        bool displayGray = (muted && muteToGray);
+    bool muted = get_var_muted();
+    bool muteToGray = get_var_muteToGray();
+    bool displayGray = (muted && muteToGray); // true if muted and muteToGray is enabled
 
-        if (displayGray != lastColorState) {
-            update_alert_display(displayGray);
-            lastColorState = displayGray;
-        }
+    if (displayGray != lastColorState) {
+        update_alert_display(displayGray);
+        update_signal_bars(numBars); 
+        lastColorState = displayGray;
+        lastNumBars = numBars;
+    } else if (numBars != lastNumBars) {
+        update_signal_bars(numBars);
+        lastNumBars = numBars;
+    }
 
+    if (alertPresent) {
+        //uint32_t now = lv_tick_get();
+        
         // Front Arrow
         {
+            bool new_val = get_var_arrowPrioFront();  // true if enabled
+            bool is_hidden = lv_obj_has_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+
+            if (new_val == is_hidden && !blink_enabled[BLINK_FRONT]) {
+                LV_LOG_INFO("paint front");
+                tick_value_change_obj = objects.front_arrow;
+                new_val ? lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN)
+                        : lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
+                tick_value_change_obj = NULL;
+               
+                /* 
+                if (alertCount == 1) {
+                    lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
+                }
+                */
+            }
+            /*
             bool should_blink = blink_enabled[BLINK_FRONT];
             if (should_blink) {
                 LV_LOG_INFO("paint front blink");
@@ -696,9 +721,21 @@ void tick_screen_main() {
                     tick_value_change_obj = NULL;
                 }
             }
+                */
         }
         // Side Arrow
         { 
+            bool new_val = get_var_arrowPrioSide();  // true if enabled
+            bool is_hidden = lv_obj_has_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
+
+            if (new_val == is_hidden && !blink_enabled[BLINK_SIDE]) {
+                LV_LOG_INFO("paint side arrows");
+                tick_value_change_obj = objects.side_arrow;
+                new_val ? lv_obj_clear_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN) 
+                        : lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
+                tick_value_change_obj = NULL;
+            }
+            /*
             bool should_blink = blink_enabled[BLINK_SIDE];
             if (should_blink) {
                 LV_LOG_INFO("paint side blink");
@@ -724,9 +761,21 @@ void tick_screen_main() {
                     tick_value_change_obj = NULL;
                 }
             }
+            */
         }
         // Rear Arrow
         {
+            bool new_val = get_var_arrowPrioRear();  // true if enabled
+            bool is_hidden = lv_obj_has_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
+       
+            if (new_val == is_hidden && !blink_enabled[BLINK_REAR]) {
+                LV_LOG_INFO("paint rear");
+                tick_value_change_obj = objects.rear_arrow;
+                new_val ? lv_obj_clear_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN) 
+                        : lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
+                tick_value_change_obj = NULL;
+            }
+            /*
             bool should_blink = blink_enabled[BLINK_REAR];
             if (should_blink) {
                 LV_LOG_INFO("paint rear blink");
@@ -752,6 +801,7 @@ void tick_screen_main() {
                     tick_value_change_obj = NULL;
                 }
             }
+            */
         }
         // Priority Alert Frequency & Bars
         {    
@@ -771,7 +821,6 @@ void tick_screen_main() {
         {
             static int lastBarLevel = -1;
             static uint32_t lastBarUpdateTime = 0;
-            int numBars = get_var_prioBars();
 
             if ((numBars != lastBarLevel || (barsCleared && numBars > 0)) && 
                 (getMillis() - lastBarUpdateTime > 200)) { {
@@ -800,7 +849,7 @@ void tick_screen_main() {
             bool new_val = get_var_kaAlert();  // true if enabled
             bool is_hidden = lv_obj_has_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN);
 
-            if (new_val == is_hidden) {
+            if (new_val == is_hidden && !blink_images[BLINK_KA]) {
                 LV_LOG_INFO("paint ka");
                 tick_value_change_obj = objects.band_ka;
                 new_val ? lv_obj_clear_flag(objects.band_ka, LV_OBJ_FLAG_HIDDEN) 
@@ -869,6 +918,11 @@ void tick_screen_main() {
     else if (!idleStateSet) {
         LV_LOG_INFO("No alerts present; set idleState");
 
+        if (displayGray != lastColorState) {
+            update_alert_display(displayGray);
+            lastColorState = displayGray;
+        }
+        
         lv_obj_t * objs_to_hide[] = {
             objects.alert_table, objects.mute_logo, objects.photo_type,
             objects.photo_image, objects.band_x, objects.band_k, 
@@ -930,6 +984,9 @@ void tick_screen_main() {
                 }
                 if (!lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
                     lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
+                }
+                if (!lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) {
+                    lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
                 }
                 lv_label_set_text_fmt(objects.bogey_count, "%d", alertCount);
             }

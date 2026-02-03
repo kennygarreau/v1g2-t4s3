@@ -162,43 +162,30 @@ void checkBandTimeouts() {
     if (ka_state.active && (now - ka_state.last_seen_ms > BAND_TIMEOUT_MS)) {
         //Serial.printf("deactivating Ka band, last seen delta: %u\n", now - ka_state.last_seen_ms);
         ka_state.active = false;
-        set_var_kaAlert(false);
         disable_blinking(BLINK_KA);
     }
     if (k_state.active && (now - k_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating K band");
         k_state.active = false;
-        set_var_kAlert(false);
         disable_blinking(BLINK_K);
     }
     if (x_state.active && (now - x_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating X band");
         x_state.active = false;
-        set_var_xAlert(false);
         disable_blinking(BLINK_X);
     }
     if (laser_state.active && (now - laser_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating LASER band");
         laser_state.active = false;
-        set_var_laserAlert(false);
         disable_blinking(BLINK_LASER);
     }
     if (front_state.active && (now - front_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating front arrow");
         front_state.active = false;
-        set_var_arrowPrioFront(false);
         disable_blinking(BLINK_FRONT);
     }
     if (side_state.active && (now - side_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating side arrow");
         side_state.active = false;
-        set_var_arrowPrioSide(false);
         disable_blinking(BLINK_SIDE);
     }
     if (rear_state.active && (now - rear_state.last_seen_ms > BAND_TIMEOUT_MS)) {
-        //Serial.println("deactivating rear arrow");
         rear_state.active = false;
-        set_var_arrowPrioRear(false);
         disable_blinking(BLINK_REAR);
     }
 }
@@ -209,10 +196,6 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     updateBandActivity(arrow1.ka, arrow1.k, arrow1.x, arrow1.laser);
     updateArrowActivity(arrow1.front, arrow1.side, arrow1.rear);
     
-    set_var_kaAlert(ka_state.active);
-    set_var_kAlert(k_state.active);
-    set_var_xAlert(x_state.active);
-    set_var_laserAlert(laser_state.active);
     set_var_muted(arrow1.muteIndicator);
 
     bool anyBandActive = false;
@@ -234,11 +217,7 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
         enable_blinking(BLINK_LASER);
     }
 
-    // Update arrows
-    set_var_arrowPrioFront(front_state.active);
-    set_var_arrowPrioSide(side_state.active);
-    set_var_arrowPrioRear(rear_state.active);
-    
+    // Update arrow blinking
     if (arrow1.front != arrow2.front && arrow1.front) {
         enable_blinking(BLINK_FRONT);
     }
@@ -426,27 +405,24 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                         it->latitude = gpsData.latitude;
                         it->longitude = gpsData.longitude;
                         it->timestamp = gpsData.rawTime;
-                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u\n", now, gpsData.latitude, gpsData.longitude,
-                                    strength, freqMhz, elapsedTimeMicros);
-                        //Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
-
+                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u | history_size: %d\n", now, gpsData.latitude, gpsData.longitude,
+                                    strength, freqMhz, elapsedTimeMicros, logHistory.size());
                     }
                 } else {
                     LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                                         strength, dir, freqMhz};
                     logHistory.push_back(newEntry);
-                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u\n", 
+                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
                                     newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros);
-                    //Serial.printf(" | decode(us): %u\n", elapsedTimeMicros); 
+                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
                 }
                 xSemaphoreGive(gpsDataMutex);
             } else {
                 LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                     strength, dir, freqMhz};
-                Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u\n", 
+                Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
                                     newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros);
+                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
             }
         }
     }

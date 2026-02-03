@@ -253,14 +253,15 @@ extern "C" void main_press_handler(lv_event_t * e) {
                 break;
         }
 
-        Serial.printf("Changing mode from %d to: %d\n", globalConfig.rawMode, newMode);
         if (bt_connected && clientWriteCharacteristic && !alertPresent) {
+            Serial.printf("Changing mode from %d to: %d\n", globalConfig.rawMode, newMode);
+            show_popup("Changing Mode...");
+
             clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqChangeMode(newMode), 8, false);
           }
-        show_popup("Changing Mode...");
 
         /* // TODO: figure out what to do here
-        if (gpsAvailable) {
+        if (bt_connected && gpsAvailable && alertPresent) {
             LockoutEntry thisLockout;
             if (xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {
                 thisLockout.timestamp = gpsData.rawTime;
@@ -290,7 +291,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
         else if (alertPresent) {
             LV_LOG_INFO("requesting mute via short press");
             Serial.println("requesting mute via short press");
-            if (clientWriteCharacteristic && bt_connected) {
+            if (clientWriteCharacteristic) {
                 clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOn(), 7, false);
                 delay(20);
                 show_popup("V1 Muted");
@@ -499,28 +500,16 @@ extern "C" void set_var_alertTableFreqs(const char* values[], int count) {
     alertCount = count;
 }
 
-extern "C" void set_var_arrowPrioFront(bool value) {
-    arrowPrioFront = value;
-}
-
 extern "C" bool get_var_arrowPrioFront() {
-    return arrowPrioFront;
-}
-
-extern "C" void set_var_arrowPrioSide(bool value) {
-    arrowPrioSide = value;
+    return front_state.active;
 }
 
 extern "C" bool get_var_arrowPrioSide() {
-    return arrowPrioSide;
-}
-
-extern "C" void set_var_arrowPrioRear(bool value) {
-    arrowPrioRear = value;
+    return side_state.active;
 }
 
 extern "C" bool get_var_arrowPrioRear() {
-    return arrowPrioRear;
+    return rear_state.active;
 }
 
 extern "C" bool get_var_muted() {
@@ -592,37 +581,51 @@ extern "C" void set_var_showAlertTable(bool value) {
     showAlertTable = value;
 }
 
-extern "C" void set_var_kAlert(bool value) {
-    kAlert = value;
-}
-
 extern "C" bool get_var_kAlert() {
     return k_state.active;
 }
 
-extern "C" void set_var_xAlert(bool value) {
-    xAlert = value;
+extern "C" bool get_var_xAlert() {
+    return x_state.active;
 }
 
-extern "C" bool get_var_xAlert() {
-    return xAlert;
+extern "C" bool get_var_kaAlert() {
+    return ka_state.active;
+}
+
+extern "C" bool get_var_laserAlert() {
+    return laser_state.active;
+}
+
+/*
+extern "C" void set_var_kAlert(bool value) {
+    kAlert = value;
 }
 
 extern "C" void set_var_kaAlert(bool value) {
     kaAlert = value;
 }
 
-extern "C" bool get_var_kaAlert() {
-    return kaAlert;
+extern "C" void set_var_xAlert(bool value) {
+    xAlert = value;
 }
 
 extern "C" void set_var_laserAlert(bool value) {
     laserAlert = value;
 }
 
-extern "C" bool get_var_laserAlert() {
-    return laserAlert;
+extern "C" void set_var_arrowPrioRear(bool value) {
+    arrowPrioRear = value;
 }
+
+extern "C" void set_var_arrowPrioSide(bool value) {
+    arrowPrioSide = value;
+}
+
+extern "C" void set_var_arrowPrioFront(bool value) {
+    arrowPrioFront = value;
+}
+*/
 
 extern "C" const char *get_var_lowspeedthreshold() {
     static char buffer[8];
@@ -665,9 +668,10 @@ void displayTestTask(void *pvParameters) {
         {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x13, 0x29, 0x1D, 0x21, 0x85, 0x88, 0x00, 0xE8, 0xAB},
         {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x23, 0x5E, 0x56, 0x92, 0x83, 0x24, 0x00, 0x00, 0xAB}, // bit 11 swap to 0x04 for photoRadar
         {0xAA, 0xD6, 0xEA, 0x43, 0x07, 0x33, 0x87, 0x8C, 0xB6, 0x81, 0x22, 0x80, 0x30, 0xAB},
-        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x00, 0x07, 0x28, 0x28, 0x10, 0x00, 0x00, 0x34, 0xAB}, // X band
+        //{0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x00, 0x07, 0x28, 0x28, 0x10, 0x00, 0x00, 0x34, 0xAB}, // X band
         {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x4F, 0x3F, 0x22, 0x00, 0x50, 0x00, 0x35, 0x2A, 0xAB}, // Ka band - Prio + Blink
         {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x4F, 0x0F, 0x24, 0x24, 0x50, 0x00, 0x35, 0x20, 0xAB}, // K band
+        {0xAA, 0xD8, 0xEA, 0x31, 0x09, 0x4F, 0x4F, 0x03, 0x88, 0x88, 0x50, 0x00, 0x80, 0x27, 0xAB}, // X band
     };
 
     while (true) {
