@@ -58,12 +58,12 @@ extern "C" bool get_var_useProxy() {
 
 extern "C" void set_var_useProxy(bool value) {
     preferences.begin("settings", false);
-    if (!value) {
-        settings.proxyBLE = false;
+    settings.proxyBLE = value;
+
+    if (value) {
         Serial.println("Enabling proxy"); 
     }
     else {
-        settings.proxyBLE = true;
         Serial.println("Disabling proxy");
     }
 
