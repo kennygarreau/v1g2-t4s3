@@ -317,7 +317,7 @@ void loop() {
     ui_tick();
     lv_task_handler();
     unsigned long elapsedHandler = millis() - now;
-    if (elapsedHandler > 25) {
+    if (elapsedHandler > 16) {
       Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
     }
   }
