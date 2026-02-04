@@ -433,6 +433,8 @@ void create_screen_main() {
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
             lv_obj_set_style_bg_color(obj, lv_color_hex(0xff212124), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_opa(obj, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_GESTURE_BUBBLE);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
 
             create_alert_rows(obj, MAX_ALERT_ROWS);
@@ -441,17 +443,22 @@ void create_screen_main() {
         {
             create_signal_bars(parent_obj, MAX_BARS);
         }
+        
+        // container for priority arrows
         objects.arrow_container = lv_obj_create(parent_obj);
         lv_obj_set_size(objects.arrow_container, 160, 220); // Adjust to fit your layout
         //lv_obj_set_pos(objects.arrow_container, 196, 92);    // Left side
         lv_obj_set_style_bg_opa(objects.arrow_container, LV_OPA_TRANSP, 0); // Transparent
         lv_obj_set_style_border_width(objects.arrow_container, 0, 0);       // No border
+        lv_obj_clear_flag(objects.arrow_container, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(objects.arrow_container, LV_OBJ_FLAG_GESTURE_BUBBLE);
         lv_obj_align(objects.arrow_container, LV_ALIGN_CENTER, -24, -24);
         // lv_obj_set_style_bg_color(objects.arrow_container, lv_palette_main(LV_PALETTE_GREY), 0);
         // lv_obj_set_style_bg_opa(objects.arrow_container, 100, 0); // Semi-transparent (0-255)
         // lv_obj_set_style_border_width(objects.arrow_container, 2, 0);
         // lv_obj_set_style_border_color(objects.arrow_container, lv_palette_main(LV_PALETTE_BLUE), 0);
         lv_obj_clear_flag(objects.arrow_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
+        
         // front arrow
         { 
             lv_obj_t *obj = lv_img_create(objects.arrow_container);
@@ -483,11 +490,14 @@ void create_screen_main() {
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         
+        // container for bands + bogey counter
         objects.alert_info_container = lv_obj_create(parent_obj);
         lv_obj_set_size(objects.alert_info_container, 96, 228); // Adjust to fit your layout
         lv_obj_set_pos(objects.alert_info_container, 0, 44);    // Left side
         lv_obj_set_style_bg_opa(objects.alert_info_container, LV_OPA_TRANSP, 0); // Transparent
         lv_obj_set_style_border_width(objects.alert_info_container, 0, 0);       // No border
+        lv_obj_clear_flag(objects.alert_info_container, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(objects.alert_info_container, LV_OBJ_FLAG_GESTURE_BUBBLE);
         // lv_obj_set_style_bg_color(objects.alert_info_container, lv_palette_main(LV_PALETTE_GREY), 0);
         // lv_obj_set_style_bg_opa(objects.alert_info_container, 100, 0); // Semi-transparent (0-255)
         // lv_obj_set_style_border_width(objects.alert_info_container, 2, 0);
