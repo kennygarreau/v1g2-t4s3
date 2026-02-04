@@ -13,6 +13,8 @@ typedef struct _objects_t {
     lv_obj_t *settings;
     lv_obj_t *dispSettings;
     lv_obj_t *status_icon_container;
+    lv_obj_t *alert_info_container;
+    lv_obj_t *arrow_container;
     lv_obj_t *v1gen2logo;
     lv_obj_t *prioalertfreq;
     lv_obj_t *bt_logo;

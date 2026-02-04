@@ -138,6 +138,39 @@ void create_signal_bars(lv_obj_t* parent, int num_bars) {
     }
 }
 
+/*
+void update_signal_bars(int num_visible) {
+    bool muted = get_var_muted();
+    bool muteToGray = get_var_muteToGray();
+    bool colorBars = get_var_colorBars();
+
+    // Cache the target color so we don't do logic inside the loop
+    uint32_t target_color = default_color;
+    if (muted && muteToGray) target_color = gray_color;
+
+    for (int i = 0; i < MAX_BARS; ++i) {
+        if (signal_bars[i] == NULL) continue;
+
+        bool should_be_visible = (i < num_visible);
+        bool currently_hidden = lv_obj_has_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
+
+        if (should_be_visible) {
+            uint32_t final_color = colorBars ? get_bar_color(i) : target_color;
+            
+            // Only set style if it actually changed
+            lv_color_t c = lv_color_hex(final_color);
+            if(lv_obj_get_style_bg_color(signal_bars[i], LV_PART_MAIN).full != c.full) {
+                lv_obj_set_style_bg_color(signal_bars[i], c, LV_PART_MAIN);
+            }
+
+            if (currently_hidden) lv_obj_clear_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
+        } else {
+            if (!currently_hidden) lv_obj_add_flag(signal_bars[i], LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+}
+    */
+
 void update_signal_bars(int num_visible) {
     bool muted = get_var_muted();
     bool muteToGray = get_var_muteToGray();
@@ -359,17 +392,6 @@ void create_screen_main() {
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
-        // bogey count
-        {
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.bogey_count = obj;
-            lv_obj_set_pos(obj, 17, 50);
-            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_label_set_text(obj, "");
-            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        }
         // default v1 mode
         {
             lv_obj_t *obj = lv_label_create(parent_obj);
@@ -419,68 +441,105 @@ void create_screen_main() {
         {
             create_signal_bars(parent_obj, MAX_BARS);
         }
+        objects.arrow_container = lv_obj_create(parent_obj);
+        lv_obj_set_size(objects.arrow_container, 160, 220); // Adjust to fit your layout
+        //lv_obj_set_pos(objects.arrow_container, 196, 92);    // Left side
+        lv_obj_set_style_bg_opa(objects.arrow_container, LV_OPA_TRANSP, 0); // Transparent
+        lv_obj_set_style_border_width(objects.arrow_container, 0, 0);       // No border
+        lv_obj_align(objects.arrow_container, LV_ALIGN_CENTER, -24, -24);
+        // lv_obj_set_style_bg_color(objects.arrow_container, lv_palette_main(LV_PALETTE_GREY), 0);
+        // lv_obj_set_style_bg_opa(objects.arrow_container, 100, 0); // Semi-transparent (0-255)
+        // lv_obj_set_style_border_width(objects.arrow_container, 2, 0);
+        // lv_obj_set_style_border_color(objects.arrow_container, lv_palette_main(LV_PALETTE_BLUE), 0);
+        lv_obj_clear_flag(objects.arrow_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
         // front arrow
         { 
-            lv_obj_t *obj = lv_img_create(parent_obj);
+            lv_obj_t *obj = lv_img_create(objects.arrow_container);
             objects.front_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front_4bit);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_front);
             lv_img_set_src(obj, psram_img);
-            lv_obj_align(obj, LV_ALIGN_CENTER, -24, -70);
+            //lv_obj_align(obj, LV_ALIGN_CENTER, -24, -70);
+            lv_obj_set_pos(obj, 0, 0);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         // side arrow
         {
-            lv_obj_t *obj = lv_img_create(parent_obj);
+            lv_obj_t *obj = lv_img_create(objects.arrow_container);
             objects.side_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_side_4bit);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_side);
             lv_img_set_src(obj, psram_img);
-            lv_obj_align(obj, LV_ALIGN_CENTER, -24, 0);
+            //lv_obj_align(obj, LV_ALIGN_CENTER, -24, 0);
+            lv_obj_set_pos(obj, 0, 90);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
         // rear arrow
         {
-            lv_obj_t *obj = lv_img_create(parent_obj);
+            lv_obj_t *obj = lv_img_create(objects.arrow_container);
             objects.rear_arrow = obj;
-            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_rear_4bit);
+            lv_img_dsc_t *psram_img = allocate_image_in_psram(&img_arrow_rear);
             lv_img_set_src(obj, psram_img);
-            lv_obj_align(obj, LV_ALIGN_CENTER, -24, 50);
+            //lv_obj_align(obj, LV_ALIGN_CENTER, -24, 50);
+            lv_obj_set_pos(obj, 0, 140);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        
+        objects.alert_info_container = lv_obj_create(parent_obj);
+        lv_obj_set_size(objects.alert_info_container, 96, 228); // Adjust to fit your layout
+        lv_obj_set_pos(objects.alert_info_container, 0, 44);    // Left side
+        lv_obj_set_style_bg_opa(objects.alert_info_container, LV_OPA_TRANSP, 0); // Transparent
+        lv_obj_set_style_border_width(objects.alert_info_container, 0, 0);       // No border
+        // lv_obj_set_style_bg_color(objects.alert_info_container, lv_palette_main(LV_PALETTE_GREY), 0);
+        // lv_obj_set_style_bg_opa(objects.alert_info_container, 100, 0); // Semi-transparent (0-255)
+        // lv_obj_set_style_border_width(objects.alert_info_container, 2, 0);
+        // lv_obj_set_style_border_color(objects.alert_info_container, lv_palette_main(LV_PALETTE_BLUE), 0);
+        lv_obj_clear_flag(objects.alert_info_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
+
+        // bogey count
         {
-            // band_ka
-            lv_obj_t *obj = lv_label_create(parent_obj);
+            lv_obj_t *obj = lv_label_create(objects.alert_info_container);
+            objects.bogey_count = obj;
+            lv_obj_set_pos(obj, 0, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "");
+            lv_obj_set_style_text_font(obj, &ui_font_alarmclock_128, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        }
+        // band_ka
+        {
+            lv_obj_t *obj = lv_label_create(objects.alert_info_container);
             objects.band_ka = obj;
-            lv_obj_set_pos(obj, 14, 162);
+            lv_obj_set_pos(obj, 0, 112);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "KA");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // band_k
         {
-            // band_k
-            lv_obj_t *obj = lv_label_create(parent_obj);
+            lv_obj_t *obj = lv_label_create(objects.alert_info_container);
             objects.band_k = obj;
-            lv_obj_set_pos(obj, 14, 200);
+            lv_obj_set_pos(obj, 0, 150);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "K");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // band_x
         {
-            // band_x
-            lv_obj_t *obj = lv_label_create(parent_obj);
+            lv_obj_t *obj = lv_label_create(objects.alert_info_container);
             objects.band_x = obj;
-            lv_obj_set_pos(obj, 14, 238);
+            lv_obj_set_pos(obj, 0, 188);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_label_set_text(obj, "X");
             lv_obj_set_style_text_font(obj, &ui_font_alarmclock_36, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
+        // initialize blinking callback and object mapping
         {   
-            // initialize blinking callback and object mapping
             init_blinking_system();
             register_blinking_image(BLINK_FRONT, objects.front_arrow);
             register_blinking_image(BLINK_SIDE, objects.side_arrow);
@@ -689,39 +748,6 @@ void tick_screen_main() {
                 }
                 */
             }
-            /*
-            bool should_blink = blink_enabled[BLINK_FRONT];
-            if (should_blink) {
-                LV_LOG_INFO("paint front blink");
-                if (now - last_blink_time >= BLINK_FREQUENCY) {
-                    last_blink_time = now;
-                    blink_state = !blink_state;
-
-                    if (blink_state) {
-                        lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
-                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_COVER, 0);
-                    } else {
-                        lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
-                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_TRANSP, 0);
-                    }
-                }
-            } else {
-                bool new_val = get_var_arrowPrioFront(); // true when front should paint
-                bool cur_val = lv_obj_has_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
-
-                if (new_val == cur_val) {
-                    LV_LOG_INFO("paint front solid");
-                    tick_value_change_obj = objects.front_arrow;
-                    if (new_val) {
-                        lv_obj_clear_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
-                        //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_COVER, 0);
-                    }
-                    lv_obj_add_flag(objects.front_arrow, LV_OBJ_FLAG_HIDDEN);
-                    //lv_obj_set_style_opa(objects.front_arrow, LV_OPA_TRANSP, 0);
-                    tick_value_change_obj = NULL;
-                }
-            }
-                */
         }
         // Side Arrow
         { 
@@ -735,33 +761,6 @@ void tick_screen_main() {
                         : lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
                 tick_value_change_obj = NULL;
             }
-            /*
-            bool should_blink = blink_enabled[BLINK_SIDE];
-            if (should_blink) {
-                LV_LOG_INFO("paint side blink");
-                if (now - last_blink_time >= BLINK_FREQUENCY) {
-                    last_blink_time = now;
-                    blink_state = !blink_state;
-
-                    if (blink_state) {
-                        lv_obj_clear_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
-                    } else {
-                        lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
-                    }
-                }
-            } else {
-                bool new_val = get_var_arrowPrioSide(); // true when side should paint
-                bool cur_val = lv_obj_has_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
-
-                if (new_val == cur_val) {
-                    LV_LOG_INFO("paint side solid");
-                    tick_value_change_obj = objects.side_arrow;
-                    if (new_val) lv_obj_clear_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
-                    else lv_obj_add_flag(objects.side_arrow, LV_OBJ_FLAG_HIDDEN);
-                    tick_value_change_obj = NULL;
-                }
-            }
-            */
         }
         // Rear Arrow
         {
@@ -775,33 +774,6 @@ void tick_screen_main() {
                         : lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
                 tick_value_change_obj = NULL;
             }
-            /*
-            bool should_blink = blink_enabled[BLINK_REAR];
-            if (should_blink) {
-                LV_LOG_INFO("paint rear blink");
-                if (now - last_blink_time >= BLINK_FREQUENCY) {
-                    last_blink_time = now;
-                    blink_state = !blink_state;
-
-                    if (blink_state) {
-                        lv_obj_clear_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
-                    } else {
-                        lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
-                    }
-                }
-            } else {
-                bool new_val = get_var_arrowPrioRear(); // true when rear should paint
-                bool cur_val = lv_obj_has_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN); // true if "hidden"
-
-                if (new_val == cur_val) {
-                    LV_LOG_INFO("paint rear solid");
-                    tick_value_change_obj = objects.rear_arrow;
-                    if (new_val) lv_obj_clear_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
-                    else lv_obj_add_flag(objects.rear_arrow, LV_OBJ_FLAG_HIDDEN);
-                    tick_value_change_obj = NULL;
-                }
-            }
-            */
         }
         // Priority Alert Frequency & Bars
         {    
@@ -980,17 +952,24 @@ void tick_screen_main() {
             } else {
                 LV_LOG_INFO("update UI bogey count to %d", alertCount);
                 if (lv_obj_has_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN)) {
+                    LV_LOG_INFO("un-hiding bogey count");
                     lv_obj_clear_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN);
                 }
                 if (!lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
+                    LV_LOG_INFO("hiding default mode");
                     lv_obj_add_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN);
                 }
                 if (!lv_obj_has_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN)) {
+                    LV_LOG_INFO("hiding custom_freq indicator");
                     lv_obj_add_flag(objects.custom_freq_en, LV_OBJ_FLAG_HIDDEN);
                 }
                 lv_label_set_text_fmt(objects.bogey_count, "%d", alertCount);
             }
+            LV_LOG_INFO("all alert updates to UI complete");
             lastAlertCount = alertCount;
+            
+            // lv_obj_invalidate(objects.alert_info_container);
+            // lv_obj_invalidate(objects.arrow_container);
         }
         // No alert present = show the mode + custom freq indicator, hide the bogey counter
         else if (!alertPresent && useDefault) {
