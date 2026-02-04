@@ -179,12 +179,12 @@ void setup()
   ui_tick();
   lv_task_handler();
 
-  if (!fileManager.init()) {
-    Serial.println("Failed to initialize SPIFFS");
+  if (!initStorage()) {
+    Serial.println("Failed to initialize LittleFS");
     return;
   }
 
-  Serial.printf("Free heap after SPIFFS init: %u\n", ESP.getFreeHeap());
+  Serial.printf("Free heap after LittleFS init: %u\n", ESP.getFreeHeap());
 
   lockoutList = (std::vector<LockoutEntry> *)ps_malloc(sizeof(std::vector<LockoutEntry>));
   if (!lockoutList) {
@@ -194,13 +194,13 @@ void setup()
 
   new (lockoutList) std::vector<LockoutEntry>();
   Serial.println("Lockout list allocated in PSRAM.");
-
+  /*
   if (!fileManager.openDatabase()) return;
   fileManager.createTable();
   fileManager.readLockouts();
 
   Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
-
+  */
 
   gpsDataMutex = xSemaphoreCreateMutex();
 

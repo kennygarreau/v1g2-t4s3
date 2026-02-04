@@ -4,9 +4,15 @@
 #include <SPIFFS.h>
 #include "v1_config.h"
 
-#define DB_PATH "/spiffs/lockouts.db"
+#define DB_PATH "/littlefs/lockouts.db"
 #define CACHE_SIZE 4
 #define SQLITE_PSRAM_BUFFER_SIZE (512 * 1024)
+
+std::vector<String> getLogFileList();
+void ensureLogDir();
+String getLogFilename(uint32_t timestamp);
+bool initStorage();
+void pruneOldLogFiles();
 
 class SPIFFSFileManager {
 private:

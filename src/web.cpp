@@ -1,6 +1,7 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
+#include <AsyncJson.h>
 #include <Update.h>
 #include "v1_config.h"
 #include "v1_packet.h"
@@ -9,6 +10,11 @@
 #include "ble.h"
 #include "ui/actions.h"
 #include "ui/ui.h"
+#include "v1_fs.h"
+#include "LittleFS.h"
+#include "esp_task_wdt.h"
+
+constexpr size_t FLUSH_THRESHOLD = 100; // Flush at 100 entries in memory
 
 const char *lockoutFieldNames[] = {
     "act",
@@ -116,9 +122,97 @@ void getDeviceStats() {
     stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
 }
 
+// Flush PSRAM log entries to LittleFS (with watchdog handling)
+bool flushLogsToDisk() {
+    if (logHistory.empty()) return true;
+    
+    ensureLogDir();
+    
+    String filename = getLogFilename(logHistory[0].timestamp);
+    
+    // Safety: Ensure path starts with /
+    if (!filename.startsWith("/")) {
+        filename = "/" + filename;
+    }
+
+    Serial.printf("Flushing to file: %s\n", filename.c_str());
+    
+    // Open in "a" (Append) mode
+    File file = LittleFS.open(filename, "a");
+    if (!file) {
+        Serial.println("Failed to open log file for appending");
+        return false;
+    }
+    
+    size_t written = 0;
+    const size_t BATCH_SIZE = 10; 
+    
+    for (size_t i = 0; i < logHistory.size(); i++) {
+        const LogEntry& entry = logHistory[i];
+        
+        // Use a local scope for the JsonDocument to free memory every iteration
+        {
+            JsonDocument doc;
+            doc["ts"]   = entry.timestamp;
+            doc["lat"]  = entry.latitude;
+            doc["lon"]  = entry.longitude;
+            doc["spd"]  = entry.speed;
+            doc["crs"]  = entry.course;
+            doc["str"]  = entry.strength;
+            doc["dir"]  = entry.direction;
+            doc["freq"] = entry.frequency;
+
+            String debugJson;
+            serializeJson(doc, debugJson);
+            Serial.printf("[DEBUG] Entry %d: %s\n", i, debugJson.c_str());
+            
+            if (serializeJson(doc, file) == 0) {
+                Serial.println("Disk full or write error!");
+                file.close();
+                return false;
+            }
+            file.println(); // Crucial for JSONL format
+        }
+        
+        written++;
+        
+        // Watchdog & system health
+        if (written % BATCH_SIZE == 0) {
+            esp_task_wdt_reset(); 
+            yield(); 
+        }
+    }
+    
+    file.flush(); // Ensure all data is physically on the flash
+    file.close();
+    
+    // Correctly check final size
+    File verify = LittleFS.open(filename, "r");
+    size_t finalSize = verify.size();
+    verify.close();
+
+    Serial.printf("Flushed %d entries to %s (New size: %d B)\n", 
+                  written, filename.c_str(), finalSize);
+    
+    // Clear PSRAM only after we know we finished the file operations
+    logHistory.clear();
+    
+    pruneOldLogFiles();
+    
+    return true;
+}
+
+void checkAutoFlush() {
+    if (logHistory.size() >= FLUSH_THRESHOLD) {
+        Serial.println("Auto-flushing logs to disk");
+        flushLogsToDisk();
+    }
+}
+
+// should be renamed to LittleFS, placeholder for now
 String readFileFromSPIFFS(const char *path)
 {
-    File file = SPIFFS.open(path, "r");
+    File file = LittleFS.open(path, "r");
     if (!file || file.isDirectory())
     {
         return "<h1>404 - Page not found</h1>";
@@ -135,7 +229,7 @@ String readFileFromSPIFFS(const char *path)
 void serveStaticFile(AsyncWebServer &server, const char *path, const char *mimeType)
 {
     server.on(path, HTTP_GET, [path, mimeType](AsyncWebServerRequest *request) { 
-        request->send(SPIFFS, path, mimeType); 
+        request->send(LittleFS, path, mimeType); 
     });
 }
 
@@ -143,7 +237,7 @@ void serveCachedStaticFile(AsyncWebServer &server, const char *path, const char 
 {
     server.on(path, HTTP_GET, [path, mimeType](AsyncWebServerRequest *request) {
         AsyncWebServerResponse *response =
-            request->beginResponse(SPIFFS, path, mimeType);
+            request->beginResponse(LittleFS, path, mimeType);
 
         response->addHeader("Cache-Control", "public, max-age=2592000, immutable");
         request->send(response);
@@ -184,6 +278,187 @@ uint32_t hexToUint32(const String &hex) {
     return colorValue;
 }
 
+int countEntriesInFile(const String& filename) {
+    File file = LittleFS.open(filename, "r");
+    if (!file) return 0;
+
+    int count = 0;
+    while (file.available()) {
+        String line = file.readStringUntil('\n');
+        if (line.length() > 2) count++;
+    }
+    file.close();
+    return count;
+}
+
+void setupLogRoutes() {
+
+    server.on("/api/logs/*", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String path = request->url().substring(10); // removes the leading /api/logs/
+        String fullPath = "/logs/" + path;
+
+        if (!LittleFS.exists(fullPath)) {
+            request->send(404, "text/plain", "Log file not found");
+            return;
+        }
+
+        Serial.printf("Log file full path: %s\n", fullPath.c_str());
+        request->send(LittleFS, fullPath, "application/x-ndjson");
+    });
+    
+    server.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
+        std::vector<String> files = getLogFileList();
+
+        JsonDocument doc;
+        JsonArray arr = doc["files"].to<JsonArray>();
+    
+        for (const auto& filename: files) {
+            File f = LittleFS.open(filename, "r");
+            JsonObject fileObj = arr.add<JsonObject>();
+            
+            // Ensure filename starts with /logs/ before substring
+            String displayName = filename;
+            if (displayName.startsWith("/logs/")) displayName = displayName.substring(6);
+            
+            fileObj["name"] = displayName;
+            
+            if (f) {
+                fileObj["size"] = f.size();
+                f.close(); // Close it before calling countEntries
+                fileObj["entries"] = countEntriesInFile(filename);
+            } else {
+                fileObj["size"] = 0;
+                fileObj["entries"] = 0;
+                Serial.printf("Failed to open %s for metadata check!\n", filename.c_str());
+            }
+        }
+
+        String response;
+        serializeJson(doc, response);
+        request->send(200, "application/json", response);
+    });
+
+    server.on("/api/flush", HTTP_POST, [](AsyncWebServerRequest *request) {
+        bool success = flushLogsToDisk();
+
+        JsonDocument doc;
+        doc["success"] = success;
+        doc["message"] = success ? "logs flushed successfully" : "Flush failed";
+
+        String response;
+        serializeJson(doc, response);
+        request->send(success ? 200 : 500, "application/json", response);
+    });
+
+    server.on("/api/logs/*", HTTP_DELETE, [](AsyncWebServerRequest *request) {
+        String path = request->url().substring(10);
+        String fullPath = "/logs/" + path;
+
+        if (LittleFS.remove(fullPath)) {
+            request->send(200, "text/plain", "Deleted");
+        } else {
+            request->send(404, "text/plain", "File not found");
+        }
+    });
+
+    server.on("/api/buffer/clear", HTTP_POST, [](AsyncWebServerRequest *request) {
+        size_t clearedCount = logHistory.size();
+        logHistory.clear();
+        
+        JsonDocument doc;
+        doc["success"] = true;
+        doc["cleared"] = clearedCount;
+        doc["message"] = String("Cleared ") + clearedCount + " entries from buffer";
+        
+        String response;
+        serializeJson(doc, response);
+        request->send(200, "application/json", response);
+    });
+
+    server.on("/api/buffer", HTTP_GET, [](AsyncWebServerRequest *request) {
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonVariant root = response->getRoot();
+        
+        JsonArray arr = root["entries"].to<JsonArray>();
+        
+        for (const auto& entry : logHistory) {
+            JsonObject obj = arr.add<JsonObject>();
+            obj["ts"] = entry.timestamp;
+            obj["lat"] = entry.latitude;
+            obj["lon"] = entry.longitude;
+            obj["spd"] = entry.speed;
+            obj["crs"] = entry.course;
+            obj["str"] = entry.strength;
+            obj["dir"] = entry.direction;
+            obj["freq"] = entry.frequency;
+        }
+        
+        root["count"] = logHistory.size();
+        root["capacity"] = logHistory.size();
+        
+        response->setLength();
+        request->send(response);
+    });
+
+    server.on("/api/debug/stack", HTTP_GET, [](AsyncWebServerRequest *request) {
+    UBaseType_t stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+    
+    String response = "{";
+    response += "\"stack_free_bytes\":";
+    response += String(stackHighWaterMark);
+    response += ",\"heap_free\":";
+    response += String(ESP.getFreeHeap());
+    response += ",\"psram_free\":";
+    response += String(ESP.getFreePsram());
+    response += ",\"min_free_heap\":";
+    response += String(ESP.getMinFreeHeap());
+    response += "}";
+    
+    Serial.printf("Stack HWM: %d bytes free\n", stackHighWaterMark);
+    
+    request->send(200, "application/json", response);
+});
+}
+
+void handleStatusRequest(AsyncWebServerRequest *request) {
+    int frequency = getCpuFrequencyMhz();
+        stats.wifiRSSI = getWifiRSSI();
+        JsonDocument jsonDoc;
+
+        jsonDoc["uptime"] = stats.uptime;
+        jsonDoc["boardType"] = stats.boardType;
+        jsonDoc["boardRev"] = stats.boardRev;
+        jsonDoc["frequency"] = frequency;
+        jsonDoc["cpuBusy"] = stats.cpuBusy;
+        jsonDoc["cpuCores"] = stats.cpuCores;
+        jsonDoc["totalHeap"] = stats.totalHeap / 1024;
+        jsonDoc["freeHeapInKB"] = stats.freeHeap / 1024;
+        jsonDoc["heapFrag"] = stats.heapFrag;
+        jsonDoc["psram_entries"] = logHistory.size();
+        jsonDoc["psram_total_kb"] = stats.totalPsram / 1024;
+        jsonDoc["psram_free_kb"] = stats.freePsram / 1024;
+        jsonDoc["fs_total_kb"] = stats.totalStorageKB;
+        jsonDoc["fs_used_kb"] = stats.usedStorageKB;
+        jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
+        jsonDoc["bluetoothRSSI"] = stats.btStr;
+        jsonDoc["wifiRSSI"] = stats.wifiRSSI;
+        jsonDoc["usingBattery"] = usingBattery;
+        jsonDoc["batteryPercent"] = batteryPercentage;
+        jsonDoc["espVoltage"] = voltageInMv;
+
+        if (isVBusIn) {
+            jsonDoc["vBusVoltage"] = vBusVoltage;
+        }
+        if (batteryCharging) {
+            jsonDoc["batteryCharging"] = "(charging)";
+        }
+        jsonDoc["carVoltage"] = stats.voltage;
+
+        String jsonResponse;
+        serializeJson(jsonDoc, jsonResponse);
+        request->send(200, "application/json", jsonResponse); 
+}
+
 void setupWebServer()
 {
     if (wifiConnected) {
@@ -216,6 +491,7 @@ void setupWebServer()
     serveStaticFile(server, "/settings.html", "text/html");
     serveStaticFile(server, "/lockouts.html", "text/html");
     serveStaticFile(server, "/status.html", "text/html");
+    serveStaticFile(server, "/logs.html", "text/html");
     serveStaticFile(server, "/style.css", "text/css");
     serveCachedStaticFile(server, "/favicon.ico", "image/x-icon");
     serveCachedStaticFile(server, "/fonts/roboto-regular.woff2", "font/woff2");
@@ -316,7 +592,11 @@ void setupWebServer()
         serializeJson(jsonDoc, jsonResponse);
         request->send(200, "application/json", jsonResponse); 
     });
+    
+    server.on("/stats", HTTP_GET, handleStatusRequest);
+    server.on("/api/status", HTTP_GET, handleStatusRequest);
 
+/*
     server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request) {
         int frequency = getCpuFrequencyMhz();
         stats.wifiRSSI = getWifiRSSI();
@@ -331,10 +611,11 @@ void setupWebServer()
         jsonDoc["totalHeap"] = stats.totalHeap / 1024;
         jsonDoc["freeHeapInKB"] = stats.freeHeap / 1024;
         jsonDoc["heapFrag"] = stats.heapFrag;
-        jsonDoc["totalPsram"] = stats.totalPsram / 1024;
-        jsonDoc["freePsramInKB"] = stats.freePsram / 1024;
-        jsonDoc["totalStorage"] = stats.totalStorageKB;
-        jsonDoc["usedStorage"] = stats.usedStorageKB;
+        jsonDoc["psram_entries"] = logHistory.size();
+        jsonDoc["psram_total_kb"] = stats.totalPsram / 1024;
+        jsonDoc["psram_free_kb"] = stats.freePsram / 1024;
+        jsonDoc["fs_total_kb"] = stats.totalStorageKB;
+        jsonDoc["fs_used_kb"] = stats.usedStorageKB;
         jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
         jsonDoc["bluetoothRSSI"] = stats.btStr;
         jsonDoc["wifiRSSI"] = stats.wifiRSSI;
@@ -354,7 +635,7 @@ void setupWebServer()
         serializeJson(jsonDoc, jsonResponse);
         request->send(200, "application/json", jsonResponse); 
     });
-
+*/
     server.on("/board-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
 
@@ -749,6 +1030,8 @@ void setupWebServer()
 
             request->send(200, "application/json", "{\"message\": \"Settings updated successfully!\"}");
     });
+
+    setupLogRoutes();
 
     server.begin();
     webStarted = true;

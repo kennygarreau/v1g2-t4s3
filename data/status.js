@@ -1,23 +1,23 @@
 let cpuChart, heapChart, heapFragChart, wifiChart, bleChart;
 
 async function fetchSystemInfo() {
-    const response = await fetch('/stats');
+    const response = await fetch('/api/status');
     const data = await response.json();
     const timestamp = Date.now();
 
     const usedHeap = data.totalHeap - data.freeHeapInKB;
-    const usedPsram = data.totalPsram - data.freePsramInKB;
+    const usedPsram = data.psram_total_kb - data.psram_free_kb;
 
     document.getElementById('cpu-freq').textContent = `${data.frequency} MHz`;
     document.getElementById('cpu-boardType').textContent = `${data.boardType}`;
     document.getElementById('cpu-cores').textContent = `${data.cpuCores}`;
     document.getElementById('uptime').textContent = formatUptime(data.uptime);
-    document.getElementById('total-storage').textContent = `${data.usedStorage} / ${data.totalStorage} KB 
-        (${((data.usedStorage / data.totalStorage) * 100).toFixed(1)}%)`;
+    document.getElementById('total-storage').textContent = `${data.fs_used_kb} / ${data.fs_total_kb} KB 
+        (${((data.fs_used_kb / data.fs_total_kb) * 100).toFixed(1)}%)`;
     document.getElementById('total-heap').textContent = `${usedHeap} / ${data.totalHeap} KB
         (${((usedHeap / data.totalHeap) * 100).toFixed(1)}%)`;
-    document.getElementById('total-psram').textContent = `${usedPsram} / ${data.totalPsram} KB
-        (${((usedPsram / data.totalPsram) * 100).toFixed(1)}%)`;
+    document.getElementById('total-psram').textContent = `${usedPsram} / ${data.psram_total_kb} KB
+        (${((usedPsram / data.psram_total_kb) * 100).toFixed(1)}%)`;
 
     const heapUsage = (1 - data.freeHeapInKB / data.totalHeap) * 100;
 

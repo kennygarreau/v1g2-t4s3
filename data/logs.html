@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Detector Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .status {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .stat {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .live-badge {
+            display: inline-block;
+            background: #ff5722;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tab:hover {
+            background: #444;
+        }
+        .tab.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .file-list {
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-item:hover {
+            background: #333;
+        }
+        .file-name {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .file-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .log-table {
+            width: 100%;
+            background: #2a2a2a;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .log-table th {
+            background: #333;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #444;
+            position: sticky;
+            top: 0;
+        }
+        .log-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #333;
+        }
+        .log-table tr:hover {
+            background: #333;
+        }
+        .log-table tr.new-entry {
+            animation: highlight 1s ease-out;
+        }
+        @keyframes highlight {
+            from { background: #4CAF50; }
+            to { background: transparent; }
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-danger {
+            background: #f44336;
+        }
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #888;
+        }
+        h1 { color: #4CAF50; }
+        h2 { color: #e0e0e0; margin-top: 30px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Radar Detector Logs</h1>
+    
+    <div class="status" id="status">
+        <div class="status-grid">
+            <div class="stat">
+                <div class="stat-label">PSRAM Buffer</div>
+                <div class="stat-value" id="psram-entries">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Free PSRAM</div>
+                <div class="stat-value" id="psram-free">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Storage Used</div>
+                <div class="stat-value" id="fs-used">-</div>
+            </div>
+        </div>
+        <button class="btn" onclick="flushLogs()" style="margin-top: 15px;">
+            Flush PSRAM to Disk
+        </button>
+        <button class="btn" onclick="clearBuffer()" style="margin-top: 15px;">
+            Clear Buffer (No Save)
+        </button>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('live')">
+            Live Buffer <span class="live-badge">LIVE</span>
+        </div>
+        <div class="tab" onclick="switchTab('saved')">
+            Saved Files
+        </div>
+    </div>
+    
+    <!-- Live Buffer Tab -->
+    <div id="live-tab" class="tab-content active">
+        <h2>Live PSRAM Buffer</h2>
+        <p style="color: #888; font-size: 14px;">
+            Auto-refreshes every 2 seconds. Shows unsaved entries currently in memory.
+        </p>
+        
+        <div id="buffer-container">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Speed</th>
+                        <th>Frequency</th>
+                        <th>Strength</th>
+                        <th>Direction</th>
+                    </tr>
+                </thead>
+                <tbody id="buffer-tbody">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            No entries in buffer yet...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Saved Files Tab -->
+    <div id="saved-tab" class="tab-content">
+        <h2>Saved Log Files</h2>
+        <div class="file-list" id="file-list">
+            <p style="padding: 20px; color: #888;">Loading...</p>
+        </div>
+    </div>
+    
+    <!-- Log Viewer Modal -->
+    <div id="log-viewer" class="hidden">
+        <h2>Log Entries: <span id="current-file"></span></h2>
+        <button class="btn btn-danger" onclick="deleteCurrentLog()">Delete This Log</button>
+        <button class="btn" onclick="closeLogViewer()">Close</button>
+        <table class="log-table" id="log-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Speed</th>
+                    <th>Frequency</th>
+                    <th>Strength</th>
+                    <th>Direction</th>
+                </tr>
+            </thead>
+            <tbody id="log-tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let currentLogFile = null;
+        let previousBufferCount = 0;
+        let autoRefreshInterval = null;
+        
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            // Start/stop auto-refresh based on active tab
+            if (tab === 'live') {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (!autoRefreshInterval) {
+                loadBuffer();  // Load immediately
+                autoRefreshInterval = setInterval(loadBuffer, 2000);  // Then every 2 seconds
+            }
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+        
+        async function loadStatus() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            
+            document.getElementById('psram-entries').textContent = data.psram_entries;
+            document.getElementById('psram-free').textContent = data.psram_free_kb + ' KB';
+            document.getElementById('fs-used').textContent = 
+                data.fs_used_kb + ' / ' + data.fs_total_kb + ' KB';
+        }
+        
+        async function loadBuffer() {
+            try {
+                const res = await fetch('/api/buffer');
+                const data = await res.json();
+                
+                const tbody = document.getElementById('buffer-tbody');
+                
+                if (data.entries.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                No entries in buffer. Waiting for radar alerts...
+                            </td>
+                        </tr>
+                    `;
+                    previousBufferCount = 0;
+                    return;
+                }
+                
+                // Check if new entries were added
+                const hasNewEntries = data.entries.length > previousBufferCount;
+                previousBufferCount = data.entries.length;
+                
+                tbody.innerHTML = data.entries.map((entry, index) => {
+                    const date = new Date(entry.ts * 1000).toLocaleString();
+                    const isNew = hasNewEntries && index >= previousBufferCount - (data.entries.length - previousBufferCount);
+                    
+                    return `
+                        <tr ${isNew ? 'class="new-entry"' : ''}>
+                            <td>${date}</td>
+                            <td>${entry.lat.toFixed(6)}</td>
+                            <td>${entry.lon.toFixed(6)}</td>
+                            <td>${entry.spd} mph</td>
+                            <td>${entry.freq} MHz</td>
+                            <td>${entry.str}</td>
+                            <td>${entry.dir}</td>
+                        </tr>
+                    `;
+                }).join('');
+                
+            } catch (err) {
+                console.error('Failed to load buffer:', err);
+            }
+        }
+        
+        async function loadFileList() {
+            const res = await fetch('/api/logs');
+            const data = await res.json();
+            
+            const container = document.getElementById('file-list');
+            if (data.files.length === 0) {
+                container.innerHTML = '<p style="padding: 20px; color: #888;">No log files yet</p>';
+                return;
+            }
+            
+            container.innerHTML = data.files.map(f => `
+                <div class="file-item" onclick="viewLog('${f.name}')">
+                    <div class="file-name">${f.name}</div>
+                    <div class="file-meta">
+                        ${f.entries} entries • ${(f.size / 1024).toFixed(1)} KB
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function viewLog(filename) {
+        currentLogFile = filename;
+        document.getElementById('current-file').textContent = filename;
+        document.getElementById('log-viewer').classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/logs/' + filename);
+            const text = await res.text();
+            
+            // Split into lines and filter out empty strings (common at end of files)
+            const lines = text.trim().split('\n').filter(line => line.trim() !== "");
+
+            const tbody = document.getElementById('log-tbody');
+            tbody.innerHTML = lines.map(line => {
+                try {
+                    const entry = JSON.parse(line);
+                    const date = new Date(entry.ts * 1000).toLocaleString();
+                    
+                    // DEFENSIVE: Check if lat/lon exist before calling .toFixed
+                    // We use || 0 as a fallback to prevent "undefined" errors
+                    const lat = (typeof entry.lat === 'number') ? entry.lat.toFixed(6) : "0.000000";
+                    const lon = (typeof entry.lon === 'number') ? entry.lon.toFixed(6) : "0.000000";
+
+                    return `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${lat}</td>
+                            <td>${lon}</td>
+                            <td>${entry.spd || 0} mph</td>
+                            <td>${entry.freq || 0} MHz</td>
+                            <td>${entry.str || 0}</td>
+                            <td>${entry.dir || '-'}</td>
+                        </tr>
+                    `;
+                } catch (e) {
+                    console.error("Error parsing line:", line, e);
+                    return ""; // Skip corrupt lines
+                }
+            }).join('');
+            } catch (err) {
+                console.error("Failed to load log file:", err);
+            }
+        }
+        
+        function closeLogViewer() {
+            document.getElementById('log-viewer').classList.add('hidden');
+            currentLogFile = null;
+        }
+        
+        async function flushLogs() {
+            const res = await fetch('/api/flush', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            loadStatus();
+            loadFileList();
+            loadBuffer();  // Refresh buffer (should be empty after flush)
+        }
+        
+        async function clearBuffer() {
+            if (!confirm('Clear PSRAM buffer without saving? This will delete all unsaved entries!')) {
+                return;
+            }
+            
+            const res = await fetch('/api/buffer/clear', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            loadStatus();
+            loadBuffer();
+        }
+        
+        async function deleteCurrentLog() {
+            if (!currentLogFile || !confirm('Delete ' + currentLogFile + '?')) return;
+            
+            await fetch('/api/logs/' + currentLogFile, { method: 'DELETE' });
+            closeLogViewer();
+            loadFileList();
+        }
+        
+        // Initial load
+        loadStatus();
+        loadFileList();
+        startAutoRefresh();  // Start auto-refresh since Live tab is default
+        
+        // Update status every 5 seconds
+        setInterval(loadStatus, 5000);
+    </script>
+</body>
+</html>

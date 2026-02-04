@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Detector Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .status {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .stat {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .file-list {
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-item:hover {
+            background: #333;
+        }
+        .file-name {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .file-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .log-table {
+            width: 100%;
+            background: #2a2a2a;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .log-table th {
+            background: #333;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #444;
+        }
+        .log-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #333;
+        }
+        .log-table tr:hover {
+            background: #333;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-danger {
+            background: #f44336;
+        }
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        h1 { color: #4CAF50; }
+        h2 { color: #e0e0e0; margin-top: 30px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Radar Detector Logs</h1>
+    
+    <div class="status" id="status">
+        <div class="status-grid">
+            <div class="stat">
+                <div class="stat-label">PSRAM Buffer</div>
+                <div class="stat-value" id="psram-entries">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Free PSRAM</div>
+                <div class="stat-value" id="psram-free">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Storage Used</div>
+                <div class="stat-value" id="fs-used">-</div>
+            </div>
+        </div>
+        <button class="btn" onclick="flushLogs()" style="margin-top: 15px;">
+            Flush PSRAM to Disk
+        </button>
+    </div>
+    
+    <h2>Log Files</h2>
+    <div class="file-list" id="file-list">
+        <p style="padding: 20px; color: #888;">Loading...</p>
+    </div>
+    
+    <div id="log-viewer" class="hidden">
+        <h2>Log Entries: <span id="current-file"></span></h2>
+        <button class="btn btn-danger" onclick="deleteCurrentLog()">Delete This Log</button>
+        <button class="btn" onclick="closeLogViewer()">Close</button>
+        <table class="log-table" id="log-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Speed</th>
+                    <th>Frequency</th>
+                    <th>Strength</th>
+                    <th>Direction</th>
+                </tr>
+            </thead>
+            <tbody id="log-tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let currentLogFile = null;
+        
+        async function loadStatus() {
+            const res = await fetch('/stats');
+            const data = await res.json();
+            
+            document.getElementById('psram-entries').textContent = data.psram_entries;
+            document.getElementById('psram-free').textContent = data.psram_free_kb + ' KB';
+            document.getElementById('fs-used').textContent = 
+                data.fs_used_kb + ' / ' + data.fs_total_kb + ' KB';
+        }
+        
+        async function loadFileList() {
+            const res = await fetch('/api/logs');
+            const data = await res.json();
+            
+            const container = document.getElementById('file-list');
+            if (data.files.length === 0) {
+                container.innerHTML = '<p style="padding: 20px; color: #888;">No log files yet</p>';
+                return;
+            }
+            
+            container.innerHTML = data.files.map(f => `
+                <div class="file-item" onclick="viewLog('${f.name}')">
+                    <div class="file-name">${f.name}</div>
+                    <div class="file-meta">
+                        ${f.entries} entries • ${(f.size / 1024).toFixed(1)} KB
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function viewLog(filename) {
+            currentLogFile = filename;
+            document.getElementById('current-file').textContent = filename;
+            document.getElementById('log-viewer').classList.remove('hidden');
+            
+            const res = await fetch('/api/logs/' + filename);
+            const text = await res.text();
+            const lines = text.trim().split('\n');
+            
+            const tbody = document.getElementById('log-tbody');
+            tbody.innerHTML = lines.map(line => {
+                const entry = JSON.parse(line);
+                const date = new Date(entry.ts * 1000).toLocaleString();
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${entry.lat.toFixed(6)}</td>
+                        <td>${entry.lon.toFixed(6)}</td>
+                        <td>${entry.spd} mph</td>
+                        <td>${entry.freq} MHz</td>
+                        <td>${entry.str}</td>
+                        <td>${entry.dir}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function closeLogViewer() {
+            document.getElementById('log-viewer').classList.add('hidden');
+            currentLogFile = null;
+        }
+        
+        async function flushLogs() {
+            const res = await fetch('/api/flush', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            loadStatus();
+            loadFileList();
+        }
+        
+        async function deleteCurrentLog() {
+            if (!currentLogFile || !confirm('Delete ' + currentLogFile + '?')) return;
+            
+            await fetch('/api/logs/' + currentLogFile, { method: 'DELETE' });
+            closeLogViewer();
+            loadFileList();
+        }
+        
+        // Initial load and auto-refresh
+        loadStatus();
+        loadFileList();
+        setInterval(loadStatus, 5000);  // Update status every 5 seconds
+    </script>
+</body>
+</html>

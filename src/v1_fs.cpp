@@ -2,27 +2,95 @@
 #include "v1_fs.h"
 #include <sqlite3.h>
 
+#include "FS.h"
+#include "LittleFS.h"
+#include <ArduinoJson.h>
+
+constexpr size_t MAX_LOG_FILES = 30; // Keep the last 30 "days"
+constexpr size_t MAX_FILE_SIZE = 100 * 1024; // 100KB
+
 sqlite3 *db;
 char *errMsg = 0;
 static uint8_t *psramBuffer = NULL;
 
-
-void listSPIFFSFiles() {
-    Serial.println("Listing SPIFFS files...");
-
-    File root = SPIFFS.open("/");
-    if (!root) {
-        Serial.println("Failed to open SPIFFS root directory");
-        return;
+bool initStorage() {
+    if (!LittleFS.begin(true, "/littlefs", 10, "littlefs")) { 
+        Serial.println("LittleFS mount failed");
+        return false;
     }
 
+    Serial.printf("LittleFS: Total=%d KB, Used=%d KB\n",
+        LittleFS.totalBytes() / 1024, LittleFS.usedBytes() / 1024);
+    ensureLogDir();
+    return true;
+}
+
+String getLogFilename(uint32_t timestamp) {
+    uint32_t daysSinceEpoch = timestamp / 86400;
+    
+    // Build path more explicitly
+    String path = "/logs/";
+    path += String(daysSinceEpoch);
+    path += ".jsonl";
+    
+    Serial.printf("Generated filename: %s\n", path.c_str());
+    
+    return path;
+}
+
+void ensureLogDir() {
+    if (!LittleFS.exists("/logs")) {
+        LittleFS.mkdir("/logs");
+    }
+}
+
+void pruneOldLogFiles() {
+    File root = LittleFS.open("/logs");
+    if (!root || !root.isDirectory()) return;
+
+    std::vector<String> files;
     File file = root.openNextFile();
     while (file) {
-        Serial.printf("FILE: %s - %d bytes\n", file.name(), file.size());
+        if (!file.isDirectory() && String(file.name()).endsWith(".jsonl")) {
+            files.push_back(String(file.name()));
+        }
         file = root.openNextFile();
     }
 
-    Serial.println("Finished listing files.");
+    std::sort(files.begin(), files.end());
+
+    while (files.size() > MAX_LOG_FILES) {
+        String toDelete = files.front();
+        Serial.printf("Deleting old log file: %s\n", toDelete.c_str());
+        LittleFS.remove(toDelete);
+        files.erase(files.begin());
+    }
+    Serial.printf("Log files retained: %d\n", files.size());
+}
+
+std::vector<String> getLogFileList() {
+    std::vector<String> files;
+    File root = LittleFS.open("/logs");
+    if (!root || !root.isDirectory()) return files;
+
+    File file = root.openNextFile();
+    while (file) {
+        if (!file.isDirectory()) {
+            String fileName = String(file.name());
+            
+            if (!fileName.startsWith("/logs/")) {
+                fileName = "/logs/" + fileName;
+            }
+
+            if (fileName.endsWith(".jsonl")) {
+                files.push_back(fileName);
+            }
+        }
+        file = root.openNextFile();
+    }
+
+    std::sort(files.rbegin(), files.rend());
+    return files;
 }
 
 bool SPIFFSFileManager::init() {
@@ -38,14 +106,14 @@ void SPIFFSFileManager::closeFile(File file) {
 }
 
 uint32_t SPIFFSFileManager::getStorageTotal() {
-    uint32_t total = SPIFFS.totalBytes();
+    uint32_t total = LittleFS.totalBytes();
     uint32_t totalKB = total / 1024;
 
     return totalKB;
 }
 
 uint32_t SPIFFSFileManager::getStorageUsed() {
-    uint32_t used = SPIFFS.usedBytes();
+    uint32_t used = LittleFS.usedBytes();
     uint32_t usedKB = used / 1024;
 
     return usedKB;
