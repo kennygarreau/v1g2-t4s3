@@ -194,13 +194,12 @@ void setup()
 
   new (lockoutList) std::vector<LockoutEntry>();
   Serial.println("Lockout list allocated in PSRAM.");
-  /*
-  if (!fileManager.openDatabase()) return;
-  fileManager.createTable();
-  fileManager.readLockouts();
 
-  Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
-  */
+  // if (!fileManager.openDatabase()) return;
+  // fileManager.createTable();
+  // fileManager.readLockouts();
+
+  // Serial.printf("Free heap after DB startup: %u\n", ESP.getFreeHeap());
 
   gpsDataMutex = xSemaphoreCreateMutex();
 
