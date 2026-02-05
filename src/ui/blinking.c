@@ -8,6 +8,9 @@ bool blink_enabled[MAX_BLINK_IMAGES] = {false}; // Track which element should bl
 uint8_t blink_count = 0;
 uint8_t cur_bars = 0;
 
+static lv_timer_t *blink_toggle_timers[MAX_BLINK_IMAGES] = {NULL};
+static lv_timer_t *blink_timeout_timers[MAX_BLINK_IMAGES] = {NULL};
+
 static void band_update_timer(lv_timer_t * timer) {
     if (activeBands & 0b00000001) { // Laser
         lv_obj_clear_flag(objects.band_laser, LV_OBJ_FLAG_HIDDEN);
@@ -39,6 +42,7 @@ void start_clear_inactive_bands_timer() {
 static void blink_timeout_cb(lv_timer_t *timer) {
     int index = (int)timer->user_data;
     blink_enabled[index] = false;
+    blink_timeout_timers[index] = NULL;
     lv_timer_del(timer);
 }
 
@@ -46,6 +50,7 @@ static void blink_toggle_cb(lv_timer_t *timer) {
     int index = (int)timer->user_data;
 
     if (!blink_enabled[index]) {
+        blink_toggle_timers[index] = NULL;
         lv_timer_del(timer);
         return;
     }
@@ -76,13 +81,15 @@ void disable_blinking(int index) {
 }
 
 void enable_blinking(int index) {
+    if (blink_toggle_timers[index] != NULL) {
+        return;
+    }
+
     blink_enabled[index] = true;
-    
-    // Timer to toggle visibility at BLINK_FREQUENCY
-    lv_timer_create(blink_toggle_cb, BLINK_FREQUENCY, (void*)index);
-    
-    // Timer to stop blinking after BLINK_DURATION_MS
-    lv_timer_create(blink_timeout_cb, BLINK_DURATION_MS, (void*)index);
+    LV_LOG_INFO("enable blinking at index %d", index);
+
+    blink_toggle_timers[index] = lv_timer_create(blink_toggle_cb, BLINK_FREQUENCY, (void*)index);
+    blink_timeout_timers[index] = lv_timer_create(blink_timeout_cb, BLINK_DURATION_MS, (void*)index);
 }
 
 void register_blinking_image(int index, lv_obj_t *obj) {

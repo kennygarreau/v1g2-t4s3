@@ -114,16 +114,15 @@ void update_alert_arrows(int num_alerts, const char* directions[], bool muted, b
 }
 
 lv_obj_t* create_signal_bar(lv_obj_t* parent, int x, int y) {
-    lv_obj_t* obj = lv_label_create(parent);
+    lv_obj_t* obj = lv_obj_create(parent); 
+    
     lv_obj_set_pos(obj, x, y);
-    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    //lv_obj_set_style_text_font(obj, &ui_font_alarmclock_32, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_text(obj, "             ");
+    lv_obj_set_size(obj, 60, 20); 
     lv_obj_set_style_bg_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    //lv_obj_set_style_border_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-    //lv_obj_set_style_border_width(obj, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(obj, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(obj, 0, 0);
+    
     lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
     return obj;
 }
@@ -492,10 +491,10 @@ void create_screen_main() {
         
         // container for bands + bogey counter
         objects.alert_info_container = lv_obj_create(parent_obj);
-        lv_obj_set_size(objects.alert_info_container, 96, 228); // Adjust to fit your layout
-        lv_obj_set_pos(objects.alert_info_container, 0, 44);    // Left side
-        lv_obj_set_style_bg_opa(objects.alert_info_container, LV_OPA_TRANSP, 0); // Transparent
-        lv_obj_set_style_border_width(objects.alert_info_container, 0, 0);       // No border
+        lv_obj_set_size(objects.alert_info_container, 96, 228);
+        lv_obj_set_pos(objects.alert_info_container, 0, 44);
+        lv_obj_set_style_bg_opa(objects.alert_info_container, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(objects.alert_info_container, 0, 0);
         lv_obj_clear_flag(objects.alert_info_container, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_flag(objects.alert_info_container, LV_OBJ_FLAG_GESTURE_BUBBLE);
         // lv_obj_set_style_bg_color(objects.alert_info_container, lv_palette_main(LV_PALETTE_GREY), 0);
@@ -548,9 +547,9 @@ void create_screen_main() {
             lv_obj_set_style_text_color(obj, lv_color_hex(default_color), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         }
-        // initialize blinking callback and object mapping
+        // initialize blinking object mapping
         {   
-            init_blinking_system();
+            //init_blinking_system();
             register_blinking_image(BLINK_FRONT, objects.front_arrow);
             register_blinking_image(BLINK_SIDE, objects.side_arrow);
             register_blinking_image(BLINK_REAR, objects.rear_arrow);
