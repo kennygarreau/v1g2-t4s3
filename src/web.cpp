@@ -122,7 +122,6 @@ void getDeviceStats() {
     stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
 }
 
-// Flush PSRAM log entries to LittleFS (with watchdog handling)
 bool flushLogsToDisk() {
     if (logHistory.empty()) return true;
     
@@ -302,10 +301,10 @@ void setupLogRoutes() {
             return;
         }
 
-        Serial.printf("Log file full path: %s\n", fullPath.c_str());
+        //Serial.printf("[DEBUG] Log file full path: %s\n", fullPath.c_str());
         request->send(LittleFS, fullPath, "application/x-ndjson");
     });
-    
+
     server.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
         std::vector<String> files = getLogFileList();
 
