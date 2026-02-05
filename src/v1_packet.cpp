@@ -405,24 +405,24 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                         it->latitude = gpsData.latitude;
                         it->longitude = gpsData.longitude;
                         it->timestamp = gpsData.rawTime;
-                        Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u | history_size: %d\n", now, gpsData.latitude, gpsData.longitude,
-                                    strength, freqMhz, elapsedTimeMicros, logHistory.size());
+                        //Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u | history_size: %d\n", now, gpsData.latitude, gpsData.longitude,
+                        //            strength, freqMhz, elapsedTimeMicros, logHistory.size());
                     }
                 } else {
                     LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                                         strength, dir, freqMhz};
                     logHistory.push_back(newEntry);
-                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
-                                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
+                    //Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
+                    //                newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
+                    //                newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
                 }
                 xSemaphoreGive(gpsDataMutex);
             } else {
                 LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, gpsData.speed, static_cast<int>(gpsData.course),
                     strength, dir, freqMhz};
-                Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
-                                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
+                //Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
+                //                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
+                //                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
             }
         }
     }
