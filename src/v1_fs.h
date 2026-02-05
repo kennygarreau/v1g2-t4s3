@@ -4,7 +4,7 @@
 #include <SPIFFS.h>
 #include "v1_config.h"
 
-#define DB_PATH "/littlefs/lockouts.db"
+#define DB_PATH "/lockouts.db"
 #define CACHE_SIZE 4
 #define SQLITE_PSRAM_BUFFER_SIZE (512 * 1024)
 

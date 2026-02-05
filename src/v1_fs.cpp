@@ -33,7 +33,7 @@ String getLogFilename(uint32_t timestamp) {
     path += String(daysSinceEpoch);
     path += ".jsonl";
     
-    Serial.printf("Generated filename: %s\n", path.c_str());
+    //Serial.printf("[DEBUG] Generated filename: %s\n", path.c_str());
     
     return path;
 }
@@ -94,11 +94,11 @@ std::vector<String> getLogFileList() {
 }
 
 bool SPIFFSFileManager::init() {
-    return SPIFFS.begin();
+    return LittleFS.begin();
 }
 
 File SPIFFSFileManager::openFile(const char* filePath, const char* mode) {
-    return SPIFFS.open(filePath, mode);
+    return LittleFS.open(filePath, mode);
 }
 
 void SPIFFSFileManager::closeFile(File file) {
@@ -243,7 +243,7 @@ bool SPIFFSFileManager::openDatabase() {
     }
     //listSPIFFSFiles();
 
-    File file = SPIFFS.open(DB_PATH, FILE_WRITE);
+    File file = LittleFS.open(DB_PATH, FILE_WRITE);
     if (!file) {
         Serial.println("Failed to create new database file");
         return false;
@@ -301,7 +301,7 @@ void SPIFFSFileManager::flushToDB(const std::vector<LockoutEntry> &entries) {
 }
 
 void SPIFFSFileManager::testWrite() {
-    File file = SPIFFS.open("/spiffs/test.txt", FILE_WRITE);
+    File file = LittleFS.open("/spiffs/test.txt", FILE_WRITE);
     if (!file) {
         Serial.println("Failed to create test file");
     } else {
@@ -310,8 +310,8 @@ void SPIFFSFileManager::testWrite() {
         Serial.println("Test file created successfully");
     }
 
-    if (SPIFFS.exists("/spiffs/test.txt")) {
-        if (SPIFFS.remove("/spiffs/test.txt")) {
+    if (LittleFS.exists("/spiffs/test.txt")) {
+        if (LittleFS.remove("/spiffs/test.txt")) {
             Serial.println("Test file removed successfully");
         } else {
             Serial.println("Failed to remove test file");
