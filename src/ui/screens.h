@@ -62,6 +62,7 @@ typedef struct _objects_t {
     lv_obj_t *label_ble_rssi_val;
     lv_obj_t *label_wifi_rssi_val;
     lv_obj_t *label_wifi_rssi;
+    lv_obj_t *label_version;
     lv_obj_t *mutetogray_label;
     lv_obj_t *mutetogray_button;
     lv_obj_t *colorbars_label;

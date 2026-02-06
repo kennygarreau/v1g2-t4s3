@@ -15,6 +15,7 @@ void displayTestTask(void *pvParameters);
 void processingTask(void *pvParameters);
 
 //double haversineDistance(double lat1, double lon1, double lat2, double lon2);
+const char *getVersion();
 void main_press_handler(lv_event_t * e);
 bool get_var_proxyConnected();
 bool get_var_customFreqEnabled();
@@ -94,15 +95,6 @@ bool get_var_photoAlertPresent();
 bool get_var_arrowPrioFront();
 bool get_var_arrowPrioSide();
 bool get_var_arrowPrioRear();
-
-//void set_var_arrowPrioRear(bool value);
-//void set_var_arrowPrioSide(bool value);
-//void set_var_arrowPrioFront(bool value);
-//void set_var_laserAlert(bool value);
-//void set_var_xAlert(bool value);
-//void set_var_kaAlert(bool value);
-//void set_var_kAlert(bool value);
-//void update_alert_rows(const char* alerts[], int num_alerts);
 
 //pins
 #define PIN_SD_CMD                   13
