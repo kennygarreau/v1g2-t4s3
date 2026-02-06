@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radar Detector Logs</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -125,6 +131,9 @@
         .log-table tr:hover {
             background: #333;
         }
+        .log-table tr.clickable {
+            cursor: pointer;
+        }
         .log-table tr.new-entry {
             animation: highlight 1s ease-out;
         }
@@ -132,6 +141,36 @@
             from { background: #4CAF50; }
             to { background: transparent; }
         }
+        
+        /* Map container styles */
+        .map-row {
+            display: none;
+        }
+        
+        .map-row.expanded {
+            display: table-row;
+        }
+        
+        .map-wrapper {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease-out;
+            background: #1a1a1a;
+        }
+        
+        .map-wrapper.expanded {
+            height: 400px;
+            padding: 10px;
+        }
+        
+        .entry-map {
+            height: 100%;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ddd;
+        }
+        
         .btn {
             background: #4CAF50;
             color: white;
@@ -159,6 +198,16 @@
         h1 { color: #4CAF50; }
         h2 { color: #e0e0e0; margin-top: 30px; }
         .hidden { display: none; }
+        
+        .expand-icon {
+            display: inline-block;
+            margin-right: 8px;
+            transition: transform 0.3s;
+            color: #4CAF50;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body>
@@ -200,7 +249,7 @@
     <div id="live-tab" class="tab-content active">
         <h2>Live PSRAM Buffer</h2>
         <p style="color: #888; font-size: 14px;">
-            Auto-refreshes every 2 seconds. Shows unsaved entries currently in memory.
+            Auto-refreshes every 2 seconds. Click any entry to view on map.
         </p>
         
         <div id="buffer-container">
@@ -211,6 +260,7 @@
                         <th>Latitude</th>
                         <th>Longitude</th>
                         <th>Speed</th>
+                        <th>Course</th>
                         <th>Frequency</th>
                         <th>Strength</th>
                         <th>Direction</th>
@@ -247,6 +297,7 @@
                     <th>Latitude</th>
                     <th>Longitude</th>
                     <th>Speed</th>
+                    <th>Course</th>
                     <th>Frequency</th>
                     <th>Strength</th>
                     <th>Direction</th>
@@ -260,6 +311,7 @@
         let currentLogFile = null;
         let previousBufferCount = 0;
         let autoRefreshInterval = null;
+        let activeMaps = {}; // Store active map instances
         
         function switchTab(tab) {
             // Update tab buttons
@@ -280,8 +332,8 @@
         
         function startAutoRefresh() {
             if (!autoRefreshInterval) {
-                loadBuffer();  // Load immediately
-                autoRefreshInterval = setInterval(loadBuffer, 2000);  // Then every 2 seconds
+                loadBuffer();
+                autoRefreshInterval = setInterval(loadBuffer, 2000);
             }
         }
         
@@ -302,6 +354,92 @@
                 data.fs_used_kb + ' / ' + data.fs_total_kb + ' KB';
         }
         
+        function toggleEntryMap(rowId, lat, lon, entry) {
+            const mapRow = document.getElementById('map-' + rowId);
+            const mapWrapper = mapRow ? mapRow.querySelector('.map-wrapper') : null;
+            const icon = document.getElementById('icon-' + rowId);
+            
+            if (!mapRow || !mapWrapper) return;
+            
+            // Toggle expanded state
+            const isExpanded = mapWrapper.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                mapWrapper.classList.remove('expanded');
+                mapRow.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                
+                // Clean up map instance
+                if (activeMaps[rowId]) {
+                    activeMaps[rowId].remove();
+                    delete activeMaps[rowId];
+                }
+            } else {
+                // Expand
+                mapRow.classList.add('expanded');
+                mapWrapper.classList.add('expanded');
+                icon.classList.add('expanded');
+                
+                // Initialize map after container is visible
+                setTimeout(() => {
+                    const mapDiv = document.getElementById('leaflet-' + rowId);
+                    if (mapDiv && !activeMaps[rowId]) {
+                        console.log('Initializing map for', rowId, 'with coords:', lat, lon);
+                        
+                        const map = L.map(mapDiv, {
+                            center: [lat, lon],
+                            zoom: 16,
+                            zoomControl: true
+                        });
+                        
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '© OpenStreetMap'
+                        }).addTo(map);
+                        
+                        const freqValue = Number(entry.freq);
+                        const freqDisplay = freqValue === 3012 ? "Laser" : `${entry.freq} MHz`;
+                        const dirValue = Number(entry.dir);
+
+                        const directions = {
+                            1: "Front",
+                            2: "Side",
+                            3: "Rear"
+                        };
+
+                        const dirDisplay = directions[dirValue] || entry.dir;
+                        const course = Number(entry.crs);
+                        const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+                        const cardinal = sectors[Math.round(course / 45) % 8];
+
+                        // Add marker with entry details
+                        const date = new Date(entry.ts * 1000).toLocaleString();
+                        L.marker([lat, lon]).addTo(map)
+                            .bindPopup(`
+                                <div style="background-color: #4CAF50; color: white; padding: 8px; border-radius: 4px;">
+                                    <strong>Radar Alert</strong><br>
+                                    Time: ${date}<br>
+                                    Location: ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+                                    Speed: ${entry.spd} mph<br>
+                                    Course: ${cardinal}<br>
+                                    Frequency: ${freqDisplay}<br>
+                                    Strength: ${entry.str}<br>
+                                    Direction: ${dirDisplay}
+                                </div>
+                            `)
+                            .openPopup();
+                        
+                        activeMaps[rowId] = map;
+                        
+                        // Multiple invalidateSize calls
+                        setTimeout(() => map.invalidateSize(), 100);
+                        setTimeout(() => map.invalidateSize(), 400);
+                    }
+                }, 350);
+            }
+        }
+        
         async function loadBuffer() {
             try {
                 const res = await fetch('/api/buffer');
@@ -318,29 +456,146 @@
                         </tr>
                     `;
                     previousBufferCount = 0;
+                    // Clean up any buffer maps
+                    Object.keys(activeMaps).forEach(mapId => {
+                        if (mapId.startsWith('buffer-')) {
+                            activeMaps[mapId].remove();
+                            delete activeMaps[mapId];
+                        }
+                    });
                     return;
                 }
                 
-                // Check if new entries were added
-                const hasNewEntries = data.entries.length > previousBufferCount;
-                previousBufferCount = data.entries.length;
-                
-                tbody.innerHTML = data.entries.map((entry, index) => {
-                    const date = new Date(entry.ts * 1000).toLocaleString();
-                    const isNew = hasNewEntries && index >= previousBufferCount - (data.entries.length - previousBufferCount);
+                // Only rebuild DOM if the number of entries changed
+                if (data.entries.length !== previousBufferCount) {
+                    // Track which maps are currently expanded
+                    const expandedMaps = new Set();
+                    Object.keys(activeMaps).forEach(mapId => {
+                        if (mapId.startsWith('buffer-')) {
+                            expandedMaps.add(mapId);
+                            // Remove the map instance before DOM rebuild
+                            activeMaps[mapId].remove();
+                            delete activeMaps[mapId];
+                        }
+                    });
                     
-                    return `
-                        <tr ${isNew ? 'class="new-entry"' : ''}>
-                            <td>${date}</td>
-                            <td>${entry.lat.toFixed(6)}</td>
-                            <td>${entry.lon.toFixed(6)}</td>
-                            <td>${entry.spd} mph</td>
-                            <td>${entry.freq} MHz</td>
-                            <td>${entry.str}</td>
-                            <td>${entry.dir}</td>
-                        </tr>
-                    `;
-                }).join('');
+                    const hasNewEntries = data.entries.length > previousBufferCount;
+                    const newEntriesCount = hasNewEntries ? data.entries.length - previousBufferCount : 0;
+                    previousBufferCount = data.entries.length;
+                    
+                    tbody.innerHTML = data.entries.map((entry, index) => {
+                        const date = new Date(entry.ts * 1000).toLocaleString();
+                        const isNew = hasNewEntries && index >= (data.entries.length - newEntriesCount);
+                        const rowId = 'buffer-' + index;
+                        const isExpanded = expandedMaps.has(rowId);
+                        
+                        const freqValue = Number(entry.freq);
+                        const freqDisplay = freqValue === 3012 ? "Laser" : `${entry.freq} MHz`;
+                        const dirValue = Number(entry.dir);
+
+                        const directions = {
+                            1: "Front",
+                            2: "Side",
+                            3: "Rear"
+                        };
+
+                        const dirDisplay = directions[dirValue] || entry.dir;
+                        const course = Number(entry.crs);
+                        const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+                        const cardinal = sectors[Math.round(course / 45) % 8];
+                        
+                        return `
+                            <tr ${isNew ? 'class="new-entry clickable"' : 'class="clickable"'} 
+                                onclick="toggleEntryMap('${rowId}', ${entry.lat}, ${entry.lon}, ${JSON.stringify(entry).replace(/"/g, '&quot;')})">
+                                <td>
+                                    <span class="expand-icon ${isExpanded ? 'expanded' : ''}" id="icon-${rowId}">▶</span>
+                                    ${date}
+                                </td>
+                                <td>${entry.lat.toFixed(6)}</td>
+                                <td>${entry.lon.toFixed(6)}</td>
+                                <td>${entry.spd} mph</td>
+                                <td>${cardinal}</td>
+                                <td>${freqDisplay}</td>
+                                <td>${entry.str}</td>
+                                <td>${dirDisplay}</td>
+                            </tr>
+                            <tr class="map-row ${isExpanded ? 'expanded' : ''}" id="map-${rowId}">
+                                <td colspan="7" style="padding: 0;">
+                                    <div class="map-wrapper ${isExpanded ? 'expanded' : ''}">
+                                        <div id="leaflet-${rowId}" class="entry-map"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    // Restore expanded maps after DOM update
+                    expandedMaps.forEach(mapId => {
+                        const index = parseInt(mapId.replace('buffer-', ''));
+                        if (index < data.entries.length) {
+                            const entry = data.entries[index];
+                            
+                            // Re-initialize the map
+                            setTimeout(() => {
+                                const mapDiv = document.getElementById('leaflet-' + mapId);
+                                if (mapDiv) {
+                                    console.log('Restoring map for', mapId);
+                                    
+                                    const map = L.map(mapDiv, {
+                                        center: [entry.lat, entry.lon],
+                                        zoom: 16,
+                                        zoomControl: true
+                                    });
+                                    
+                                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                        maxZoom: 19,
+                                        attribution: '© OpenStreetMap'
+                                    }).addTo(map);
+
+                                    const freqValue = Number(entry.freq);
+                                    const freqDisplay = freqValue === 3012 ? "Laser" : `${entry.freq} MHz`;
+                                    const dirValue = Number(entry.dir);
+
+                                    const directions = {
+                                        1: "Front",
+                                        2: "Side",
+                                        3: "Rear"
+                                    };
+
+                                    const course = Number(entry.course);
+                                    const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+                                    const cardinal = sectors[Math.round(course / 45) % 8];
+
+                                    const dirDisplay = directions[dirValue] || entry.dir;
+                                    console.log(dirValue, dirDisplay);
+
+                                    const date = new Date(entry.ts * 1000).toLocaleString();
+                                    L.marker([entry.lat, entry.lon]).addTo(map)
+                                        .bindPopup(`
+                                            <div style="background-color: #4CAF50; color: white; padding: 8px; border-radius: 4px;">
+                                                <strong>Radar Alert</strong><br>
+                                                Time: ${date}<br>
+                                                Location: ${entry.lat.toFixed(6)}, ${entry.lon.toFixed(6)}<br>
+                                                Speed: ${entry.spd} mph<br>
+                                                Course: ${cardinal}<br>
+                                                Frequency: ${freqDisplay}<br>
+                                                Strength: ${entry.str}<br>
+                                                Direction: ${dirDisplay}
+                                            </div>
+                                        `)
+                                        .openPopup();
+                                    
+                                    activeMaps[mapId] = map;
+                                    
+                                    // Force size recalculation
+                                    setTimeout(() => map.invalidateSize(), 100);
+                                    setTimeout(() => map.invalidateSize(), 400);
+                                }
+                            }, 350);
+                        }
+                    });
+                }
+                // If entry count is the same, do nothing - keep existing DOM and maps intact
                 
             } catch (err) {
                 console.error('Failed to load buffer:', err);
@@ -368,50 +623,68 @@
         }
         
         async function viewLog(filename) {
-        currentLogFile = filename;
-        document.getElementById('current-file').textContent = filename;
-        document.getElementById('log-viewer').classList.remove('hidden');
+            currentLogFile = filename;
+            document.getElementById('current-file').textContent = filename;
+            document.getElementById('log-viewer').classList.remove('hidden');
 
-        try {
-            const res = await fetch('/api/logs/' + filename);
-            const text = await res.text();
-            
-            // Split into lines and filter out empty strings (common at end of files)
-            const lines = text.trim().split('\n').filter(line => line.trim() !== "");
+            try {
+                const res = await fetch('/api/logs/' + filename);
+                const text = await res.text();
+                
+                const lines = text.trim().split('\n').filter(line => line.trim() !== "");
 
-            const tbody = document.getElementById('log-tbody');
-            tbody.innerHTML = lines.map(line => {
-                try {
-                    const entry = JSON.parse(line);
-                    const date = new Date(entry.ts * 1000).toLocaleString();
-                    
-                    // DEFENSIVE: Check if lat/lon exist before calling .toFixed
-                    // We use || 0 as a fallback to prevent "undefined" errors
-                    const lat = (typeof entry.lat === 'number') ? entry.lat.toFixed(6) : "0.000000";
-                    const lon = (typeof entry.lon === 'number') ? entry.lon.toFixed(6) : "0.000000";
+                const tbody = document.getElementById('log-tbody');
+                tbody.innerHTML = lines.map((line, index) => {
+                    try {
+                        const entry = JSON.parse(line);
+                        const date = new Date(entry.ts * 1000).toLocaleString();
+                        const rowId = 'log-' + filename + '-' + index;
+                        
+                        const lat = (typeof entry.lat === 'number') ? entry.lat : 0;
+                        const lon = (typeof entry.lon === 'number') ? entry.lon : 0;
 
-                    return `
-                        <tr>
-                            <td>${date}</td>
-                            <td>${lat}</td>
-                            <td>${lon}</td>
-                            <td>${entry.spd || 0} mph</td>
-                            <td>${entry.freq || 0} MHz</td>
-                            <td>${entry.str || 0}</td>
-                            <td>${entry.dir || '-'}</td>
-                        </tr>
-                    `;
-                } catch (e) {
-                    console.error("Error parsing line:", line, e);
-                    return ""; // Skip corrupt lines
-                }
-            }).join('');
+                        return `
+                            <tr class="clickable" 
+                                onclick="toggleEntryMap('${rowId}', ${lat}, ${lon}, ${JSON.stringify(entry).replace(/"/g, '&quot;')})">
+                                <td>
+                                    <span class="expand-icon" id="icon-${rowId}">▶</span>
+                                    ${date}
+                                </td>
+                                <td>${lat.toFixed(6)}</td>
+                                <td>${lon.toFixed(6)}</td>
+                                <td>${entry.spd || 0} mph</td>
+                                <td>${entry.crs || 0}</td>
+                                <td>${entry.freq || 0} MHz</td>
+                                <td>${entry.str || 0}</td>
+                                <td>${entry.dir || '-'}</td>
+                            </tr>
+                            <tr class="map-row" id="map-${rowId}">
+                                <td colspan="7" style="padding: 0;">
+                                    <div class="map-wrapper">
+                                        <div id="leaflet-${rowId}" class="entry-map"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } catch (e) {
+                        console.error("Error parsing line:", line, e);
+                        return "";
+                    }
+                }).join('');
             } catch (err) {
                 console.error("Failed to load log file:", err);
             }
         }
         
         function closeLogViewer() {
+            // Clean up all active maps in the viewer
+            Object.keys(activeMaps).forEach(mapId => {
+                if (mapId.startsWith('log-')) {
+                    activeMaps[mapId].remove();
+                    delete activeMaps[mapId];
+                }
+            });
+            
             document.getElementById('log-viewer').classList.add('hidden');
             currentLogFile = null;
         }
@@ -422,7 +695,7 @@
             alert(data.message);
             loadStatus();
             loadFileList();
-            loadBuffer();  // Refresh buffer (should be empty after flush)
+            loadBuffer();
         }
         
         async function clearBuffer() {
@@ -448,7 +721,7 @@
         // Initial load
         loadStatus();
         loadFileList();
-        startAutoRefresh();  // Start auto-refresh since Live tab is default
+        startAutoRefresh();
         
         // Update status every 5 seconds
         setInterval(loadStatus, 5000);
