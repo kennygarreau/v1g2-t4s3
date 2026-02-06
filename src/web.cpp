@@ -481,6 +481,7 @@ void setupWebServer()
     serveStaticFile(server, "/update.js", "application/javascript");
     serveStaticFile(server, "/lockouts.js", "application/javascript");
     serveStaticFile(server, "/status.js", "application/javascript");
+    serveStaticFile(server, "/logs.js", "application/javascript");
     serveCachedStaticFile(server, "/js/chart.js", "application/javascript");
     serveCachedStaticFile(server, "/js/moment.js", "application/javascript");
     serveCachedStaticFile(server, "/js/chartjs-adapter-moment.js", "application/javascript");
@@ -594,47 +595,6 @@ void setupWebServer()
     
     server.on("/stats", HTTP_GET, handleStatusRequest);
     server.on("/api/status", HTTP_GET, handleStatusRequest);
-
-/*
-    server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request) {
-        int frequency = getCpuFrequencyMhz();
-        stats.wifiRSSI = getWifiRSSI();
-        JsonDocument jsonDoc;
-
-        jsonDoc["uptime"] = stats.uptime;
-        jsonDoc["boardType"] = stats.boardType;
-        jsonDoc["boardRev"] = stats.boardRev;
-        jsonDoc["frequency"] = frequency;
-        jsonDoc["cpuBusy"] = stats.cpuBusy;
-        jsonDoc["cpuCores"] = stats.cpuCores;
-        jsonDoc["totalHeap"] = stats.totalHeap / 1024;
-        jsonDoc["freeHeapInKB"] = stats.freeHeap / 1024;
-        jsonDoc["heapFrag"] = stats.heapFrag;
-        jsonDoc["psram_entries"] = logHistory.size();
-        jsonDoc["psram_total_kb"] = stats.totalPsram / 1024;
-        jsonDoc["psram_free_kb"] = stats.freePsram / 1024;
-        jsonDoc["fs_total_kb"] = stats.totalStorageKB;
-        jsonDoc["fs_used_kb"] = stats.usedStorageKB;
-        jsonDoc["connectedWifiClients"] = stats.connectedWifiClients;
-        jsonDoc["bluetoothRSSI"] = stats.btStr;
-        jsonDoc["wifiRSSI"] = stats.wifiRSSI;
-        jsonDoc["usingBattery"] = usingBattery;
-        jsonDoc["batteryPercent"] = batteryPercentage;
-        jsonDoc["espVoltage"] = voltageInMv;
-
-        if (isVBusIn) {
-            jsonDoc["vBusVoltage"] = vBusVoltage;
-        }
-        if (batteryCharging) {
-            jsonDoc["batteryCharging"] = "(charging)";
-        }
-        jsonDoc["carVoltage"] = stats.voltage;
-
-        String jsonResponse;
-        serializeJson(jsonDoc, jsonResponse);
-        request->send(200, "application/json", jsonResponse); 
-    });
-*/
     server.on("/board-info", HTTP_GET, [](AsyncWebServerRequest *request) {
         JsonDocument jsonDoc;
 

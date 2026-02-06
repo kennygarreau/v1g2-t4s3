@@ -67,21 +67,23 @@ struct LockoutEntry {
  * @param timestamp uint32_t
  * @param latitude double
  * @param longitude double
- * @param speed int
- * @param course int
- * @param strength int
- * @param direction bool
- * @param frequency int
+ * @param frequency uint16_t
+ * @param course uint16_t
+ * @param speed uint8_t
+ * @param strength uint8_t
+ * @param direction uint8_t
+ * @param padding uint8_t
  */
 struct LogEntry {
     uint32_t timestamp;
     double latitude;
     double longitude;
+    uint16_t frequency;
+    uint16_t course;
     uint8_t speed;
-    int course;
-    int strength;
-    int direction;
-    int frequency;
+    uint8_t strength;
+    uint8_t direction;
+    uint8_t padding;
 };
 
 //extern std::vector<LockoutEntry> savedLockoutLocations;
