@@ -128,8 +128,8 @@ lv_obj_t* create_signal_bar(lv_obj_t* parent, int x, int y) {
 }
 
 void create_signal_bars(lv_obj_t* parent, int num_bars) {
-    int base_x = 100;       // Base X position for all bars
-    int base_y = 264;      // Starting Y position
+    int base_x = -14;       // Base X position for all bars - prev 100
+    int base_y = 144;      // Starting Y position - prev 264
     int y_step = 30;       // Vertical spacing between bars
 
     for (int i = 0; i < num_bars && i < MAX_BARS; ++i) {
@@ -438,12 +438,29 @@ void create_screen_main() {
 
             create_alert_rows(obj, MAX_ALERT_ROWS);
         }
+        // container for signal bars
+        {
+        objects.prio_bar_container = lv_obj_create(parent_obj);
+        lv_obj_set_size(objects.prio_bar_container, 64, 192);
+        lv_obj_set_pos(objects.prio_bar_container, 98, 100);
+        lv_obj_set_style_bg_opa(objects.prio_bar_container, LV_OPA_TRANSP, 0); // Transparent
+        lv_obj_set_style_border_width(objects.prio_bar_container, 0, 0);       // No border
+        lv_obj_clear_flag(objects.prio_bar_container, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(objects.prio_bar_container, LV_OBJ_FLAG_GESTURE_BUBBLE);
+        // lv_obj_set_style_bg_color(objects.prio_bar_container, lv_palette_main(LV_PALETTE_GREY), 0);
+        // lv_obj_set_style_bg_opa(objects.prio_bar_container, 100, 0); // Semi-transparent (0-255)
+        // lv_obj_set_style_border_width(objects.prio_bar_container, 2, 0);
+        // lv_obj_set_style_border_color(objects.prio_bar_container, lv_palette_main(LV_PALETTE_BLUE), 0);
+        lv_obj_clear_flag(objects.prio_bar_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
+        }
         // main_signal_bars
         {
-            create_signal_bars(parent_obj, MAX_BARS);
+            //create_signal_bars(parent_obj, MAX_BARS);
+            create_signal_bars(objects.prio_bar_container, MAX_BARS);
         }
         
         // container for priority arrows
+        {
         objects.arrow_container = lv_obj_create(parent_obj);
         lv_obj_set_size(objects.arrow_container, 160, 220); // Adjust to fit your layout
         //lv_obj_set_pos(objects.arrow_container, 196, 92);    // Left side
@@ -457,7 +474,7 @@ void create_screen_main() {
         // lv_obj_set_style_border_width(objects.arrow_container, 2, 0);
         // lv_obj_set_style_border_color(objects.arrow_container, lv_palette_main(LV_PALETTE_BLUE), 0);
         lv_obj_clear_flag(objects.arrow_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
-        
+        }
         // front arrow
         { 
             lv_obj_t *obj = lv_img_create(objects.arrow_container);
@@ -490,6 +507,7 @@ void create_screen_main() {
         }
         
         // container for bands + bogey counter
+        {
         objects.alert_info_container = lv_obj_create(parent_obj);
         lv_obj_set_size(objects.alert_info_container, 96, 228);
         lv_obj_set_pos(objects.alert_info_container, 0, 44);
@@ -502,7 +520,7 @@ void create_screen_main() {
         // lv_obj_set_style_border_width(objects.alert_info_container, 2, 0);
         // lv_obj_set_style_border_color(objects.alert_info_container, lv_palette_main(LV_PALETTE_BLUE), 0);
         lv_obj_clear_flag(objects.alert_info_container, LV_OBJ_FLAG_SCROLLABLE); // Disable scrolling
-
+        }
         // bogey count
         {
             lv_obj_t *obj = lv_label_create(objects.alert_info_container);
@@ -802,6 +820,9 @@ void tick_screen_main() {
         {
             static int lastBarLevel = -1;
             static uint32_t lastBarUpdateTime = 0;
+            if (lv_obj_has_flag(objects.prio_bar_container, LV_OBJ_FLAG_HIDDEN)) {
+                lv_obj_clear_flag(objects.prio_bar_container, LV_OBJ_FLAG_HIDDEN);
+            }
 
             if ((numBars != lastBarLevel || (barsCleared && numBars > 0)) && 
                 (getMillis() - lastBarUpdateTime > 200)) { {
@@ -908,10 +929,10 @@ void tick_screen_main() {
             objects.alert_table, objects.mute_logo, objects.photo_type,
             objects.photo_image, objects.band_x, objects.band_k, 
             objects.band_ka, objects.rear_arrow, objects.side_arrow, 
-            objects.front_arrow
+            objects.front_arrow, objects.prio_bar_container,
         };
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 11 ; i++) {
             // Option A: Fade all at once (there's a noticeable lag?)
             //fade_out_and_hide(objs_to_hide[i], 0);
             
@@ -922,7 +943,6 @@ void tick_screen_main() {
             lv_obj_add_flag(objs_to_hide[i], LV_OBJ_FLAG_HIDDEN);
         }
 
-        update_signal_bars(0);
         barsCleared = true;
         set_var_showAlertTable(false);
         lv_label_set_text(objects.prioalertfreq, "");
