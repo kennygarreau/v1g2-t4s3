@@ -2,7 +2,6 @@
 #include <ESPAsyncWebServer.h>
 #include "ui/ui.h"
 #include "ui/actions.h"
-//#include "ui/blinking.h"
 #include "utils.h"
 #include "wifi.h"
 #include "v1_packet.h"
@@ -47,6 +46,10 @@ void checkProximityForMute(double currentLat, double currentLon) {
     }
 }
 */
+
+extern "C" const char *getVersion() {
+    return FIRMWARE_VERSION;
+}
 
 extern "C" bool get_var_proxyConnected() {
     return proxyConnected;
@@ -596,36 +599,6 @@ extern "C" bool get_var_kaAlert() {
 extern "C" bool get_var_laserAlert() {
     return laser_state.active;
 }
-
-/*
-extern "C" void set_var_kAlert(bool value) {
-    kAlert = value;
-}
-
-extern "C" void set_var_kaAlert(bool value) {
-    kaAlert = value;
-}
-
-extern "C" void set_var_xAlert(bool value) {
-    xAlert = value;
-}
-
-extern "C" void set_var_laserAlert(bool value) {
-    laserAlert = value;
-}
-
-extern "C" void set_var_arrowPrioRear(bool value) {
-    arrowPrioRear = value;
-}
-
-extern "C" void set_var_arrowPrioSide(bool value) {
-    arrowPrioSide = value;
-}
-
-extern "C" void set_var_arrowPrioFront(bool value) {
-    arrowPrioFront = value;
-}
-*/
 
 extern "C" const char *get_var_lowspeedthreshold() {
     static char buffer[8];
