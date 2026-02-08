@@ -357,6 +357,10 @@ extern "C" bool get_var_wifiEnabled() {
     return settings.enableWifi;
 }
 
+extern "C" uint8_t get_var_rawMode() {
+    return globalConfig.rawMode;
+}
+
 extern "C" void set_var_wifiEnabled(bool enable) {
     preferences.begin("settings", false);
     if (enable) {

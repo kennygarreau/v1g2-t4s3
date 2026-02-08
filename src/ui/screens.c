@@ -962,9 +962,9 @@ void tick_screen_main() {
         lv_obj_t *target_old = useDefault ? objects.mode_type : objects.default_mode;
         lv_obj_t *overlay = objects.overlay_mode;
 
-        const char *new_val = get_var_logicmode(useDefault); // get the actual name of the logic mode, eg., "ADV LOGIC" or "L"
-        const char *cur_val = lv_label_get_text(target);     // get the current value of the logic mode, eg., "ADV LOGIC", or "L"
-        
+        uint8_t new_val = get_var_rawMode();
+        static uint8_t cur_raw;
+
         if (!target) {
             LV_LOG_ERROR("Error: %s is NULL!", useDefault ? "objects.default_mode" : "objects.mode_type");
             return;
@@ -1007,11 +1007,12 @@ void tick_screen_main() {
         }
         // No alert present = show the mode + custom freq indicator, hide the bogey counter
         else if (!alertPresent && useDefault) {
-            if (new_val && cur_val && strcmp(new_val, cur_val) != 0 || 
+            if (new_val && new_val != cur_raw ||
                 lv_obj_has_flag(objects.default_mode, LV_OBJ_FLAG_HIDDEN)) {
-
-                    LV_LOG_INFO("updating mode to %s", new_val);
-                    lv_label_set_text(target, new_val);
+                    const char *txt_val = get_var_logicmode(useDefault);
+                    
+                    LV_LOG_INFO("updating mode to %s", txt_val);
+                    //lv_label_set_text(target, txt_val);
                     lv_label_set_text(target_old, "");
                     lv_label_set_text(objects.prioalertfreq, "");
 
@@ -1031,11 +1032,12 @@ void tick_screen_main() {
                         lv_obj_add_flag(objects.bogey_count, LV_OBJ_FLAG_HIDDEN);
                     }
                     // set the overlay for advanced logic mode "small L"
-                    if (new_val == "c") {
+                    if (new_val == 2) {
                         lv_label_set_text(overlay, "4");
                         lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
                         lv_label_set_text(objects.default_mode, "L");
                     } else {
+                        lv_label_set_text(target, txt_val);
                         lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
                     }
                 }

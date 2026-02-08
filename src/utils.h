@@ -32,6 +32,7 @@ bool get_var_usev1cle();
 void set_var_usev1cle(bool switch_state);
 bool get_var_v1clePresent();
 bool get_var_wifiConnected();
+uint8_t get_var_rawMode();
 bool get_var_wifiEnabled();
 void set_var_wifiEnabled(bool enable);
 bool get_var_localWifi();
