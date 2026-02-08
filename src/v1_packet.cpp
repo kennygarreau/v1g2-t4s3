@@ -412,9 +412,9 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
                     LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, freqMhz, static_cast<u8_t>(gpsData.course), gpsData.speed,
                                         strength, dir};
                     logHistory.push_back(newEntry);
-                    Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
-                                   newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                                   newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
+                    // Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
+                    //                newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
+                    //                newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
                 }
                 xSemaphoreGive(gpsDataMutex);
             } else {
@@ -511,42 +511,23 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
             uint8_t mode = modeBit0 + modeBit1;
             */
 
-            uint8_t mode = ((aux1 >> 2) & 0x03);
-
             struct ModeInfo {
-                uint8_t rawMode;
                 const char* mode;
                 const char* defaultMode;
             };
             
             const ModeInfo modeTable[4] = {
-                {0, "Invalid Mode", "I"},
-                {1, "ALL BOGEYS", "A"},
-                {2, "LOGIC", "c"},
-                {3, "ADV LOGIC", "L"}
+                {"Invalid Mode", "I"},
+                {"ALL BOGEYS", "A"},
+                {"LOGIC", "c"},
+                {"ADV LOGIC", "L"}
             };
 
-            switch(mode) {
-                case 0:
-                    globalConfig.mode = "Invalid Mode";
-                    globalConfig.defaultMode = "I";
-                    break;
-                case 1:
-                    globalConfig.rawMode = 1;
-                    globalConfig.mode = "ALL BOGEYS";
-                    globalConfig.defaultMode = "A";
-                    break;
-                case 2:
-                    globalConfig.rawMode = 2;
-                    globalConfig.mode = "LOGIC";
-                    globalConfig.defaultMode = "c";
-                    break;
-                case 3:
-                    globalConfig.rawMode = 3;
-                    globalConfig.mode = "ADV LOGIC";
-                    globalConfig.defaultMode = "L";
-                    break;
-            }
+            uint8_t mode = ((aux1 >> 2) & 0x03);
+
+            globalConfig.rawMode     = mode;
+            globalConfig.mode        = modeTable[mode].mode;
+            globalConfig.defaultMode = modeTable[mode].defaultMode;
         }
     } 
     else if (packetID == 0x43) {
