@@ -298,6 +298,29 @@ uint32_t get_bar_color(int i) {
     }
 }
 
+void enter_laser_mode() {
+    lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xffffffff), 0);
+    lv_label_set_text(objects.prioalertfreq, "LASER");
+    lv_obj_set_style_bg_color(objects.main, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_t * objs_to_hide[] = {
+        objects.alert_table, objects.mute_logo, objects.photo_type,
+        objects.photo_image, objects.band_x, objects.band_k, 
+        objects.band_ka, objects.rear_arrow, objects.side_arrow, 
+        objects.front_arrow, objects.prio_bar_container, objects.overlay_mode
+    };
+
+    for(int i = 0; i < 12 ; i++) {
+        lv_obj_add_flag(objs_to_hide[i], LV_OBJ_FLAG_HIDDEN);
+    }
+
+}
+
+void exit_laser_mode() {
+    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(objects.prioalertfreq, lv_color_hex(0xffff0000), 0);
+}
+
 static void hide_after_animation_cb(lv_anim_t * a) {
     lv_obj_add_flag((lv_obj_t *)a->var, LV_OBJ_FLAG_HIDDEN);
 }

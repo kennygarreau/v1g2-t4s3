@@ -754,6 +754,9 @@ void tick_screen_main() {
     }
 
     if (alertPresent) {
+        // if (laserAlert) {
+        //     enter_laser_mode();
+        // } else {
         //uint32_t now = lv_tick_get();
         
         // Front Arrow
@@ -916,9 +919,11 @@ void tick_screen_main() {
         }
         
         idleStateSet = false;
+    //}
     }
     else if (!idleStateSet) {
         LV_LOG_INFO("No alerts present; set idleState");
+        //exit_laser_mode();
 
         if (displayGray != lastColorState) {
             update_alert_display(displayGray);
@@ -1029,6 +1034,7 @@ void tick_screen_main() {
                     if (new_val == "c") {
                         lv_label_set_text(overlay, "4");
                         lv_obj_clear_flag(overlay, LV_OBJ_FLAG_HIDDEN);
+                        lv_label_set_text(objects.default_mode, "L");
                     } else {
                         lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
                     }

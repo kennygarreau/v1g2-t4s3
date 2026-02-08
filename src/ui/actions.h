@@ -29,6 +29,8 @@ void update_alert_display(bool muted);
 uint32_t get_bar_color(int i);
 static void hide_after_animation_cb(lv_anim_t * a);
 void fade_out_and_hide(lv_obj_t * obj, uint32_t delay);
+void enter_laser_mode();
+void exit_laser_mode();
 
 extern lv_img_dsc_t *allocate_image_in_psram(const lv_img_dsc_t *src_img);
 
