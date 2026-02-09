@@ -28,6 +28,9 @@ void queryDeviceInfo(NimBLEClient* pClient);
 void displayReader(NimBLEClient* pClient);
 void onProxyReady();
 
+void volumeTask(void *p);
+void batteryTask(void *p);
+
 // Bluetooth service configurations
 static NimBLEUUID deviceInfoUUID("180A");
 static NimBLEUUID bmeServiceUUID("92A0AFF4-9E05-11E2-AA59-F23C91AEC05E");

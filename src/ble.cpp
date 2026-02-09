@@ -282,6 +282,58 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
 }
 
 void displayReader(NimBLEClient* pClient) {
+  dataRemoteService = pClient->getService(bmeServiceUUID);
+  if (!dataRemoteService) {
+      Serial.println("Failed to find bmeServiceUUID!");
+      return;
+  }
+  
+  infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
+  if (!infDisplayDataCharacteristic) {
+      Serial.println("Failed to find infDisplayDataCharacteristic.");
+      return;
+  }
+  
+  if (infDisplayDataCharacteristic->canNotify()) {
+    infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallbackv2);
+    Serial.println("Subscribed to alert notifications.");
+  } else {
+    Serial.println("Characteristic does not support notifications.");
+    return;
+  }
+  
+  clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
+  if (!clientWriteCharacteristic) {
+    Serial.println("Failed to find clientWriteCharacteristic.");
+    return;
+  }
+  
+  NimBLERemoteDescriptor* pDesc = infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902));
+  if (pDesc) {
+    pDesc->writeValue((uint8_t*)notificationOn, 2, true);
+  }
+  
+  vTaskDelay(pdMS_TO_TICKS(50));
+  
+  if (settings.turnOffDisplay) {
+    uint8_t value = settings.onlyDisplayBTIcon ? 0x01 : 0x00;
+    clientWriteCharacteristic->writeValue(
+        (uint8_t*)Packet::reqTurnOffMainDisplay(value), 8, false
+    );
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+  
+  clientWriteCharacteristic->writeValue(
+    (uint8_t*)Packet::reqStartAlertData(), 7, false
+  );
+  
+  if (settings.proxyBLE) {
+    onProxyReady();
+  }
+}
+
+/*
+void displayReader(NimBLEClient* pClient) {
 
     dataRemoteService = pClient->getService(bmeServiceUUID);
     if (dataRemoteService) {
@@ -320,6 +372,7 @@ void displayReader(NimBLEClient* pClient) {
       Serial.println("Failed to find bmeServiceUUID!");
     }
 }
+*/
 
 void queryDeviceInfo(NimBLEClient* pClient) {
     NimBLERemoteService* pService = pClient->getService(deviceInfoUUID);
@@ -412,6 +465,15 @@ void reqBatteryVoltage() {
   }
 }
 
+void batteryTask(void *p) {
+  const TickType_t delay = pdMS_TO_TICKS(10000);
+
+  while (true) {
+    reqBatteryVoltage();
+    vTaskDelay(delay);
+  }
+}
+
 void reqVolume() {
   if (bt_connected && clientWriteCharacteristic && !alertPresent) {
     if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
@@ -419,6 +481,15 @@ void reqVolume() {
       delay(10);
       xSemaphoreGive(bleMutex);
     }
+  }
+}
+
+void volumeTask(void *p) {
+  const TickType_t delay = pdMS_TO_TICKS(61000);
+
+  while (true) {
+      reqVolume();
+      vTaskDelay(delay);
   }
 }
 
