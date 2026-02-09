@@ -261,16 +261,8 @@ class NotifyCharCallbacks : public NimBLECharacteristicCallbacks {
 
 static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!pData) return;
-  std::vector<uint8_t> tempRawData(pData, pData + length);
-  tempRawData.assign(pData, pData + length);
 
-  if (tempRawData != previousRawData) {
-    previousRawData = tempRawData;
-    latestRawData = std::move(tempRawData);
-    newDataAvailable = true;
-  }
-
-  if (pAlertNotifyChar) {
+  if (pAlertNotifyChar && settings.proxyBLE) {
     if (xSemaphoreTake(bleNotifyMutex, pdMS_TO_TICKS(50))) {
       pAlertNotifyChar->setValue(pData, length);
       if (notifySubscribed) {
@@ -278,6 +270,24 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
       }
       xSemaphoreGive(bleNotifyMutex);
     }
+  }
+
+  bool hasAlerts = false;
+  uint8_t packetId = pData[3];
+  
+  if (packetId == 0x31) {
+    hasAlerts = (pData[7] != 0x00);  // 0x31: check byte 7
+  } 
+  else if (packetId == 0x43) {
+    hasAlerts = (pData[5] != 0x00);  // 0x43: check byte 5
+  }
+  else {
+    hasAlerts = true;
+  }
+
+  if (hasAlerts) {
+    latestRawData.assign(pData, pData + length);
+    newDataAvailable = true;
   }
 }
 
@@ -422,44 +432,44 @@ void requestVersion() {
 }
 
 void requestVolume() {
-    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
-      clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-      delay(10);
-      xSemaphoreGive(bleMutex);
-    }
+  if (xSemaphoreTake(bleMutex, pdMS_TO_TICKS(100))) {
+    clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
+    vTaskDelay(10);
+    xSemaphoreGive(bleMutex);
+  }
 }
 
 void requestUserBytes() {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqUserBytes(), 7, false);
-    delay(10);
+    vTaskDelay(10);
 }
 
 void requestSweepSections() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqSweepSections(), 7, false);
-    delay(10);
+    vTaskDelay(10);
   }
 }
 
 void requestMaxSweepIndex() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMaxSweepIndex(), 7, false);
-    delay(10);
+    vTaskDelay(10);
   }
 }
 
 void requestAllSweepDefinitions() {
   if (bt_connected && clientWriteCharacteristic) {
     clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqAllSweepDefinitions(), 7, false);
-    delay(10);
+    vTaskDelay(10);
   }
 }
 
 void reqBatteryVoltage() {
   if (bt_connected && clientWriteCharacteristic && !alertPresent) {
-    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
+    if (xSemaphoreTake(bleMutex, pdMS_TO_TICKS(100))) {
       clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqBatteryVoltage(), 7, false);
-      delay(10);
+      vTaskDelay(10);
       xSemaphoreGive(bleMutex);
     }
   }
@@ -476,9 +486,9 @@ void batteryTask(void *p) {
 
 void reqVolume() {
   if (bt_connected && clientWriteCharacteristic && !alertPresent) {
-    if (xSemaphoreTake(bleMutex, portMAX_DELAY)) {
+    if (xSemaphoreTake(bleMutex, pdMS_TO_TICKS(100))) {
       clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqCurrentVolume(), 7, false);
-      delay(10);
+      vTaskDelay(10);
       xSemaphoreGive(bleMutex);
     }
   }
@@ -593,7 +603,7 @@ void initBLEServer() {
   pAdvertising->setMinInterval(0x80);
   pAdvertising->setMaxInterval(0xC0);
   pAdvertising->start();
-  delay(100);
+  vTaskDelay(100);
 
   printAdvertisingDetails();
 }
