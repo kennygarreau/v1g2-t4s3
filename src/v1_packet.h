@@ -138,7 +138,7 @@ private:
 public:
     PacketDecoder(const std::vector<uint8_t>& rawpacket);
 
-    std::string decode_v2(int lowSpeedThreshold, uint8_t currentSpeed);
+    void decode_v2(int lowSpeedThreshold, uint8_t currentSpeed);
     void decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed);
 };
 

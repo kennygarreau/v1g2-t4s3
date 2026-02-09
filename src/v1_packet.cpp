@@ -524,13 +524,13 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     ID 31 (infDisplayData): route to decodeDisplayData
     ID 43 (respAlertData): direct decode 
 */
-std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed) {
+void PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed) {
     if (rawpacket.size() > 1 && rawpacket[0] != 0xAA) {
-        return "err SOF";
+        return;
     }
 
     if (rawpacket.size() > 1 && rawpacket[rawpacket.size() - 1] != 0xAB) {
-        return "err EOF";
+        return;
     }
 
     uint8_t packetID = rawpacket[3];
@@ -578,7 +578,7 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
                 alertPresent = false;
                 photoAlertPresent = false;
             }
-            return "";
+            return;
         }
         else {
             alertCountValue = alertC & 0b00001111;
@@ -847,7 +847,7 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         uint8_t p1 = rawpacket[5];
         Serial.printf("infV1Busy; pending packets: %d, first packet ID: 0x%02X\n", pendingPackets, p1);
     }
-    return "";
+    return;
 }
 
 /*

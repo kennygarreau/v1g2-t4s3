@@ -246,7 +246,8 @@ void loop() {
     newDataAvailable = false;
 
     PacketDecoder decoder(latestRawData);
-    std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
+    //std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
+    decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
   }
   
   unsigned long currentMillis = millis();
