@@ -8,7 +8,7 @@ extern NimBLERemoteCharacteristic* clientWriteCharacteristic;
 
 extern bool serialReceived, versionReceived, volumeReceived, userBytesReceived, 
             sweepSectionsReceived, maxSweepIndexReceived, allSweepDefinitionsReceived;
-extern bool bleInit, newDataAvailable;
+extern bool bleInit, newDataAvailable, needsMode;
 extern std::vector<uint8_t> latestRawData;
 
 void initBLE();

@@ -1,6 +1,8 @@
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_config.h"
+#include "utils.h"
+#include "ui/blinking.h"
 
 bool serialReceived = false;
 bool versionReceived = false;
@@ -21,6 +23,7 @@ static constexpr uint32_t scanTimeMs = 5 * 1000;
 bool bleInit = true;
 bool newDataAvailable = false;
 static bool notifySubscribed = false;
+bool needsMode = true;
 
 NimBLERemoteService* dataRemoteService = nullptr;
 NimBLERemoteCharacteristic* infDisplayDataCharacteristic = nullptr;
@@ -274,18 +277,23 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
 
   bool hasAlerts = false;
   uint8_t packetId = pData[3];
-  
+
   if (packetId == 0x31) {
     hasAlerts = (pData[7] != 0x00);  // 0x31: check byte 7
   } 
   else if (packetId == 0x43) {
     hasAlerts = (pData[5] != 0x00);  // 0x43: check byte 5
+    alertPresent = false;
+    photoAlertPresent = false;
+    muted = false;
+    // should we call the clear_inactive_bands timer instead of activeBands = 0x00
+    start_clear_inactive_bands_timer();
   }
   else {
     hasAlerts = true;
   }
 
-  if (hasAlerts) {
+  if (hasAlerts || needsMode) {
     latestRawData.assign(pData, pData + length);
     newDataAvailable = true;
   }

@@ -263,6 +263,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
             show_popup("Changing Mode...");
 
             clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqChangeMode(newMode), 8, false);
+            needsMode = true;
           }
 
         /* // TODO: figure out what to do here

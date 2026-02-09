@@ -263,7 +263,8 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     }
 
     if (!anyBandActive) {
-        start_clear_inactive_bands_timer();
+        //start_clear_inactive_bands_timer();
+        Serial.printf("hit !anyBandActive in v1_packet - this should NOT fire");
     }
 }
 
@@ -536,42 +537,38 @@ void PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed) {
     uint8_t packetID = rawpacket[3];
 
     if (packetID == 0x31) {
-        //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 13);
-        
-        //if (settings.displayTest || payload != lastRawInfPayload) {
-            uint8_t bandArrow1 = rawpacket[8];
-            uint8_t bandArrow2 = rawpacket[9];
-            uint8_t aux0 = rawpacket[10];
-            uint8_t aux1 = rawpacket[11];
-            uint8_t aux2 = rawpacket[12];
+        uint8_t bandArrow1 = rawpacket[8];
+        uint8_t bandArrow2 = rawpacket[9];
+        uint8_t aux0 = rawpacket[10];
+        uint8_t aux1 = rawpacket[11];
+        uint8_t aux2 = rawpacket[12];
 
-            BandArrowData arrow1Data = processBandArrow_v2(bandArrow1);
-            BandArrowData arrow2Data = processBandArrow_v2(bandArrow2);
+        BandArrowData arrow1Data = processBandArrow_v2(bandArrow1);
+        BandArrowData arrow2Data = processBandArrow_v2(bandArrow2);
 
-            compareBandArrows(arrow1Data, arrow2Data);
+        compareBandArrows(arrow1Data, arrow2Data);
 
-            bool softMute = (aux0 & 0b00000001) ? 1 : 0;
-            uint8_t mutedReason = (aux1 & 0b00010000) ? 1 : 0;
+        bool softMute = (aux0 & 0b00000001) ? 1 : 0;
+        uint8_t mutedReason = (aux1 & 0b00010000) ? 1 : 0;
 
-            /*
-            uint8_t modeBit0 = (aux1 & 0b00000100) ? 1 : 0;
-            uint8_t modeBit1 = (aux1 & 0b00001000) ? 2 : 0;
-            uint8_t mode = modeBit0 + modeBit1;
-            */
+        /*
+        uint8_t modeBit0 = (aux1 & 0b00000100) ? 1 : 0;
+        uint8_t modeBit1 = (aux1 & 0b00001000) ? 2 : 0;
+        uint8_t mode = modeBit0 + modeBit1;
+        */
 
-            uint8_t mode = ((aux1 >> 2) & 0x03);
-            static uint8_t lastMode = 0xFF;
+        uint8_t mode = ((aux1 >> 2) & 0x03);
+        static uint8_t lastMode = 0xFF;
 
-            if (mode != lastMode) {
-                globalConfig.rawMode     = mode;
-                globalConfig.mode        = modeTable[mode].mode;
-                globalConfig.defaultMode = modeTable[mode].defaultMode;
-                lastMode = mode;
-            }
-        //}
+        if (mode != lastMode) {
+            globalConfig.rawMode     = mode;
+            globalConfig.mode        = modeTable[mode].mode;
+            globalConfig.defaultMode = modeTable[mode].defaultMode;
+            lastMode = mode;
+            needsMode = false;
+        }
     } 
     else if (packetID == 0x43) {
-        //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
         uint8_t alertC = rawpacket[5];
         if (alertC == 0x00) {
             if (alertPresent) {
