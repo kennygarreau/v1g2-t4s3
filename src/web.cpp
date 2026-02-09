@@ -208,6 +208,15 @@ void checkAutoFlush() {
     }
 }
 
+void logFlushTask(void *pvParameters) {
+    const TickType_t delay = pdMS_TO_TICKS(60000);  // 1 minute
+
+    while (true) {
+        flushLogsToDisk();
+        vTaskDelay(delay);
+    }
+}
+
 // should be renamed to LittleFS, placeholder for now
 String readFileFromSPIFFS(const char *path)
 {
