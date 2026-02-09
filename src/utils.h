@@ -11,6 +11,9 @@ extern "C" {
 #include "lvgl.h"
 
 extern uint8_t activeBands;
+extern volatile bool statusBarUpdateRequested;
+
+void statusBarTimerTask(void *pv);
 void displayTestTask(void *pvParameters);
 void processingTask(void *pvParameters);
 

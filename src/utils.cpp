@@ -21,6 +21,8 @@ int alertTableSize = 0;
 bool proxyConnected, bt_connected, showAlertTable, kAlert, xAlert, kaAlert, laserAlert, arrowPrioFront, arrowPrioSide, arrowPrioRear;
 bool photoAlertPresent;
 
+volatile bool statusBarUpdateRequested = false;
+
 //int locationCount = 0;
 /*
 void checkProximityForMute(double currentLat, double currentLon) {
@@ -616,6 +618,15 @@ extern "C" bool get_var_gpsEnabled() {
 
 extern "C" bool get_var_gpsAvailable() {
     return gpsAvailable;
+}
+
+void statusBarTimerTask(void *pv) {
+    const TickType_t delay = pdMS_TO_TICKS(1000);
+
+    while (true) {
+        statusBarUpdateRequested = true;
+        vTaskDelay(delay);
+    }
 }
 
 void processingTask(void *pvParameters) {
