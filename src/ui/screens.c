@@ -1040,6 +1040,7 @@ void tick_screen_main() {
                         lv_label_set_text(target, txt_val);
                         lv_obj_add_flag(overlay, LV_OBJ_FLAG_HIDDEN);
                     }
+                    cur_raw = new_val;
                 }
 
                 lastAlertCount = -1;
