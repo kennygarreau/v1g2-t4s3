@@ -141,6 +141,7 @@ void gpsTask(void *parameter)
         gpsAvailable = false;
       }
     }
-    vTaskDelay(pdMS_TO_TICKS(200));
+    vTaskDelay(pdMS_TO_TICKS(50));
+    //Serial.printf("GPS Stack High Water: %u\n", uxTaskGetStackHighWaterMark(NULL));
   }
 }

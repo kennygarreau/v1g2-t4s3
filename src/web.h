@@ -39,7 +39,7 @@ extern bool isRebootPending;
 extern const char *lockoutFieldNames[];
 extern const char *logFieldNames[];
 
-void logFlushTask(void *pvParameters);
+void systemManagerTask(void *pvParameters);
 void setupWebServer();
 void checkReboot();
 void getDeviceStats();

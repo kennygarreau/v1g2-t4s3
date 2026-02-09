@@ -9,7 +9,6 @@
 #include "v1_config.h"
 #include <LV_Helper.h>
 #include <FreeRTOS.h>
-//#include <Ticker.h>
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
@@ -18,10 +17,6 @@
 #include "utils.h"
 #include "gps.h"
 #include "esp_flash.h"
-
-//Ticker writeBatteryVoltageTicker;
-//Ticker writeVolumeTicker;
-//Ticker statusBarTicker;
 
 AsyncWebServer server(80);
 //SemaphoreHandle_t xWiFiLock = NULL;
@@ -206,7 +201,7 @@ void setup()
   if (settings.enableGPS) {
     Serial.println("Initializing GPS...");
     gpsSerial.begin(BAUD_RATE, SERIAL_8N1, RXD, TXD);
-    xTaskCreatePinnedToCore(gpsTask, "GPSTask", 4096, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(gpsTask, "GPSTask", 3072, NULL, 1, NULL, 1);
   }
 
   lv_obj_t * scr = lv_scr_act();
@@ -218,10 +213,6 @@ void setup()
   stats.totalStorageKB = fileManager.getStorageTotal();
   stats.usedStorageKB = fileManager.getStorageUsed();
 
-  //writeVolumeTicker.attach(61, reqVolume);
-  //writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
-  //statusBarTicker.attach(1, ui_tick_statusBar);
-
   radarQueue = xQueueCreate(10, sizeof(RadarPacket));
 
   if (settings.displayTest) {
@@ -229,10 +220,7 @@ void setup()
     xTaskCreate(displayTestTask, "DisplayTest", 2048, NULL, 1, NULL);
   }
 
-  xTaskCreatePinnedToCore(logFlushTask, "LogFlush", 8192, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(volumeTask, "vol", 4096, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(batteryTask, "bat", 4096, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(statusBarTimerTask, "StatusBarTimer", 2048, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(systemManagerTask, "SystemMgr", 4096, NULL, 1, NULL, 1);
 
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);

@@ -122,98 +122,94 @@ void getDeviceStats() {
     stats.heapFrag = (stats.freeHeap > 0) ? (100 - (largestBlock * 100 / stats.freeHeap)) : 0;
 }
 
-bool flushLogsToDisk() {
+bool flushLogsToDisk(JsonDocument& doc) {
     if (logHistory.empty()) return true;
     
     ensureLogDir();
-    
     String filename = getLogFilename(logHistory[0].timestamp);
-    
-    // Safety: Ensure path starts with /
-    if (!filename.startsWith("/")) {
-        filename = "/" + filename;
-    }
+    if (!filename.startsWith("/")) filename = "/" + filename;
 
-    Serial.printf("Flushing to file: %s\n", filename.c_str());
-    
-    // Open in "a" (Append) mode
     File file = LittleFS.open(filename, "a");
     if (!file) {
-        Serial.println("Failed to open log file for appending");
+        Serial.println("Failed to open log file");
         return false;
     }
     
     size_t written = 0;
-    const size_t BATCH_SIZE = 10; 
-    
     for (size_t i = 0; i < logHistory.size(); i++) {
+        doc.clear(); // Clear memory without reallocating
         const LogEntry& entry = logHistory[i];
         
-        // Use a local scope for the JsonDocument to free memory every iteration
-        {
-            JsonDocument doc;
-            doc["ts"]   = entry.timestamp;
-            doc["lat"]  = entry.latitude;
-            doc["lon"]  = entry.longitude;
-            doc["spd"]  = entry.speed;
-            doc["crs"]  = entry.course;
-            doc["str"]  = entry.strength;
-            doc["dir"]  = entry.direction;
-            doc["freq"] = entry.frequency;
+        doc["ts"]   = entry.timestamp;
+        doc["lat"]  = entry.latitude;
+        doc["lon"]  = entry.longitude;
+        doc["spd"]  = entry.speed;
+        doc["crs"]  = entry.course;
+        doc["str"]  = entry.strength;
+        doc["dir"]  = entry.direction;
+        doc["freq"] = entry.frequency;
 
-            String debugJson;
-            serializeJson(doc, debugJson);
-            Serial.printf("[DEBUG] Entry %d: %s\n", i, debugJson.c_str());
-            
-            if (serializeJson(doc, file) == 0) {
-                Serial.println("Disk full or write error!");
-                file.close();
-                return false;
-            }
-            file.println(); // Crucial for JSONL format
+        if (serializeJson(doc, file) == 0) {
+            Serial.println("Disk write error!");
+            file.close();
+            return false;
         }
+        file.println();
         
         written++;
-        
-        // Watchdog & system health
-        if (written % BATCH_SIZE == 0) {
-            esp_task_wdt_reset(); 
-            yield(); 
-        }
+        if (written % 10 == 0) yield(); 
     }
     
-    file.flush(); // Ensure all data is physically on the flash
     file.close();
-    
-    // Correctly check final size
-    File verify = LittleFS.open(filename, "r");
-    size_t finalSize = verify.size();
-    verify.close();
-
-    Serial.printf("Flushed %d entries to %s (New size: %d B)\n", 
-                  written, filename.c_str(), finalSize);
-    
-    // Clear PSRAM only after we know we finished the file operations
     logHistory.clear();
-    
     pruneOldLogFiles();
     
+    Serial.printf("Flushed %d entries to %s\n", written, filename.c_str());
     return true;
 }
 
+/*
 void checkAutoFlush() {
     if (logHistory.size() >= FLUSH_THRESHOLD) {
         Serial.println("Auto-flushing logs to disk");
         flushLogsToDisk();
     }
 }
+*/
 
-void logFlushTask(void *pvParameters) {
-    const TickType_t delay = pdMS_TO_TICKS(60000);  // 1 minute
+void systemManagerTask(void *pvParameters) {
+    uint32_t lastStatusUpdate = 0;
+    uint32_t lastBatteryCheck  = 0;
+    uint32_t lastLogFlush      = 0;
+    uint32_t lastVolumeCheck   = 0;
+
+    JsonDocument doc; 
 
     while (true) {
-        flushLogsToDisk();
-        vTaskDelay(delay);
+        uint32_t now = millis();
+
+        if (now - lastStatusUpdate >= 1000) {
+            statusBarUpdateRequested = true;
+            lastStatusUpdate = now;
+        }
+
+        if (now - lastBatteryCheck >= 10000) {
+            reqBatteryVoltage();
+            lastBatteryCheck = now;
+        }
+
+        if (now - lastLogFlush >= 120000) {
+            flushLogsToDisk(doc); 
+            lastLogFlush = now;
+        }
+
+        if (now - lastVolumeCheck >= 61000) {
+            reqVolume();
+            lastVolumeCheck = now;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+        //Serial.printf("System Manager Stack High Water: %u\n", uxTaskGetStackHighWaterMark(NULL));
     }
 }
 
@@ -346,6 +342,7 @@ void setupLogRoutes() {
         request->send(200, "application/json", response);
     });
 
+    /*
     server.on("/api/flush", HTTP_POST, [](AsyncWebServerRequest *request) {
         bool success = flushLogsToDisk();
 
@@ -357,6 +354,7 @@ void setupLogRoutes() {
         serializeJson(doc, response);
         request->send(success ? 200 : 500, "application/json", response);
     });
+    */
 
     server.on("/api/logs/*", HTTP_DELETE, [](AsyncWebServerRequest *request) {
         String path = request->url().substring(10);
