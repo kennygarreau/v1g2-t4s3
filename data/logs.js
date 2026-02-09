@@ -274,12 +274,11 @@ async function loadBuffer() {
                                 3: "Rear"
                             };
 
-                            const course = Number(entry.course);
+                            const course = Number(entry.crs);
                             const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
                             const cardinal = sectors[Math.round(course / 45) % 8];
 
                             const dirDisplay = directions[dirValue] || entry.dir;
-                            console.log(dirValue, dirDisplay);
 
                             const date = new Date(entry.ts * 1000).toLocaleString();
                             L.marker([entry.lat, entry.lon]).addTo(map)
@@ -354,6 +353,32 @@ async function viewLog(filename) {
                 
                 const lat = (typeof entry.lat === 'number') ? entry.lat : 0;
                 const lon = (typeof entry.lon === 'number') ? entry.lon : 0;
+                const freqValue = Number(entry.freq);
+                let bandTitle = "Radar Alert"; // Default fallback
+                if (freqValue === 3012) {
+                    bandTitle = "Laser Alert";
+                } else if (freqValue >= 10000 && freqValue <= 11000) {
+                    bandTitle = "X-Band Alert";
+                } else if (freqValue >= 23000 && freqValue <= 25000) {
+                    bandTitle = "K-Band Alert";
+                } else if (freqValue >= 33000 && freqValue <= 37000) {
+                    bandTitle = "Ka-Band Alert";
+                
+                }
+                const freqDisplay = freqValue === 3012 ? "Laser" : `${entry.freq} MHz`;
+                const dirValue = Number(entry.dir);
+
+                const directions = {
+                    1: "Front",
+                    2: "Side",
+                    3: "Rear"
+                };
+
+                const course = Number(entry.course);
+                const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+                const cardinal = sectors[Math.round(course / 45) % 8];
+
+                const dirDisplay = directions[dirValue] || entry.dir;
 
                 return `
                     <tr class="clickable" 
@@ -365,10 +390,10 @@ async function viewLog(filename) {
                         <td>${lat.toFixed(6)}</td>
                         <td>${lon.toFixed(6)}</td>
                         <td>${entry.spd || 0} mph</td>
-                        <td>${entry.crs || 0}</td>
-                        <td>${entry.freq || 0} MHz</td>
+                        <td>${cardinal}</td>
+                        <td>${freqDisplay}</td>
                         <td>${entry.str || 0}</td>
-                        <td>${entry.dir || '-'}</td>
+                        <td>${dirDisplay}</td>
                     </tr>
                     <tr class="map-row" id="map-${rowId}">
                         <td colspan="7" style="padding: 0;">
