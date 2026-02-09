@@ -76,6 +76,24 @@ enum Modes {
     MODE_ADVLOGIC = 3
 };
 
+struct ModeInfo {
+    const char* mode;
+    const char* defaultMode;
+};
+
+const ModeInfo modeTable[4] = {
+    {"Invalid Mode", "I"},
+    {"ALL BOGEYS", "A"},
+    {"LOGIC", "c"},
+    {"ADV LOGIC", "L"}
+};
+
+struct AlertToLog {
+    uint16_t freqMhz;
+    uint8_t strength;
+    Direction dir;
+};
+
 enum class PhotoRadarType : uint8_t {
     None            = 0,
     MRCT            = 1,

@@ -9,7 +9,7 @@
 #include "v1_config.h"
 #include <LV_Helper.h>
 #include <FreeRTOS.h>
-#include <Ticker.h>
+//#include <Ticker.h>
 #include "ble.h"
 #include "v1_packet.h"
 #include "v1_fs.h"
@@ -19,9 +19,9 @@
 #include "gps.h"
 #include "esp_flash.h"
 
-Ticker writeBatteryVoltageTicker;
-Ticker writeVolumeTicker;
-Ticker statusBarTicker;
+//Ticker writeBatteryVoltageTicker;
+//Ticker writeVolumeTicker;
+//Ticker statusBarTicker;
 
 AsyncWebServer server(80);
 //SemaphoreHandle_t xWiFiLock = NULL;
@@ -218,9 +218,9 @@ void setup()
   stats.totalStorageKB = fileManager.getStorageTotal();
   stats.usedStorageKB = fileManager.getStorageUsed();
 
-  writeVolumeTicker.attach(61, reqVolume);
-  writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
-  statusBarTicker.attach(1, ui_tick_statusBar);
+  //writeVolumeTicker.attach(61, reqVolume);
+  //writeBatteryVoltageTicker.attach(10, reqBatteryVoltage);
+  //statusBarTicker.attach(1, ui_tick_statusBar);
 
   radarQueue = xQueueCreate(10, sizeof(RadarPacket));
 
@@ -229,11 +229,19 @@ void setup()
     xTaskCreate(displayTestTask, "DisplayTest", 2048, NULL, 1, NULL);
   }
 
+  xTaskCreatePinnedToCore(logFlushTask, "LogFlush", 8192, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(volumeTask, "vol", 4096, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(batteryTask, "bat", 4096, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(statusBarTimerTask, "StatusBarTimer", 2048, NULL, 1, NULL, 0);
+
   unsigned long elapsedMillis = millis() - bootMillis;
   Serial.printf("setup finished: %.2f seconds\n", elapsedMillis / 1000.0);
 }
 
 void loop() {  
+  // unsigned long loopStart = millis();
+  // unsigned long now = loopStart;
+  
   static bool configHasRun = false;
   static unsigned long lastTick = 0;
   static unsigned long lastTableTick = 0;
@@ -310,17 +318,6 @@ void loop() {
     checkReboot();
   }
 
-  unsigned long now = millis();
-  if (now - lastTick >= uiTickInterval) {    
-    lastTick = now;
-    ui_tick();
-    lv_task_handler();
-    unsigned long elapsedHandler = millis() - now;
-    if (elapsedHandler > 16) {
-      Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
-    }
-  }
-
   static uint32_t last_band_check = 0;
   static uint32_t last_status_print = 0;
   if (millis() - last_band_check > 100 && bt_connected) {
@@ -334,10 +331,22 @@ void loop() {
     }
   }
 
+  unsigned long now = millis();
+
   // TODO: move this to a task
   if (now - lastTableTick >= atTickInterval) {
     lastTableTick = now;
     tick_alertTable();
+  }
+
+  if (now - lastTick >= uiTickInterval) {    
+    lastTick = now;
+    ui_tick();
+    lv_task_handler();
+    unsigned long elapsedHandler = millis() - now;
+    if (elapsedHandler > 16) {
+      Serial.printf("Warning: screen draw time: %u ms\n", elapsedHandler);
+    }
   }
 
   loopCounter++;

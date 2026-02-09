@@ -728,6 +728,11 @@ void tick_alertTable() {
 }
 
 void tick_screen_main() {
+    if (statusBarUpdateRequested) {
+        statusBarUpdateRequested = false;
+        tick_status_bar();
+    }
+    
     bool alertPresent = get_var_alertPresent();
     uint8_t alertCount = get_var_alertCount();
     int numBars = get_var_prioBars();
@@ -970,7 +975,7 @@ void tick_screen_main() {
             return;
         }
     
-        if (!new_val) {
+        if (!new_val && get_var_bt_connected()) {
             LV_LOG_ERROR("Error: get_var_logicmode() returned NULL!");
             return;
         }

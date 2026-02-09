@@ -273,13 +273,18 @@ Execute if we successfully write reqStartAlertData to clientWriteUUID
 void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed) {
     unsigned long startTimeMicros = micros();
     
-    std::string dirValue, bandValue;
+    //std::string dirValue, bandValue;
+    const char* dirValue = nullptr;   // Changed from std::string
+    const char* bandValue = nullptr;
     int frontStrengthVal = 0;
     int rearStrengthVal = 0;
     uint16_t freqMhz = 0;
     float freqGhz;
     Direction dir;
     Band bnd;
+
+    std::vector<AlertToLog> alertsToLog;
+    alertsToLog.reserve(alerts.size());
 
     std::vector<AlertTableData> alertDataList;
     AlertTableData newAlertData = {alertCountValue, {}, {}, 0, 0};
@@ -392,7 +397,51 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
             uint8_t strength = std::max(frontStrengthVal, rearStrengthVal);
             if (bnd == BAND_LASER) { freqMhz = 3012; strength = 6; }
 
-            if (gpsAvailable && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
+            if (gpsAvailable && strength >= autoLockoutSettings.minThreshold) {
+                alertsToLog.push_back({freqMhz, strength, dir});
+            }
+        }
+    }
+
+    if (!alertsToLog.empty() && xSemaphoreTake(gpsDataMutex, pdMS_TO_TICKS(50))) {
+        const uint32_t now = gpsData.rawTime;
+        const uint32_t timeWindow = 10;
+        
+        for (const auto& alert : alertsToLog) {
+            auto it = std::find_if(logHistory.begin(), logHistory.end(), 
+                [&alert, now, timeWindow](const LogEntry& entry) {
+                    return entry.frequency == alert.freqMhz && 
+                        (now - entry.timestamp) <= timeWindow;
+                });
+            
+            if (it != logHistory.end()) {
+                // Update existing
+                if (alert.strength >= it->strength) {
+                    it->strength = alert.strength;
+                    it->latitude = gpsData.latitude;
+                    it->longitude = gpsData.longitude;
+                    it->timestamp = now;
+                }
+            } else {
+                // Add new
+                LogEntry newEntry = {
+                    now, 
+                    gpsData.latitude, 
+                    gpsData.longitude, 
+                    alert.freqMhz,
+                    static_cast<uint8_t>(gpsData.course), 
+                    gpsData.speed,
+                    alert.strength, 
+                    alert.dir
+                };
+                logHistory.push_back(newEntry);
+            }
+        }
+        
+        xSemaphoreGive(gpsDataMutex);
+    }
+/*
+            if (gpsAvailable && strength >= autoLockoutSettings.minThreshold && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
                 const uint32_t now = gpsData.rawTime;
                 const uint32_t timeWindow = 10;
                 
@@ -426,6 +475,7 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
             }
         }
     }
+*/
 
     if (alertCountValue > 1) {
 
@@ -457,8 +507,6 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     }
 
     set_var_alertCount(alertCountValue); // sets the bogey counter
-    //int tSize = alertDataList[0].freqCount; // this crashes with a single alert
-    //Serial.printf("table size: %i\n", tSize);
 
     int tableSize = alertCountValue - 1;
     if (tableSize > MAX_ALERTS) { tableSize = MAX_ALERTS; }
@@ -488,14 +536,14 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
     uint8_t packetID = rawpacket[3];
 
     if (packetID == 0x31) {
-        std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 13);
+        //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 13);
         
-        if (settings.displayTest || payload != lastRawInfPayload) {
-            uint8_t bandArrow1 = payload[3];
-            uint8_t bandArrow2 = payload[4];
-            uint8_t aux0 = payload[5];
-            uint8_t aux1 = payload[6];
-            uint8_t aux2 = payload[7];
+        //if (settings.displayTest || payload != lastRawInfPayload) {
+            uint8_t bandArrow1 = rawpacket[8];
+            uint8_t bandArrow2 = rawpacket[9];
+            uint8_t aux0 = rawpacket[10];
+            uint8_t aux1 = rawpacket[11];
+            uint8_t aux2 = rawpacket[12];
 
             BandArrowData arrow1Data = processBandArrow_v2(bandArrow1);
             BandArrowData arrow2Data = processBandArrow_v2(bandArrow2);
@@ -511,28 +559,20 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
             uint8_t mode = modeBit0 + modeBit1;
             */
 
-            struct ModeInfo {
-                const char* mode;
-                const char* defaultMode;
-            };
-            
-            const ModeInfo modeTable[4] = {
-                {"Invalid Mode", "I"},
-                {"ALL BOGEYS", "A"},
-                {"LOGIC", "c"},
-                {"ADV LOGIC", "L"}
-            };
-
             uint8_t mode = ((aux1 >> 2) & 0x03);
+            static uint8_t lastMode = 0xFF;
 
-            globalConfig.rawMode     = mode;
-            globalConfig.mode        = modeTable[mode].mode;
-            globalConfig.defaultMode = modeTable[mode].defaultMode;
-        }
+            if (mode != lastMode) {
+                globalConfig.rawMode     = mode;
+                globalConfig.mode        = modeTable[mode].mode;
+                globalConfig.defaultMode = modeTable[mode].defaultMode;
+                lastMode = mode;
+            }
+        //}
     } 
     else if (packetID == 0x43) {
-        std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
-        uint8_t alertC = payload[0];
+        //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
+        uint8_t alertC = rawpacket[5];
         if (alertC == 0x00) {
             if (alertPresent) {
                 alertPresent = false;
@@ -544,6 +584,7 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
             alertCountValue = alertC & 0b00001111;
             alertIndexValue = (alertC & 0b11110000) >> 4;
 
+            std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
             alertTableRaw.push_back(payload);
 
             // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
@@ -555,14 +596,14 @@ std::string PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed
         }
     }
     else if (packetID == 0x02) {
-        std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
+        //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
 
-        char versionID        = byteToAscii(payload[0]);
-        char majorVersion     = byteToAscii(payload[1]);
-        char minorVersion     = byteToAscii(payload[3]);
-        char revisionDigitOne = byteToAscii(payload[4]);
-        char revisionDigitTwo = byteToAscii(payload[5]);
-        char controlNumber    = byteToAscii(payload[6]);
+        char versionID        = byteToAscii(rawpacket[5]);
+        char majorVersion     = byteToAscii(rawpacket[6]);
+        char minorVersion     = byteToAscii(rawpacket[8]);
+        char revisionDigitOne = byteToAscii(rawpacket[9]);
+        char revisionDigitTwo = byteToAscii(rawpacket[10]);
+        char controlNumber    = byteToAscii(rawpacket[11]);
 
         if (versionID == 'V') {
             char versionString[8];
