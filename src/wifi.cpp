@@ -144,12 +144,17 @@ void stopWifi() {
 }
 
 void wifiScan() {
+    if (wifiClientConnected) {
+        Serial.println("Client connected to AP; aborting scan.");
+        return;
+    }
+
     Serial.println("Scanning for WiFi networks...");
     int networkCount = WiFi.scanNetworks();
 
-    if (networkCount == 0) {
-        Serial.println("No networks found");
-        if (settings.enableWifi) {
+    if (networkCount <= 0) {
+        Serial.println(networkCount == 0 ? "No networks found" : "Scan failed");        
+        if (settings.enableWifi && !localWifiStarted) {
             startLocalWifi();
         }
         WiFi.scanDelete();
@@ -161,6 +166,7 @@ void wifiScan() {
         Serial.printf("%d: %s (RSSI: %d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), 
             WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "Open" : "Secured");
     }
+
     for (auto &cred : settings.wifiCredentials) {
         for (int i = 0; i < networkCount; i++) {
             if (WiFi.SSID(i) == cred.ssid) {
@@ -176,7 +182,7 @@ void wifiScan() {
                 Serial.println();
 
                 if (WiFi.status() == WL_CONNECTED) {
-                    return;
+                    break;
                 } else {
                     Serial.printf("Failed to connect to %s\n", cred.ssid.c_str());
                 }
@@ -184,10 +190,10 @@ void wifiScan() {
             }
         }
     }
+    WiFi.scanDelete();
 
     Serial.println("No known networks available.");
     if (!wifiConnected && !localWifiStarted && settings.enableWifi) {
         startLocalWifi();
     }
-    WiFi.scanDelete();
 }
