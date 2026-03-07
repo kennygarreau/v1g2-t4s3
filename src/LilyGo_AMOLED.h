@@ -9,6 +9,7 @@
 
 #pragma once
 #include <Arduino.h>
+#include "lvgl.h"
 
 #if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(2,0,5)
 #error "Please update the esp32 core version to a version greater than 2.0.5 and less than v3.0.0, how to update, please see here https://docs.espressif.com/projects/arduino-esp32/en/latest/"
@@ -56,6 +57,7 @@
 //#define BOARD_PIXELS_PIN    (18)        //only 1.47 inch
 //#define BOARD_PIXELS_NUM    (1)
 //#define DEFAULT_SCK_SPEED   (30 * 1000 * 1000)
+
 
 typedef struct __DisplayConfigure {
     int d0;
@@ -227,7 +229,6 @@ static const BoardPmuPins_t AMOLED_241_PMU_PINS =  {6/*SDA*/, 7/*SCL*/, 5/*IRQ*/
 static const BoardTouchPins_t AMOLED_241_TOUCH_PINS =  {6/*SDA*/, 7/*SCL*/, 8/*IRQ*/, 17/*RST*/};
 static const BoardSDCardPins_t AMOLED_241_SD_PINS =  {4/*MISO*/, 2/*MOSI*/, 3/*SCK*/, 1/*CS*/};
 
-
 static const  BoardsConfigure_t BOARD_AMOLED_191 = {
     // RM67162 Driver
     RM67162_AMOLED,
@@ -293,7 +294,7 @@ class LilyGo_AMOLED:
 {
 public:
     // KG
-    void pushColorsDMA_v2(uint16_t *data, uint32_t len);
+    void pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t *disp_drv);
     void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye);
     void writeCommand_v2(uint32_t cmd, uint8_t *pdat, uint32_t length);
     bool checkDisplayReady();

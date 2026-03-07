@@ -7,6 +7,7 @@
  *
  */
 #pragma once
+#define SEND_BUF_SIZE           (16384)
 
 #include <stdint.h>
 
@@ -14,6 +15,8 @@
 //     DISP_VERTICAL,      // vertical
 //     DISP_HORIZONTAL,    // horizontal
 // };
+
+extern uint16_t *dma_bounce;
 
 class LilyGo_Display
 {
@@ -28,7 +31,7 @@ public:
     virtual uint16_t height() = 0;
 
     //KG
-    virtual void pushColorsDMA_v2(uint16_t *data, uint32_t len) = 0;
+    virtual void pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t *disp_drv) = 0;
     virtual void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye) = 0;
 
     virtual uint8_t getPoint(int16_t *x, int16_t *y, uint8_t get_point ) = 0;

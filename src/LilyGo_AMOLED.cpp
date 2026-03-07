@@ -40,7 +40,6 @@
 #define LCD_CMD_BRIGHTNESS   (0x51)
 #endif
 
-#define SEND_BUF_SIZE           (16384)
 #define TFT_SPI_MODE            SPI_MODE0
 #define DEFAULT_SPI_HANDLER    (SPI3_HOST)
 
@@ -416,7 +415,7 @@ bool LilyGo_AMOLED::initBUS(DriverBusType type)
             .data5_io_num = BOARD_NONE_PIN,
             .data6_io_num = BOARD_NONE_PIN,
             .data7_io_num = BOARD_NONE_PIN,
-            .max_transfer_sz = (SEND_BUF_SIZE * 16) + 8,
+            .max_transfer_sz = 65535, // (SEND_BUF_SIZE * 2) + 8,
             //.max_transfer_sz = SEND_BUF_SIZE + 8,
             .flags = SPICOMMON_BUSFLAG_MASTER | SPICOMMON_BUSFLAG_GPIO_PINS,
         };
@@ -673,7 +672,7 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
         assert(pBuffer);
     }
 
-    setRotation(0);
+    setRotation(2); // 0 = default
 
     return true;
 }
@@ -879,10 +878,61 @@ bool LilyGo_AMOLED::checkDisplayReady() {
     return digitalRead(tePin) == HIGH;
 }
 
-void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
+void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t *disp_drv) {
     if (!spi) return;
 
     bool first_send = true;
+    setCS();
+
+    while (len > 0) {
+        size_t chunk_size = min((uint32_t)SEND_BUF_SIZE, len);
+
+        memcpy(dma_bounce, data, chunk_size * sizeof(uint16_t));
+
+        spi_transaction_ext_t t = {0};
+        memset(&t, 0, sizeof(t));
+
+        if (first_send) {
+            t.base.flags = SPI_TRANS_MODE_QIO;
+            t.base.cmd   = 0x32;
+            t.base.addr  = 0x002C00;
+            first_send   = false;
+        } else {
+            t.base.flags = SPI_TRANS_MODE_QIO
+                         | SPI_TRANS_VARIABLE_CMD
+                         | SPI_TRANS_VARIABLE_ADDR
+                         | SPI_TRANS_VARIABLE_DUMMY;
+            t.command_bits = 0;
+            t.address_bits = 0;
+            t.dummy_bits   = 0;
+        }
+
+        t.base.tx_buffer = dma_bounce;
+        t.base.length    = chunk_size * 16;
+
+        esp_err_t ret = spi_device_queue_trans(spi, &t.base, portMAX_DELAY);
+        if (ret != ESP_OK) {
+            log_e("DMA queue failed!");
+            break;
+        }
+
+        spi_transaction_t *trans_result;
+        spi_device_get_trans_result(spi, &trans_result, portMAX_DELAY);
+
+        data += chunk_size;
+        len  -= chunk_size;
+    }
+
+    clrCS();
+    lv_disp_flush_ready(disp_drv);
+}
+
+/*
+void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t *disp_drv) {
+    if (!spi) return;
+
+    bool first_send = true;
+    bool pending_result = false;
     setCS();  // Set chip select
 
     while (len > 0) {
@@ -930,8 +980,11 @@ void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
     }
 
     clrCS();  // Clear chip select
-}
+    
+    lv_disp_flush_ready(disp_drv);
 
+}
+*/
 
 // Push (aka write pixel) colours to the TFT (use setAddrWindow() first)
 void LilyGo_AMOLED::pushColors(uint16_t *data, uint32_t len)
