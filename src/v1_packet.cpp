@@ -261,11 +261,6 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
             enable_blinking(front_state.active ? BLINK_FRONT : BLINK_REAR);
         }
     }
-
-    if (!anyBandActive) {
-        //start_clear_inactive_bands_timer();
-        Serial.printf("hit !anyBandActive in v1_packet - this should NOT fire");
-    }
 }
 
 /* 
@@ -274,7 +269,6 @@ Execute if we successfully write reqStartAlertData to clientWriteUUID
 void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed) {
     unsigned long startTimeMicros = micros();
     
-    //std::string dirValue, bandValue;
     const char* dirValue = nullptr;   // Changed from std::string
     const char* bandValue = nullptr;
     int frontStrengthVal = 0;
@@ -441,70 +435,31 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
         
         xSemaphoreGive(gpsDataMutex);
     }
-/*
-            if (gpsAvailable && strength >= autoLockoutSettings.minThreshold && xSemaphoreTake(gpsDataMutex, portMAX_DELAY)) {    
-                const uint32_t now = gpsData.rawTime;
-                const uint32_t timeWindow = 10;
-                
-                auto it = std::find_if(logHistory.begin(), logHistory.end(), [freqMhz, now, timeWindow](const LogEntry& entry) {
-                    return entry.frequency == freqMhz && (now - entry.timestamp) <= timeWindow;});
-                
-                if (it != logHistory.end()) {
-                    if (strength >= it->strength) {
-                        it->strength = strength;
-                        it->latitude = gpsData.latitude;
-                        it->longitude = gpsData.longitude;
-                        it->timestamp = gpsData.rawTime;
-                        //Serial.printf("Update existing alert: %u | lat: %f | lon: %f | str: %d | freq: %d | decode(us): %u | history_size: %d\n", now, gpsData.latitude, gpsData.longitude,
-                        //            strength, freqMhz, elapsedTimeMicros, logHistory.size());
-                    }
-                } else {
-                    LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, freqMhz, static_cast<u8_t>(gpsData.course), gpsData.speed,
-                                        strength, dir};
-                    logHistory.push_back(newEntry);
-                    // Serial.printf("Logging alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
-                    //                newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                    //                newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
-                }
-                xSemaphoreGive(gpsDataMutex);
-            } else {
-                LogEntry newEntry = {gpsData.rawTime, gpsData.latitude, gpsData.longitude, freqMhz, static_cast<u8_t>(gpsData.course), gpsData.speed,
-                    strength, dir};
-                //Serial.printf("Unlogged alert: %u | lat: %f | lon: %f | speed: %d | course: %d | str: %d | dir: %d | freq: %d | decode(us): %u | history_size: %d\n", 
-                //                    newEntry.timestamp, newEntry.latitude, newEntry.longitude, newEntry.speed, newEntry.course, 
-                //                    newEntry.strength, newEntry.direction, newEntry.frequency, elapsedTimeMicros, logHistory.size());
-            }
-        }
-    }
-*/
-
     if (alertCountValue > 1) {
-
-        for (auto& alertData : alertDataList) {
-            std::vector<float> uniqueFrequencies;
-            std::vector<std::string> uniqueDirections;
+    for (auto& alertData : alertDataList) {
+        uint8_t uniqueCount = 0;
         
-            for (int i = 0; i < alertData.freqCount; i++) {
-                bool freqExists = false;
-                for (auto& uniqueFreq : uniqueFrequencies) {
-                    if (alertData.frequencies[i] == uniqueFreq) {
-                        freqExists = true;
-                        break;
-                    }
-                }
-        
-                if (!freqExists) {
-                    uniqueFrequencies.push_back(alertData.frequencies[i]);
-                    uniqueDirections.push_back(alertData.direction[i]);
+        for (int i = 0; i < alertData.freqCount; i++) {
+            bool isDuplicate = false;
+            
+            for (int j = 0; j < uniqueCount; j++) {
+                if (alertData.frequencies[i] == alertData.frequencies[j]) {
+                    isDuplicate = true;
+                    break;
                 }
             }
-        
-            alertData.freqCount = uniqueFrequencies.size();
-            for (int i = 0; i < alertData.freqCount; i++) {
-                alertData.frequencies[i] = uniqueFrequencies[i];
-                alertData.direction[i] = uniqueDirections[i];
+            
+            if (!isDuplicate) {
+                if (uniqueCount != i) {
+                    alertData.frequencies[uniqueCount] = alertData.frequencies[i];
+                    alertData.direction[uniqueCount] = alertData.direction[i];
+                }
+                uniqueCount++;
             }
         }
+        
+        alertData.freqCount = uniqueCount;
+    }
     }
 
     set_var_alertCount(alertCountValue); // sets the bogey counter
@@ -519,6 +474,7 @@ void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpe
     } else {
         set_var_showAlertTable(false);
     }
+    //Serial.printf("decodeAlertData_v2: %u us\n", micros() - startTimeMicros);
 }
 
 /*  decode operation, passed from loop() - based on the packet ID.
@@ -570,27 +526,18 @@ void PacketDecoder::decode_v2(int lowSpeedThreshold, uint8_t currentSpeed) {
     } 
     else if (packetID == 0x43) {
         uint8_t alertC = rawpacket[5];
-        if (alertC == 0x00) {
-            if (alertPresent) {
-                alertPresent = false;
-                photoAlertPresent = false;
-            }
-            return;
-        }
-        else {
-            alertCountValue = alertC & 0b00001111;
-            alertIndexValue = (alertC & 0b11110000) >> 4;
+        alertCountValue = alertC & 0b00001111;
+        alertIndexValue = (alertC & 0b11110000) >> 4;
 
-            std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
-            alertTableRaw.push_back(payload);
+        std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);
+        alertTableRaw.push_back(payload);
 
-            // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
-            if (alertTableRaw.size() >= alertCountValue || alertTableRaw.size() == MAX_ALERTS + 1) {
-                alertPresent = true;
-                decodeAlertData_v2(alertTableRaw, lowSpeedThreshold, currentSpeed);
-                alertTableRaw.clear();
-            } 
-        }
+        // check if the alertTable vector size is more than or equal to the tableSize (alerts.count) extracted from alertByte
+        if (alertTableRaw.size() >= alertCountValue || alertTableRaw.size() == MAX_ALERTS + 1) {
+            alertPresent = true;
+            decodeAlertData_v2(alertTableRaw, lowSpeedThreshold, currentSpeed);
+            alertTableRaw.clear();
+        } 
     }
     else if (packetID == 0x02) {
         //std::vector<uint8_t> payload(rawpacket.begin() + 5, rawpacket.begin() + 12);

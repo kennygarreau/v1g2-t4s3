@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.6.0g"
+#define FIRMWARE_VERSION "1.6.0h"
 #define BAUD_RATE 9600
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
@@ -288,7 +288,7 @@ struct AlertTableData {
     uint8_t barCount; // TODO: convert to array
     uint8_t freqCount;
     float frequencies[MAX_ALERTS + 1];
-    std::string direction[MAX_ALERTS + 1];
+    const char* direction[MAX_ALERTS + 1];
 };
 
 #endif // V1_CONFIG_H

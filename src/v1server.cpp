@@ -131,6 +131,8 @@ void setup()
 {
   bootMillis = millis();
   Serial.begin();
+  vTaskDelay(pdMS_TO_TICKS(2000));
+
   pinMode(8, INPUT_PULLUP);
   analogReadResolution(12);
   
@@ -242,14 +244,6 @@ void loop() {
     Serial.printf("processing packets at: %.2f seconds\n", elapsedMillis / 1000.0);
   }
 
-  if (newDataAvailable) {
-    newDataAvailable = false;
-
-    PacketDecoder decoder(latestRawData);
-    //std::string decoded = decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
-    decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
-  }
-  
   unsigned long currentMillis = millis();
   if (currentMillis - lastMillis >= 2000) {
     //Serial.printf("Uptime: %u | Loops executed: %d\n", stats.uptime, loopCounter); // uncomment for loop profiling

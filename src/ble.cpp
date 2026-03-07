@@ -294,8 +294,11 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   }
 
   if (hasAlerts || needsMode) {
-    latestRawData.assign(pData, pData + length);
+    //latestRawData.assign(pData, pData + length);
     newDataAvailable = true;
+    std::vector<uint8_t> packetCopy(pData, pData + length);
+    PacketDecoder decoder(packetCopy);
+    decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
   }
 }
 
@@ -349,48 +352,6 @@ void displayReader(NimBLEClient* pClient) {
     onProxyReady();
   }
 }
-
-/*
-void displayReader(NimBLEClient* pClient) {
-
-    dataRemoteService = pClient->getService(bmeServiceUUID);
-    if (dataRemoteService) {
-      infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-      if (infDisplayDataCharacteristic) {
-        if (infDisplayDataCharacteristic->canNotify()) {
-          infDisplayDataCharacteristic->subscribe(true, notifyDisplayCallbackv2);
-          Serial.println("Subscribed to alert notifications.");
-        } else {
-          Serial.println("Characteristic does not support notifications.");
-        }
-      } else {
-        Serial.println("Failed to find infDisplayDataCharacteristic.");
-      }
-  
-      infDisplayDataCharacteristic = dataRemoteService->getCharacteristic(infDisplayDataUUID);
-      clientWriteCharacteristic = dataRemoteService->getCharacteristic(clientWriteUUID);
-      if (infDisplayDataCharacteristic && clientWriteCharacteristic) {
-        NimBLERemoteDescriptor* pDesc = infDisplayDataCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902));
-        if (pDesc) {
-          pDesc->writeValue((uint8_t*)notificationOn, 2, true);
-        }
-        delay(50);
-        if (settings.turnOffDisplay) {
-          uint8_t value = settings.onlyDisplayBTIcon ? 0x01 : 0x00;
-          clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqTurnOffMainDisplay(value), 8, false);
-          delay(50);
-        }
-        clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqStartAlertData(), 7, false);
-      }
-
-      if (settings.proxyBLE) {
-        onProxyReady();
-      }
-    } else {
-      Serial.println("Failed to find bmeServiceUUID!");
-    }
-}
-*/
 
 void queryDeviceInfo(NimBLEClient* pClient) {
     NimBLERemoteService* pService = pClient->getService(deviceInfoUUID);
