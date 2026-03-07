@@ -997,6 +997,15 @@ void setupWebServer()
             request->send(200, "application/json", "{\"message\": \"Settings updated successfully!\"}");
     });
 
+    server.on("/auth/discovery", HTTP_ANY, [](AsyncWebServerRequest *request){
+        request->send(204);
+    });
+
+    server.onNotFound([](AsyncWebServerRequest *request){
+        request->send(404);
+        request->client()->close(true); 
+    });
+
     setupLogRoutes();
 
     server.begin();
