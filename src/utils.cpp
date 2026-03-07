@@ -476,7 +476,7 @@ void set_var_frequencies(const std::vector<AlertTableData>& alertDataList) {
             snprintf(alert_frequencies[index], sizeof(alert_frequencies[index]), "%.3f", alertData.frequencies[i]);
             frequency_ptrs[index] = alert_frequencies[index];
 
-            strncpy(alert_directions[index], alertData.direction[i].c_str(), sizeof(alert_directions[index]) - 1);
+            strncpy(alert_directions[index], alertData.direction[i], sizeof(alert_directions[index]) - 1);
             alert_directions[index][sizeof(alert_directions[index]) - 1] = '\0';
             direction_ptrs[index] = alert_directions[index];
 

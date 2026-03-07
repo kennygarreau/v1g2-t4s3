@@ -1362,73 +1362,76 @@ void tick_screen_settings() {
     }
     // V1C LE enable/disable
     {
-        if (!objects.switch_v1cle) return;
+        if (objects.switch_v1cle) {
+            bool usev1cle = get_var_usev1cle();
+            bool switch_checked = lv_obj_has_state(objects.switch_v1cle, LV_STATE_CHECKED);
 
-        //bool v1cle_present = get_var_v1clePresent();
-        bool usev1cle = get_var_usev1cle();
-        bool switch_checked = lv_obj_has_state(objects.switch_v1cle, LV_STATE_CHECKED);
-
-        if (usev1cle && !switch_checked) {
-            lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_state(objects.switch_v1cle, LV_STATE_CHECKED);
-        }
-        else if (usev1cle && switch_checked) {
-            lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
-            //lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
-        }
-        else {
-            lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
+            if (usev1cle != switch_checked) {
+                if (usev1cle) {
+                    lv_obj_clear_flag(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(objects.switch_v1cle, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_state(objects.switch_v1cle, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(objects.label_v1cle, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
+                }
+            }
         }
     }
     // Proxy enable/disable
     {
-        if (!objects.switch_proxy) return;
-
-        //bool v1cle_present = get_var_v1clePresent();
-        bool useProxy = get_var_useProxy();
-        bool switch_checked = lv_obj_has_state(objects.switch_proxy, LV_STATE_CHECKED);
-
-        if (useProxy && !switch_checked) {
-            lv_obj_clear_flag(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(objects.switch_proxy, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_state(objects.switch_proxy, LV_STATE_CHECKED);
-        }
-        else if (useProxy && switch_checked) {
-            lv_obj_clear_flag(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(objects.switch_proxy, LV_OBJ_FLAG_HIDDEN);
-            //lv_obj_clear_state(objects.switch_v1cle, LV_STATE_CHECKED);
-        }
-        else {
-            lv_obj_clear_state(objects.switch_proxy, LV_STATE_CHECKED);
+        if (objects.switch_proxy) {
+            bool useProxy = get_var_useProxy();
+            bool switch_checked = lv_obj_has_state(objects.switch_proxy, LV_STATE_CHECKED);
+            
+            if (useProxy != switch_checked) {
+                if (useProxy) {
+                    lv_obj_clear_flag(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(objects.switch_proxy, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_state(objects.switch_proxy, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(objects.label_proxy, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_state(objects.switch_proxy, LV_STATE_CHECKED);
+                }
+            }
         }
     }
     // RSSI vals
     {
         static unsigned long lastUpdateTime = 0;
+        static int lastBleRssi = 999;  // Initialize with impossible values
+        static int lastWifiRssi = 999;
+        
         unsigned long currentTime = getMillis();
 
-        if (currentTime - lastUpdateTime < 2000) {
-            return;
+        if (currentTime - lastUpdateTime >= 2000) {
+            lastUpdateTime = currentTime;
+
+            int bleRssi = getBluetoothSignalStrength();
+            int wifiRssi = getWifiRSSI();
+
+            if (bleRssi != lastBleRssi) {
+                char bleRssi_str[12];
+                snprintf(bleRssi_str, sizeof(bleRssi_str), "%d dBm", bleRssi);
+                
+                tick_value_change_obj = objects.label_ble_rssi_val;
+                LV_LOG_INFO("updating BLE RSSI");
+                lv_label_set_text(objects.label_ble_rssi_val, bleRssi_str);
+                lastBleRssi = bleRssi;
+            }
+
+            if (wifiRssi != lastWifiRssi) {
+                char wifiRssi_str[12];
+                snprintf(wifiRssi_str, sizeof(wifiRssi_str), "%d dBm", wifiRssi);
+                
+                LV_LOG_INFO("updating Wifi RSSI");
+                tick_value_change_obj = objects.label_wifi_rssi_val;
+                lv_label_set_text(objects.label_wifi_rssi_val, wifiRssi_str);
+                lastWifiRssi = wifiRssi;
+            }
+            
+            tick_value_change_obj = NULL;
         }
-
-        lastUpdateTime = currentTime;
-
-        int bleRssi = getBluetoothSignalStrength();
-        int wifiRssi = getWifiRSSI();
-        char bleRssi_str[8];
-        char wifiRssi_str[8];
-        snprintf(bleRssi_str, sizeof(bleRssi_str), "%d dBm", bleRssi);
-        snprintf(wifiRssi_str, sizeof(wifiRssi_str), "%d dBm", wifiRssi);
-        
-        tick_value_change_obj = objects.label_ble_rssi_val;
-        LV_LOG_INFO("updating BLE RSSI");
-        lv_label_set_text(objects.label_ble_rssi_val, bleRssi_str);
-        LV_LOG_INFO("updating Wifi RSSI");
-        tick_value_change_obj = objects.label_wifi_rssi_val;
-        lv_label_set_text(objects.label_wifi_rssi_val, wifiRssi_str);
-        tick_value_change_obj = NULL;
     }
 }
 
