@@ -26,9 +26,11 @@ static void band_update_timer(lv_timer_t * timer) {
     }
 }
 
+/*
 void start_band_update_timer() {
     lv_timer_create(band_update_timer, 500, NULL); // Check every 500ms
 }
+*/
 
 static void clear_inactive_bands_timer(lv_timer_t * timer) {
     activeBands = 0;
@@ -97,6 +99,7 @@ void register_blinking_image(int index, lv_obj_t *obj) {
     blink_images[index] = obj;
 }
 
+/*
 static void blink_timer_cb(lv_timer_t *timer) {
     for (int i = 0; i < blink_count; i++) {
         if (blink_enabled[i]) {
@@ -106,6 +109,8 @@ static void blink_timer_cb(lv_timer_t *timer) {
     }
 }
 
+
 void init_blinking_system() {
     lv_timer_create(blink_timer_cb, BLINK_FREQUENCY, NULL);
 }
+*/

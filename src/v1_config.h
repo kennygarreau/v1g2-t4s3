@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include <vector>
 
-#define FIRMWARE_VERSION "1.6.0h"
+#define FIRMWARE_VERSION "1.6.d"
 #define BAUD_RATE 9600
 #define FULLY_CHARGED_VOLTAGE 4124
 #define EMPTY_VOLTAGE 3100
@@ -26,8 +26,9 @@
 //#define KBLOCK5 24.224 // +/- .002 (2 MHz) Honda
 
 extern LilyGo_AMOLED amoled;
-extern bool proxyConnected, bt_connected, muted, alertPresent, v1le, savvy, remoteAudio;
+extern bool proxyConnected, bt_connected, alertPresent, v1le, savvy, remoteAudio;
 extern bool wifiClientConnected, wifiConnecting, wifiConnected, localWifiStarted, webStarted;
+extern volatile bool muted;
 
 extern int alertTableSize;
 extern uint8_t currentSpeed;

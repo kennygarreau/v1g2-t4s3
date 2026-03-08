@@ -887,7 +887,7 @@ void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t
     while (len > 0) {
         size_t chunk_size = min((uint32_t)SEND_BUF_SIZE, len);
 
-        memcpy(dma_bounce, data, chunk_size * sizeof(uint16_t));
+        //memcpy(dma_bounce, data, chunk_size * sizeof(uint16_t));
 
         spi_transaction_ext_t t = {0};
         memset(&t, 0, sizeof(t));
@@ -907,7 +907,7 @@ void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len, lv_disp_drv_t
             t.dummy_bits   = 0;
         }
 
-        t.base.tx_buffer = dma_bounce;
+        t.base.tx_buffer = data;
         t.base.length    = chunk_size * 16;
 
         esp_err_t ret = spi_device_queue_trans(spi, &t.base, portMAX_DELAY);

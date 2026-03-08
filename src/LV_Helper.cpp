@@ -38,6 +38,16 @@ static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color
 
 /* DMA display flush */
 static void disp_flush_v2(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
+    static uint32_t flush_count = 0;
+    static uint32_t last_reset = 0;
+    
+    flush_count++;
+    if (millis() - last_reset > 1000) {
+        Serial.printf("Flushes/sec: %u\n", flush_count);
+        flush_count = 0;
+        last_reset = millis();
+    }
+    
     if (color_p == NULL) return;
     flush_user_data_t *ctx = static_cast<flush_user_data_t *>(disp_drv->user_data);
     
@@ -192,8 +202,6 @@ void beginLvglHelper(LilyGo_Display &board, bool debug) {
 }
 
 void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
-    dma_bounce = (uint16_t *)heap_caps_malloc(16384 * sizeof(uint16_t), MALLOC_CAP_DMA);
-    assert(dma_bounce != NULL);
 
     lv_init();
 
@@ -211,32 +219,28 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
     lv_color_t *buf1 = (lv_color_t *)ps_malloc(lv_buffer_size);
     lv_color_t *buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
     */
-    size_t lv_buffer_size = (board.width() * board.height() / 10) * sizeof(lv_color_t);  // Reduce buffer size to fit DMA
+    size_t lv_buffer_size = (board.width() * board.height() / 6) * sizeof(lv_color_t);  // Reduce buffer size to fit DMA
 
-    lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_SPIRAM);
-    lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_SPIRAM);
-
-    //lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA);
+    lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA);
     //lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA);
-    //lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
-    //lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
+    
+    assert(buf1);
 
-    assert(buf1 && buf2);
-
-    if (!buf1 || !buf2) {
+    if (!buf1) {
         Serial.printf("LVGL buffer alloc failed! Free DMA RAM: %zu bytes, needed: %zu bytes\n",
             heap_caps_get_free_size(MALLOC_CAP_DMA),
             lv_buffer_size);
         if (buf1) heap_caps_free(buf1);
-        if (buf2) heap_caps_free(buf2);
+        //if (buf2) heap_caps_free(buf2);
         return;
     }
-/*
-    if (!esp_ptr_dma_capable(buf1) || !esp_ptr_dma_capable(buf2)) {
-        Serial.println("ERROR: Buffers are NOT DMA-capable!");
-    }
-*/
-    lv_disp_draw_buf_init(&draw_buf, buf1, buf2, board.width() * board.height() / 10);
+
+    Serial.printf("buf1: %p DMA capable: %s\n", buf1, esp_ptr_dma_capable(buf1) ? "YES" : "NO");
+    //Serial.printf("buf2: %p DMA capable: %s\n", buf2, esp_ptr_dma_capable(buf2) ? "YES" : "NO");
+    Serial.printf("Free DMA after alloc: %u\n", heap_caps_get_free_size(MALLOC_CAP_DMA));
+    Serial.printf("Free internal after alloc: %u\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+    lv_disp_draw_buf_init(&draw_buf, buf1, NULL, board.width() * board.height() / 10);
 
     /*Initialize the display*/
     lv_disp_drv_init( &disp_drv );
