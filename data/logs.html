@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar Detector Logs</title>
+    <title>v1g2.display · Logs</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
@@ -11,250 +13,93 @@
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     <script src="logs.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #1a1a1a;
-            color: #e0e0e0;
-        }
-        .status {
-            background: #2a2a2a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
-        .stat {
-            background: #333;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #888;
-        }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        .live-badge {
-            display: inline-block;
-            background: #ff5722;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab {
-            background: #333;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .tab:hover {
-            background: #444;
-        }
-        .tab.active {
-            background: #4CAF50;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .file-list {
-            background: #2a2a2a;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .file-item {
-            padding: 15px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .file-item:hover {
-            background: #333;
-        }
-        .file-name {
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        .file-meta {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-        }
-        .log-table {
-            width: 100%;
-            background: #2a2a2a;
-            border-collapse: collapse;
-            margin-top: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .log-table th {
-            background: #333;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-            border-bottom: 2px solid #444;
-            position: sticky;
-            top: 0;
-        }
-        .log-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #333;
-        }
-        .log-table tr:hover {
-            background: #333;
-        }
-        .log-table tr.clickable {
-            cursor: pointer;
-        }
-        .log-table tr.new-entry {
-            animation: highlight 1s ease-out;
-        }
-        @keyframes highlight {
-            from { background: #4CAF50; }
-            to { background: transparent; }
-        }
-        
-        /* Map container styles */
-        .map-row {
-            display: none;
-        }
-        
-        .map-row.expanded {
-            display: table-row;
-        }
-        
-        .map-wrapper {
-            height: 0;
-            overflow: hidden;
-            transition: height 0.3s ease-out;
-            background: #1a1a1a;
-        }
-        
-        .map-wrapper.expanded {
-            height: 400px;
-            padding: 10px;
-        }
-        
-        .entry-map {
-            height: 100%;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #ddd;
-        }
-        
-        .btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-        .btn:hover {
-            background: #45a049;
-        }
-        .btn-danger {
-            background: #f44336;
-        }
-        .btn-danger:hover {
-            background: #da190b;
-        }
-        .empty-state {
-            padding: 40px;
-            text-align: center;
-            color: #888;
-        }
-        h1 { color: #4CAF50; }
-        h2 { color: #e0e0e0; margin-top: 30px; }
-        .hidden { display: none; }
-        
-        .expand-icon {
-            display: inline-block;
-            margin-right: 8px;
-            transition: transform 0.3s;
-            color: #4CAF50;
-        }
-        .expand-icon.expanded {
-            transform: rotate(90deg);
-        }
-    </style>
 </head>
 <body>
-    <h1>Radar Alert History</h1>
-    
-    <div class="status" id="status">
-        <div class="status-grid">
-            <div class="stat">
-                <div class="stat-label">PSRAM Buffer</div>
-                <div class="stat-value" id="psram-entries">-</div>
+    <nav>
+        <span class="nav-brand">v1g2</span>
+        <a href="/">Home</a>
+        <a href="settings.html">Configuration</a>
+        <a href="lockouts.html">Lockouts</a>
+        <a href="status.html">Status</a>
+        <a href="#" class="active">Logs</a>
+        <a href="update.html">Update</a>
+    </nav>
+
+    <div class="container">
+
+        <div class="status" id="status">
+            <div class="status-grid">
+                <div class="stat">
+                    <div class="stat-label">PSRAM Buffer</div>
+                    <div class="stat-value" id="psram-entries">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Free PSRAM</div>
+                    <div class="stat-value" id="psram-free">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Storage Used</div>
+                    <div class="stat-value" id="fs-used">-</div>
+                </div>
             </div>
-            <div class="stat">
-                <div class="stat-label">Free PSRAM</div>
-                <div class="stat-value" id="psram-free">-</div>
+            <button class="btn btn-primary" onclick="flushLogs()">Flush PSRAM to Disk</button>
+            <button class="btn btn-ghost" onclick="clearBuffer()" style="margin-left:8px;">Clear Buffer</button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('live')">
+                Live Buffer <span class="live-badge">LIVE</span>
             </div>
-            <div class="stat">
-                <div class="stat-label">Storage Used</div>
-                <div class="stat-value" id="fs-used">-</div>
+            <div class="tab" onclick="switchTab('saved')">
+                Saved Files
             </div>
         </div>
-        <button class="btn" onclick="flushLogs()" style="margin-top: 15px;">
-            Flush PSRAM to Disk
-        </button>
-        <button class="btn" onclick="clearBuffer()" style="margin-top: 15px;">
-            Clear Buffer (No Save)
-        </button>
-    </div>
-    
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('live')">
-            Live Buffer <span class="live-badge">LIVE</span>
+
+        <!-- Live Buffer Tab -->
+        <div id="live-tab" class="tab-content active">
+            <p style="color: var(--text-muted); font-size: 13px; margin: 12px 0 0;">
+                Auto-refreshes every 2 seconds. Click any entry to view on map.
+            </p>
+            <div id="buffer-container">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Speed</th>
+                            <th>Course</th>
+                            <th>Frequency</th>
+                            <th>Strength</th>
+                            <th>Direction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="buffer-tbody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                No entries in buffer yet...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="tab" onclick="switchTab('saved')">
-            Saved Files
+
+        <!-- Saved Files Tab -->
+        <div id="saved-tab" class="tab-content">
+            <div class="file-list" id="file-list">
+                <p style="padding: 20px; color: var(--text-muted);">Loading...</p>
+            </div>
         </div>
-    </div>
-    
-    <!-- Live Buffer Tab -->
-    <div id="live-tab" class="tab-content active">
-        <h2>Live PSRAM Buffer</h2>
-        <p style="color: #888; font-size: 14px;">
-            Auto-refreshes every 2 seconds. Click any entry to view on map.
-        </p>
-        
-        <div id="buffer-container">
-            <table class="log-table">
+
+        <!-- Log Viewer -->
+        <div id="log-viewer" class="hidden" style="margin-top:16px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                <h2 style="margin:0; font-size:14px;">Log: <span id="current-file" style="color:var(--accent);"></span></h2>
+                <button class="btn btn-danger" onclick="deleteCurrentLog()">Delete</button>
+                <button class="btn btn-ghost" onclick="closeLogViewer()">Close</button>
+            </div>
+            <table class="log-table" id="log-table">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -267,45 +112,10 @@
                         <th>Direction</th>
                     </tr>
                 </thead>
-                <tbody id="buffer-tbody">
-                    <tr>
-                        <td colspan="7" class="empty-state">
-                            No entries in buffer yet...
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="log-tbody"></tbody>
             </table>
         </div>
-    </div>
-    
-    <!-- Saved Files Tab -->
-    <div id="saved-tab" class="tab-content">
-        <h2>Saved Log Files</h2>
-        <div class="file-list" id="file-list">
-            <p style="padding: 20px; color: #888;">Loading...</p>
-        </div>
-    </div>
-    
-    <!-- Log Viewer Modal -->
-    <div id="log-viewer" class="hidden">
-        <h2>Log Entries: <span id="current-file"></span></h2>
-        <button class="btn btn-danger" onclick="deleteCurrentLog()">Delete This Log</button>
-        <button class="btn" onclick="closeLogViewer()">Close</button>
-        <table class="log-table" id="log-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Speed</th>
-                    <th>Course</th>
-                    <th>Frequency</th>
-                    <th>Strength</th>
-                    <th>Direction</th>
-                </tr>
-            </thead>
-            <tbody id="log-tbody"></tbody>
-        </table>
+
     </div>
 </body>
 </html>
