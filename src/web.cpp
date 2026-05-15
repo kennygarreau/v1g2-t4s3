@@ -932,7 +932,8 @@ void setupWebServer()
                 settings.displayOrientation = doc["displayOrientation"].as<int>();
                 Serial.println("displayOrientation: " + String(settings.displayOrientation));
                 preferences.putInt("displayOrient", settings.displayOrientation);
-                //isRebootPending = true; // add this back in once multiple orientations is supported
+                settings.isPortraitMode = (settings.displayOrientation == 1 || settings.displayOrientation == 3);
+                isRebootPending = true;
             }
             if (doc.containsKey("textColor")) {
                 settings.textColor = hexToUint32(doc["textColor"].as<String>());

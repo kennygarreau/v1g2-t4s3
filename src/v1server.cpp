@@ -89,7 +89,7 @@ void loadSettings() {
   settings.colorBars = preferences.getBool("colorBars", true);
   settings.showBogeyCount = preferences.getBool("showBogeys", false);
 
-  if (settings.displayOrientation == 0 || settings.displayOrientation == 2) {
+  if (settings.displayOrientation == 1 || settings.displayOrientation == 3) {
     settings.isPortraitMode = true;
   } else {
     settings.isPortraitMode = false;
@@ -155,6 +155,7 @@ void setup()
   bool rslt = amoled.begin();
   if (rslt) {
     amoled.setBrightness(settings.brightness);
+    amoled.setRotation(settings.displayOrientation);
     Serial.println("============================================");
     Serial.print("    Board Name:LilyGo AMOLED "); Serial.println(amoled.getName());
     Serial.println("============================================");
