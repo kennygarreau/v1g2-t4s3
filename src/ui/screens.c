@@ -704,11 +704,11 @@ void tick_alertTable() {
     // set visibility
     // if (currentVisibility != lastVisibility) {
     //     lastVisibility = currentVisibility;
-    if (currentVisibility) {
-        lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
-    }
+        if (currentVisibility) {
+            lv_obj_clear_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(objects.alert_table, LV_OBJ_FLAG_HIDDEN);
+        }
     //}
 
     // update alert table content based on size change OR mute status change

@@ -30,10 +30,10 @@ extern void disable_blinking(int index);
 
 static void clear_inactive_bands_timer(lv_timer_t * timer);
 void start_clear_inactive_bands_timer();
-void register_blinking_image(int index, lv_obj_t *obj);
+void start_band_update_timer();
 
-//void start_band_update_timer();
-//void init_blinking_system(void);
+void register_blinking_image(int index, lv_obj_t *obj);
+void init_blinking_system(void);
 
 #ifdef __cplusplus
 }
