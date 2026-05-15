@@ -283,11 +283,6 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   } 
   else if (packetId == 0x43) {
     hasAlerts = (pData[5] != 0x00);  // 0x43: check byte 5
-    alertPresent = false;
-    photoAlertPresent = false;
-    muted = false;
-    // should we call the clear_inactive_bands timer instead of activeBands = 0x00
-    start_clear_inactive_bands_timer();
   }
   else {
     hasAlerts = true;
@@ -299,6 +294,12 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
     std::vector<uint8_t> packetCopy(pData, pData + length);
     PacketDecoder decoder(packetCopy);
     decoder.decode_v2(settings.lowSpeedThreshold, currentSpeed);
+  } else {
+    alertPresent = false;
+    photoAlertPresent = false;
+    muted = false;
+    // should we call the clear_inactive_bands timer instead of activeBands = 0x00
+    start_clear_inactive_bands_timer();
   }
 }
 

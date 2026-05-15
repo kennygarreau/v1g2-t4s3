@@ -12,6 +12,10 @@
 #include "LilyGo_Display.h"
 //#include "InputParams.h"
 
+typedef struct {
+    LilyGo_Display *board;
+    lv_disp_drv_t  *drv;
+} flush_user_data_t;
 
 void beginLvglHelper(LilyGo_Display &board, bool debug = false);
 void beginLvglHelperDMA(LilyGo_Display &board, bool debug = false);
