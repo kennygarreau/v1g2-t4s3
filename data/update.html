@@ -1,49 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>v1g2.display</title>
+    <title>v1g2.display · Update</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="style.css">
     <script src="update.js"></script>
 </head>
-
 <body>
     <nav>
+        <span class="nav-brand">v1g2</span>
         <a href="/">Home</a>
         <a href="settings.html">Configuration</a>
         <a href="lockouts.html">Lockouts</a>
         <a href="status.html">Status</a>
-        <a href="#">Update</a>
+        <a href="logs.html">Logs</a>
+        <a href="#" class="active">Update</a>
     </nav>
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-    
-    <!-- Firmware Update Form -->
-    <form enctype='multipart/form-data' id='upload_form'>
-        <h3>Firmware Update</h3>
-        <input type='file' name='update'>
-        <input type='submit' value='Update'>
-        <div id='prg'>progress: 0%</div>
-    </form>
 
-    <!-- Filesystem Update Form -->
-    <form enctype="multipart/form-data" id="upload_filesystem_form">
-        <h3>Filesystem Update</h3>
-        <input type="file" name="filesystem" required>
-        <input type="submit" value="Update">
-        <div id="fs_prg">Progress: 0%</div>
-    </form>
-    
-    <!-- Individual File Upload Form -->
-    <form enctype="multipart/form-data" id="upload_file_form">
-        <h3>Upload Individual File</h3>
-        <input type="text" id="target_path" name="path" placeholder="/update.js" required>
-        <input type="file" name="file" required>
-        <input type="submit" value="Upload File">
-        <div id="file_prg">Ready</div>
-    </form>
+    <div class="container">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+            <!-- Firmware Update -->
+            <div class="card">
+                <div class="card-title">Firmware Update</div>
+                <form enctype='multipart/form-data' id='upload_form'>
+                    <div class="field">
+                        <label>Binary (.bin)</label>
+                        <input type='file' name='update'>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <input type='submit' value='Flash Firmware'>
+                    </div>
+                    <div id='prg' style="margin-top:10px; font-size:12px; color:var(--text-muted);">Ready</div>
+                </form>
+            </div>
+
+            <!-- Filesystem Update -->
+            <div class="card">
+                <div class="card-title">Filesystem Update</div>
+                <form enctype="multipart/form-data" id="upload_filesystem_form">
+                    <div class="field">
+                        <label>Binary (.bin)</label>
+                        <input type="file" name="filesystem" required>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <input type="submit" value="Flash Filesystem">
+                    </div>
+                    <div id="fs_prg" style="margin-top:10px; font-size:12px; color:var(--text-muted);">Ready</div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Individual File Upload -->
+        <div class="card">
+            <div class="card-title">Upload Individual File</div>
+            <form enctype="multipart/form-data" id="upload_file_form">
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Target Path</label>
+                        <input type="text" id="target_path" name="path" placeholder="/update.js" required>
+                    </div>
+                    <div class="field">
+                        <label>File</label>
+                        <input type="file" name="file" required>
+                    </div>
+                </div>
+                <div style="margin-top:12px; display:flex; align-items:center; gap:12px;">
+                    <input type="submit" value="Upload File">
+                    <span id="file_prg" style="font-size:12px; color:var(--text-muted);">Ready</span>
+                </div>
+            </form>
+        </div>
+
+    </div>
 </body>
-
 </html>

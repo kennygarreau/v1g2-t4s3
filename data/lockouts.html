@@ -3,167 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>v1g2.display</title>
+    <title>v1g2.display · Lockouts</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
     <script defer src="lockouts.js"></script>
     <script defer>
         document.addEventListener("DOMContentLoaded", function() {
             const toggleText = document.getElementById("toggleSettings");
             const settingsContainer = document.getElementById("settingsContainer");
-            
+
             settingsContainer.style.display = "none";
-            
+
             toggleText.addEventListener("click", function() {
                 if (settingsContainer.style.display === "none") {
                     settingsContainer.style.display = "block";
-                    toggleText.innerHTML = "Settings &#9650;"; // Up arrow
+                    toggleText.textContent = "Auto-Lockout Settings ▲";
                 } else {
                     settingsContainer.style.display = "none";
-                    toggleText.innerHTML = "Settings &#9660;"; // Down arrow
+                    toggleText.textContent = "Auto-Lockout Settings ▼";
                 }
             });
         });
     </script>
 </head>
 <body>
-    <nav class="main-navbar">
-        <a href="index.html">Home</a>
+    <nav>
+        <span class="nav-brand">v1g2</span>
+        <a href="/">Home</a>
         <a href="settings.html">Configuration</a>
-        <a href="#">Lockouts</a>
+        <a href="#" class="active">Lockouts</a>
         <a href="status.html">Status</a>
+        <a href="logs.html">Logs</a>
         <a href="update.html">Update</a>
     </nav>
 
-    <!-- Toggle Text for Settings -->
-    <p id="toggleSettings" style="cursor: pointer; font-weight: bold;">Settings &#9660;</p>
+    <!-- Collapsible settings -->
+    <p id="toggleSettings">Auto-Lockout Settings ▼</p>
 
-    <!-- Settings Table (Collapsible) -->
-    <div class="container" id="settingsContainer" style="display: none;">
-        <form id="settingsForm">
-          <table id="settingsTable">
-            <tbody>
-              <tr>
-                <td>Enable Auto Lockouts</td>
-                <td>
-                  <select id="enableLockouts" name="enableLockouts">
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Minimum Bar Threshold</td>
-                <td>
-                  <select id="minBarThreshold" name="minBarThreshold">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Learning Time (hours)</td>
-                <td>
-                  <select id="learningTime" name="learningTime">
-                    <option value="2">2</option>
-                    <option value="4">4</option>
-                    <option value="6">6</option>
-                    <option value="8">8</option>
-                    <option value="12">12</option>
-                    <option value="24">24</option>
-                    <option value="48">48</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Inactive Time (months)</td>
-                  <td>
-                  <select id="inactiveTime" name="inactiveTime">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Required Alerts</td>
-                <td>
-                    <select id="requiredAlerts" name="requiredAlerts">
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                    </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Lockout Radius</td>
-                <td>
-                  <select id="radius" name="radius">
-                    <option value="200">200m (1/8 mile)</option>
-                    <option value="400">400m (1/4 mile)</option>
-                    <option value="600">600m (3/8 mile)</option>
-                    <option value="800">800m (1/2 mile)</option>
-                    <option value="1000">1000m (5/8 mile)</option>
-                    <option value="1200">1200m (3/4 mile)</option>                       
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <input type="submit" value="Update">
+    <div id="settingsContainer">
+        <form id="settingsForm" style="margin-top:0;">
+            <div class="card">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="enableLockouts">Enable Auto Lockouts</label>
+                        <select id="enableLockouts" name="enableLockouts">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="minBarThreshold">Minimum Bar Threshold</label>
+                        <select id="minBarThreshold" name="minBarThreshold">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="learningTime">Learning Time (hours)</label>
+                        <select id="learningTime" name="learningTime">
+                            <option value="2">2</option>
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="12">12</option>
+                            <option value="24">24</option>
+                            <option value="48">48</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="inactiveTime">Inactive Time (months)</label>
+                        <select id="inactiveTime" name="inactiveTime">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="requiredAlerts">Required Alerts</label>
+                        <select id="requiredAlerts" name="requiredAlerts">
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="radius">Lockout Radius</label>
+                        <select id="radius" name="radius">
+                            <option value="200">200m (1/8 mile)</option>
+                            <option value="400">400m (1/4 mile)</option>
+                            <option value="600">600m (3/8 mile)</option>
+                            <option value="800">800m (1/2 mile)</option>
+                            <option value="1000">1000m (5/8 mile)</option>
+                            <option value="1200">1200m (3/4 mile)</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="submit" value="Save" style="margin-top:12px;">
+            </div>
         </form>
     </div>
 
-    <!-- Lockout List Table (Bottom) -->
+    <!-- Lockout History -->
     <div class="container" id="lockoutContainer">
-        <h2>Lockout History</h2>
-        <details>
-            <summary>Filter:</summary>
-            <label>
-                <input type="checkbox" id="filter-auto" checked> Auto Lockouts
-            </label>
-            <label>
-                <input type="checkbox" id="filter-manual" checked> Manual Lockouts
-            </label>
-            <label>
-                <input type="checkbox" id="filter-x" checked> X-band
-            </label>
-            <label>
-                <input type="checkbox" id="filter-k" checked> K-band
-            </label>
-            <label>
-                <input type="checkbox" id="filter-ka" checked> Ka-band
-            </label>
-        </details>
-        <table id="lockoutTable">
-            <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Type</th>
-                  <th>Latitude</th>
-                  <th>Longitude</th>
-                  <th>Direction</th>
-                  <th>Band</th>
-                  <th>Frequency</th>
-                  <th>Speed</th>
-                  <th>Strength</th>
-                  <th>Count</th>
-                  <th>Course</th>
-                  <th>Active</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- JavaScript will populate this -->
-            </tbody>
-        </table>
-        <button id="exportCSV">Export to CSV</button>
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div class="section-header">
+                <span class="section-title">Lockout History</span>
+                <button id="exportCSV" class="btn btn-ghost" style="padding:5px 12px; font-size:12px;">Export CSV</button>
+            </div>
+
+            <!-- Filters -->
+            <div style="padding: 0 16px 12px; border-bottom: 1px solid var(--border);">
+                <div class="filter-row">
+                    <label><input type="checkbox" id="filter-auto" checked> Auto</label>
+                    <label><input type="checkbox" id="filter-manual" checked> Manual</label>
+                    <label><input type="checkbox" id="filter-x" checked> X-band</label>
+                    <label><input type="checkbox" id="filter-k" checked> K-band</label>
+                    <label><input type="checkbox" id="filter-ka" checked> Ka-band</label>
+                </div>
+            </div>
+
+            <table id="lockoutTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Direction</th>
+                        <th>Band</th>
+                        <th>Frequency</th>
+                        <th>Speed</th>
+                        <th>Strength</th>
+                        <th>Count</th>
+                        <th>Course</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JavaScript will populate this -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 </html>

@@ -8,8 +8,7 @@
 #include <set>
 
 std::vector<uint8_t> lastRawInfPayload;
-bool priority, junkAlert, alertPresent, remoteAudio, savvy;
-volatile bool muted;
+bool priority, junkAlert, alertPresent, muted, remoteAudio, savvy;
 static uint8_t alertCountValue, alertIndexValue;
 std::string prio_alert_freq = "";
 static char current_alerts[MAX_ALERTS][32];

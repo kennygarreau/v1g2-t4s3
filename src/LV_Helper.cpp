@@ -24,8 +24,6 @@ static lv_indev_drv_t indev_mouse;
 static lv_indev_drv_t indev_keypad;
 //static struct InputParams params_copy;
 
-uint16_t *dma_bounce = nullptr;
-static flush_user_data_t flush_ctx;  // Static lifetime - persists after function returns
 
 /* Display flushing */
 static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p )
@@ -38,32 +36,15 @@ static void disp_flush( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color
 
 /* DMA display flush */
 static void disp_flush_v2(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    static uint32_t flush_count = 0;
-    static uint32_t last_reset = 0;
-    
-    flush_count++;
-    if (millis() - last_reset > 1000) {
-        Serial.printf("Flushes/sec: %u\n", flush_count);
-        flush_count = 0;
-        last_reset = millis();
-    }
-    
-    if (color_p == NULL) return;
-    flush_user_data_t *ctx = static_cast<flush_user_data_t *>(disp_drv->user_data);
-    
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
     
-    //static_cast<LilyGo_Display *>(disp_drv->user_data)->setAddrWindow(area->x1, area->y1, area->x2, area->y2);
+    static_cast<LilyGo_Display *>(disp_drv->user_data)->setAddrWindow(area->x1, area->y1, area->x2, area->y2);
 
-    //static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColorsDMA_v2((uint16_t *)color_p, w * h);
+    static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColorsDMA_v2((uint16_t *)color_p, w * h);
     //Serial.printf("Buffer address: %p (aligned: %s)\n", color_p, ((uintptr_t)color_p % 4 == 0) ? "YES" : "NO");
-    ctx->board->setAddrWindow(area->x1, area->y1, area->x2, area->y2);
 
-    // flush_ready now called inside after DMA completes
-    ctx->board->pushColorsDMA_v2((uint16_t *)color_p, w * h, disp_drv);
-
-    //lv_disp_flush_ready(disp_drv);
+    lv_disp_flush_ready(disp_drv);
 }
 
 /*Read the touchpad*/
@@ -167,12 +148,11 @@ void beginLvglHelper(LilyGo_Display &board, bool debug) {
 
     size_t lv_buffer_size = (board.width() * board.height() / 10) * sizeof(lv_color_t);
     buf = (lv_color_t *)ps_malloc(lv_buffer_size);
-    //buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
-    //assert(buf && buf2);
-    assert(buf);
+    buf2 = (lv_color_t *)ps_malloc(lv_buffer_size);
+    assert(buf && buf2);
 
     //lv_disp_draw_buf_init( &draw_buf, buf, NULL, board.width() * board.height());
-    lv_disp_draw_buf_init( &draw_buf, buf, NULL, (board.width() * board.height() / 10));
+    lv_disp_draw_buf_init( &draw_buf, buf, buf2, (board.width() * board.height() / 10));
 
 
     /*Initialize the display*/
@@ -211,9 +191,6 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
         }
     #endif
 
-    size_t free_dma = heap_caps_get_free_size(MALLOC_CAP_DMA);
-    Serial.printf("Free DMA RAM before alloc: %zu bytes\n", free_dma);
-
     /*
     size_t lv_buffer_size = (board.width() * board.height() / 2) * sizeof(lv_color_t);
     lv_color_t *buf1 = (lv_color_t *)ps_malloc(lv_buffer_size);
@@ -223,22 +200,14 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
 
     lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA);
     lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA);
-    
+    //lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
+    // lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(lv_buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM);
+
     assert(buf1 && buf2);
 
-    if (!buf1 || !buf2) {
-        Serial.printf("LVGL buffer alloc failed! Free DMA RAM: %zu bytes, needed: %zu bytes\n",
-            heap_caps_get_free_size(MALLOC_CAP_DMA),
-            lv_buffer_size);
-        if (buf1) heap_caps_free(buf1);
-        if (buf2) heap_caps_free(buf2);
-        return;
+    if (!esp_ptr_dma_capable(buf1) || !esp_ptr_dma_capable(buf2)) {
+        Serial.println("ERROR: Buffers are NOT DMA-capable!");
     }
-
-    Serial.printf("buf1: %p DMA capable: %s\n", buf1, esp_ptr_dma_capable(buf1) ? "YES" : "NO");
-    Serial.printf("buf2: %p DMA capable: %s\n", buf2, esp_ptr_dma_capable(buf2) ? "YES" : "NO");
-    Serial.printf("Free DMA after alloc: %u\n", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    Serial.printf("Free internal after alloc: %u\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
 
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, board.width() * board.height() / 10);
 
@@ -250,11 +219,7 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
     disp_drv.draw_buf = &draw_buf;
     bool full_refresh = board.needFullRefresh();
     disp_drv.full_refresh = full_refresh;
-    //disp_drv.user_data = &board;
-    flush_ctx.board = &board;
-    flush_ctx.drv   = &disp_drv;
-
-    disp_drv.user_data = &flush_ctx;
+    disp_drv.user_data = &board;
     if (!full_refresh) {
         disp_drv.rounder_cb = lv_rounder_cb;
     }
