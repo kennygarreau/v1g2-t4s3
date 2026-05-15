@@ -673,7 +673,7 @@ bool LilyGo_AMOLED::beginAMOLED_241(bool disable_sd, bool disable_state_led)
         assert(pBuffer);
     }
 
-    setRotation(0);
+    setRotation(2);
 
     return true;
 }
