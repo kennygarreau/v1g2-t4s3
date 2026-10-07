@@ -268,6 +268,8 @@ Execute if we successfully write reqStartAlertData to clientWriteUUID
 */
 void PacketDecoder::decodeAlertData_v2(const alertsVectorRaw& alerts, int lowSpeedThreshold, uint8_t currentSpeed) {
     unsigned long startTimeMicros = micros();
+    // Recompute photo status only when a complete alert table is available.
+    set_var_photoAlertPresent(false);
     
     const char* dirValue = nullptr;   // Changed from std::string
     const char* bandValue = nullptr;

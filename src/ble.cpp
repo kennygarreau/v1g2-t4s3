@@ -282,12 +282,14 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
     hasAlerts = (pData[7] != 0x00);  // 0x31: check byte 7
   } 
   else if (packetId == 0x43) {
-    hasAlerts = (pData[5] != 0x00);  // 0x43: check byte 5
-    alertPresent = false;
-    photoAlertPresent = false;
+    hasAlerts = (pData[5] & 0x0F) != 0; // Low nibble is the alert count.
+    if (!hasAlerts) {
+      alertPresent = false;
+      photoAlertPresent = false;
+    }
     muted = false;
-    // should we call the clear_inactive_bands timer instead of activeBands = 0x00
-    start_clear_inactive_bands_timer();
+    // Preserve the complete table while its replacement arrives.
+    // Existing band timeouts handle inactivity without per-packet LVGL timers.
   }
   else {
     hasAlerts = true;
