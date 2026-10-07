@@ -250,10 +250,6 @@ void compareBandArrows(const BandArrowData& arrow1, const BandArrowData& arrow2)
     }
 
     if (laser_state.active) {
-        if (muted) {
-            set_var_muted(false);
-            reqMuteOff();
-        }
         set_var_prio_alert_freq("LASER");
         set_var_prioBars(7);
 
