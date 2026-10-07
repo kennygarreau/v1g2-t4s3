@@ -862,7 +862,6 @@ void setupWebServer()
                 
                 Serial.println("Updating WiFi credentials...");
                 
-                int oldNetworkCount = preferences.getInt("networkCount", 0);
                 for (int i = 0; i < MAX_WIFI_NETWORKS; i++) {
                     preferences.remove(("wifi_ssid_" + String(i)).c_str());
                     preferences.remove(("wifi_pass_" + String(i)).c_str());
@@ -884,12 +883,10 @@ void setupWebServer()
                 preferences.putInt("networkCount", networkCount);
                 Serial.println("Total networks stored: " + String(networkCount));
 
-                if (settings.enableWifi && wifiScanTaskHandle == NULL) {
-                    Serial.println("Triggering WiFi reconnect with new credentials...");
-                    WiFi.disconnect(true, false);
-                    vTaskDelay(pdMS_TO_TICKS(200));
-                    xTaskCreate(wifiScanTask, "wifiScanTask", 4096, NULL, 1, &wifiScanTaskHandle);
-                }
+                // Reload saved credentials after the response, including an empty list.
+                // An immediate reconnect would reuse the old in-memory list.
+                isRebootPending = true;
+                rebootTime = millis();
             }
             if (doc.containsKey("localSSID")) {
                 settings.localSSID = doc["ssid"].as<String>();
