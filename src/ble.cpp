@@ -279,13 +279,14 @@ static void notifyDisplayCallbackv2(NimBLERemoteCharacteristic* pCharacteristic,
   uint8_t packetId = pData[3];
 
   if (packetId == 0x31) {
-    hasAlerts = (pData[7] != 0x00);  // 0x31: check byte 7
+    // Decode status even when alerts clear so mute changes are not dropped.
+    hasAlerts = true;
   } 
   else if (packetId == 0x43) {
     hasAlerts = (pData[5] != 0x00);  // 0x43: check byte 5
     alertPresent = false;
     photoAlertPresent = false;
-    muted = false;
+    // Alert-table packets do not change the detector-reported mute state.
     // should we call the clear_inactive_bands timer instead of activeBands = 0x00
     start_clear_inactive_bands_timer();
   }
