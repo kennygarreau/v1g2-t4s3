@@ -24,6 +24,7 @@ extern int16_t currentScreen;
 
 #if !defined(EEZ_FOR_LVGL)
 void loadScreen(enum ScreensEnum screenId);
+void loadScreenAnimated(enum ScreensEnum screenId, lv_scr_load_anim_t animation);
 #endif
 
 #ifdef __cplusplus

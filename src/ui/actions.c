@@ -169,29 +169,31 @@ void unitOfSpeed_handler(lv_event_t * e) {
 }
 
 void gesture_event_handler(lv_event_t * e) {
+    lv_indev_t *indev = lv_indev_get_act();
+    if (!indev) return;
     lv_obj_t *screen = lv_scr_act();
-    lv_dir_t gesture = lv_indev_get_gesture_dir(lv_indev_get_act());
+    lv_dir_t gesture = lv_indev_get_gesture_dir(indev);
 
     if (gesture == LV_DIR_LEFT) {
         if (screen == objects.main) {
             LV_LOG_INFO("Swipe Left - Main -> Settings");
-            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
-            loadScreen(SCREEN_ID_SETTINGS);
+            lv_indev_wait_release(indev);
+            loadScreenAnimated(SCREEN_ID_SETTINGS, LV_SCR_LOAD_ANIM_MOVE_LEFT);
         } else if (screen == objects.settings) {
             LV_LOG_INFO("Swipe Left - Settings -> Display Settings");
-            lv_scr_load_anim(objects.dispSettings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
-            loadScreen(SCREEN_ID_DISPSETTINGS);
+            lv_indev_wait_release(indev);
+            loadScreenAnimated(SCREEN_ID_DISPSETTINGS, LV_SCR_LOAD_ANIM_MOVE_LEFT);
         }
     } 
     else if (gesture == LV_DIR_RIGHT) {
         if (screen == objects.settings) {
             LV_LOG_INFO("Swipe Right - Settings -> Main");
-            lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
-            loadScreen(SCREEN_ID_MAIN);
+            lv_indev_wait_release(indev);
+            loadScreenAnimated(SCREEN_ID_MAIN, LV_SCR_LOAD_ANIM_MOVE_RIGHT);
         } else if (screen == objects.dispSettings) {
             LV_LOG_INFO("Swipe Right - Display Settings -> Settings");
-            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
-            loadScreen(SCREEN_ID_SETTINGS);
+            lv_indev_wait_release(indev);
+            loadScreenAnimated(SCREEN_ID_SETTINGS, LV_SCR_LOAD_ANIM_MOVE_RIGHT);
         }
     }
 }

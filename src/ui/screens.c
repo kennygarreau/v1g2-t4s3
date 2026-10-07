@@ -1764,7 +1764,10 @@ void create_screens() {
     create_screen_settings();
     create_screen_dispSettings();
 
-    //lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
+    lv_obj_clear_flag(objects.main, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(objects.settings, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(objects.dispSettings, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_event_cb(objects.main, gesture_event_handler, LV_EVENT_GESTURE, NULL);
     lv_obj_add_event_cb(objects.settings, gesture_event_handler, LV_EVENT_GESTURE, NULL);
 
     lv_scr_load(objects.logo_screen);

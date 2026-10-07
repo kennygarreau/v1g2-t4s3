@@ -238,8 +238,6 @@ extern "C" void main_press_handler(lv_event_t * e) {
         return;
     }
 
-    lv_dir_t gesture = lv_indev_get_gesture_dir(indev);
-
     if (code == LV_EVENT_LONG_PRESSED) {
         LV_LOG_INFO("long press detected");
         long_press_detected = true;
@@ -284,17 +282,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
         */
     }
     else if (code == LV_EVENT_CLICKED && !long_press_detected) {
-        if (gesture == LV_DIR_LEFT) {
-            LV_LOG_INFO("Swipe Left - Go to Settings");
-            lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
-            loadScreen(SCREEN_ID_SETTINGS);
-        } 
-        else if (gesture == LV_DIR_RIGHT) {
-            LV_LOG_INFO("Swipe Right - Go to Main Screen");
-            lv_scr_load_anim(objects.main, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, false);
-            loadScreen(SCREEN_ID_MAIN);
-        }
-        else if (alertPresent) {
+        if (alertPresent) {
             LV_LOG_INFO("requesting mute via short press");
             Serial.println("requesting mute via short press");
             if (clientWriteCharacteristic) {

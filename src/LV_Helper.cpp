@@ -52,18 +52,14 @@ static void touchpad_read( lv_indev_drv_t *indev_driver, lv_indev_data_t *data )
 {
     static int16_t x, y;
     
-    if (touchInterrupt) {
-        touchInterrupt = false;
+    // Poll actual contact state; an IRQ gap does not mean the finger lifted.
+    touchInterrupt = false;
 
-        uint8_t touched = static_cast<LilyGo_Display *>(indev_driver->user_data)->getPoint(&x, &y, 1);
-        if ( touched ) {
-            data->point.x = x;
-            data->point.y = y;
-            data->state = LV_INDEV_STATE_PR;
-            //return;
-        } else {
-            data->state = LV_INDEV_STATE_REL;
-        }
+    uint8_t touched = static_cast<LilyGo_Display *>(indev_driver->user_data)->getPoint(&x, &y, 1);
+    if (touched) {
+        data->point.x = x;
+        data->point.y = y;
+        data->state = LV_INDEV_STATE_PR;
     } else {
         data->state = LV_INDEV_STATE_REL;
     }
@@ -264,4 +260,3 @@ void beginLvglInputDevice(struct InputParams prams)
     }
 }
 */
-
