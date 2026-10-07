@@ -294,6 +294,8 @@ class LilyGo_AMOLED:
 public:
     // KG
     void pushColorsDMA_v2(uint16_t *data, uint32_t len);
+    bool pushColorsDMAAsync(uint16_t *data, uint32_t len) override;
+    bool finishDMA(bool wait) override;
     void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye);
     void writeCommand_v2(uint32_t cmd, uint8_t *pdat, uint32_t length);
     bool checkDisplayReady();
@@ -414,6 +416,8 @@ private:
     void writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length);
     uint16_t *pBuffer;
     spi_device_handle_t spi;
+    spi_transaction_ext_t dmaTransactions[17] = {};
+    size_t dmaPending = 0;
     uint8_t _brightness;
     const BoardsConfigure_t *boards;
     bool _touchOnline;
@@ -433,4 +437,3 @@ private:
 #ifndef LilyGo_Class
 #define LilyGo_Class LilyGo_AMOLED
 #endif
-

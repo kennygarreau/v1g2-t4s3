@@ -15,6 +15,6 @@
 
 void beginLvglHelper(LilyGo_Display &board, bool debug = false);
 void beginLvglHelperDMA(LilyGo_Display &board, bool debug = false);
+void pollDisplayDMA();
 //void beginLvglInputDevice(struct InputParams prams);
-
 

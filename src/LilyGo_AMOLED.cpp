@@ -728,6 +728,7 @@ void LilyGo_AMOLED::uninstallSD()
 
 void LilyGo_AMOLED::writeCommand(uint32_t cmd, uint8_t *pdat, uint32_t length)
 {
+    finishDMA(true);
     if (spiDev) {
         // Write spi command
         setCS();
@@ -880,7 +881,28 @@ bool LilyGo_AMOLED::checkDisplayReady() {
 }
 
 void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
-    if (!spi) return;
+    if (pushColorsDMAAsync(data, len)) finishDMA(true);
+}
+
+bool LilyGo_AMOLED::finishDMA(bool wait) {
+    if (!dmaPending) return true;
+    while (dmaPending) {
+        spi_transaction_t *result = nullptr;
+        esp_err_t ret = spi_device_get_trans_result(spi, &result, wait ? portMAX_DELAY : 0);
+        if (ret == ESP_ERR_TIMEOUT) return false;
+        if (ret != ESP_OK) {
+            log_e("DMA completion failed: %d", ret);
+            return false;
+        }
+        --dmaPending;
+    }
+    clrCS();
+    return true;
+}
+
+bool LilyGo_AMOLED::pushColorsDMAAsync(uint16_t *data, uint32_t len) {
+    if (!spi || !data || !len || len > SEND_BUF_SIZE * 17) return false;
+    if (!finishDMA(true)) return false;
 
     bool first_send = true;
     setCS();  // Set chip select
@@ -891,7 +913,7 @@ void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
             chunk_size = SEND_BUF_SIZE;
         }
 
-        spi_transaction_ext_t t = {0};
+        spi_transaction_ext_t &t = dmaTransactions[dmaPending];
         memset(&t, 0, sizeof(t));
 
         // Setup the first transaction differently
@@ -916,20 +938,18 @@ void LilyGo_AMOLED::pushColorsDMA_v2(uint16_t *data, uint32_t len) {
         esp_err_t ret = spi_device_queue_trans(spi, &t.base, portMAX_DELAY);
         if (ret != ESP_OK) {
             Serial.printf("DMA transfer failed: %d\n", ret);
+            finishDMA(true);
+            clrCS();
+            return false;
         }
-
-        spi_transaction_t *trans_result;
-        ret = spi_device_get_trans_result(spi, &trans_result, portMAX_DELAY);
-        if (ret != ESP_OK) {
-            log_e("DMA SPI transfer failed!");
-        }
+        ++dmaPending;
 
         // Move data pointer and decrease length
         data += chunk_size;
         len -= chunk_size;
     }
 
-    clrCS();  // Clear chip select
+    return true; // Descriptors and LVGL buffer remain owned until completion.
 }
 
 

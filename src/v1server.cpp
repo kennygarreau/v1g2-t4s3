@@ -230,6 +230,7 @@ void setup()
 }
 
 void loop() {  
+  pollDisplayDMA();
   // unsigned long loopStart = millis();
   // unsigned long now = loopStart;
   

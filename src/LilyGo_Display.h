@@ -29,6 +29,8 @@ public:
 
     //KG
     virtual void pushColorsDMA_v2(uint16_t *data, uint32_t len) = 0;
+    virtual bool pushColorsDMAAsync(uint16_t *data, uint32_t len) = 0;
+    virtual bool finishDMA(bool wait) = 0;
     virtual void setAddrWindow_v2(uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye) = 0;
 
     virtual uint8_t getPoint(int16_t *x, int16_t *y, uint8_t get_point ) = 0;

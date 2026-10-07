@@ -18,6 +18,22 @@
 static lv_disp_draw_buf_t draw_buf;
 static lv_disp_drv_t disp_drv;
 static lv_indev_drv_t  indev_drv;
+static lv_disp_drv_t *pendingFlush = nullptr;
+
+void pollDisplayDMA() {
+    if (pendingFlush && static_cast<LilyGo_Display *>(pendingFlush->user_data)->finishDMA(false)) {
+        lv_disp_drv_t *driver = pendingFlush;
+        pendingFlush = nullptr;
+        lv_disp_flush_ready(driver);
+    }
+}
+
+static void waitDisplayDMA(lv_disp_drv_t *driver) {
+    if (pendingFlush && static_cast<LilyGo_Display *>(driver->user_data)->finishDMA(true)) {
+        pendingFlush = nullptr;
+        lv_disp_flush_ready(driver);
+    }
+}
 static lv_indev_t  *mouse_indev = NULL;
 static lv_indev_t  *kb_indev = NULL;
 static lv_indev_drv_t indev_mouse;
@@ -41,10 +57,11 @@ static void disp_flush_v2(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
     
     static_cast<LilyGo_Display *>(disp_drv->user_data)->setAddrWindow(area->x1, area->y1, area->x2, area->y2);
 
-    static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColorsDMA_v2((uint16_t *)color_p, w * h);
-    //Serial.printf("Buffer address: %p (aligned: %s)\n", color_p, ((uintptr_t)color_p % 4 == 0) ? "YES" : "NO");
-
-    lv_disp_flush_ready(disp_drv);
+    if (static_cast<LilyGo_Display *>(disp_drv->user_data)->pushColorsDMAAsync((uint16_t *)color_p, w * h)) {
+        pendingFlush = disp_drv;
+    } else {
+        lv_disp_flush_ready(disp_drv);
+    }
 }
 
 /*Read the touchpad*/
@@ -216,6 +233,7 @@ void beginLvglHelperDMA(LilyGo_Display &board, bool debug) {
     disp_drv.hor_res = board.width();
     disp_drv.ver_res = board.height();
     disp_drv.flush_cb = disp_flush_v2;
+    disp_drv.wait_cb = waitDisplayDMA;
     disp_drv.draw_buf = &draw_buf;
     bool full_refresh = board.needFullRefresh();
     disp_drv.full_refresh = full_refresh;
