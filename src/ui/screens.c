@@ -1261,7 +1261,7 @@ void create_screen_settings() {
         {
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.label_version = obj;
-            lv_obj_set_pos(obj, 508, 416);
+            lv_obj_align(obj, LV_ALIGN_BOTTOM_RIGHT, -12, -6);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             const char *text = getVersion();
             lv_label_set_text(obj, text);
