@@ -8,6 +8,7 @@
 #include "math.h"
 #include "time.h"
 #include "ble.h"
+#include <atomic>
 
 std::string v1LogicMode = "";
 std::string prioAlertFreq = "START";
@@ -22,6 +23,22 @@ bool proxyConnected, bt_connected, showAlertTable, kAlert, xAlert, kaAlert, lase
 bool photoAlertPresent;
 
 volatile bool statusBarUpdateRequested = false;
+static bool unmutePending = false;
+static unsigned long unmuteRequestedAt = 0;
+static std::atomic<bool> detectorReportedMuted{false};
+static std::atomic<unsigned long> muteStatusRevision{0};
+static unsigned long unmuteStatusRevision = 0;
+
+void processMuteFeedback() {
+    if (!unmutePending) return;
+    if (muteStatusRevision.load() != unmuteStatusRevision && !detectorReportedMuted.load()) {
+        unmutePending = false;
+        show_popup("V1 Unmuted");
+    } else if (!bt_connected || millis() - unmuteRequestedAt >= 3000) {
+        unmutePending = false;
+        show_popup("Unmute Not Confirmed");
+    }
+}
 
 //int locationCount = 0;
 /*
@@ -244,6 +261,16 @@ extern "C" void main_press_handler(lv_event_t * e) {
         LV_LOG_INFO("long press detected");
         long_press_detected = true;
         Serial.println("long press detected");
+        if (alertPresent) {
+            if (detectorReportedMuted.load() && bt_connected && clientWriteCharacteristic && !settings.displayTest) {
+                if (clientWriteCharacteristic->writeValue((uint8_t*)Packet::reqMuteOff(), 7, false)) {
+                    unmutePending = true;
+                    unmuteRequestedAt = millis();
+                    unmuteStatusRevision = muteStatusRevision.load();
+                }
+            }
+            return;
+        }
         uint8_t newMode;
 
         switch (globalConfig.rawMode) {
@@ -283,7 +310,7 @@ extern "C" void main_press_handler(lv_event_t * e) {
         }
         */
     }
-    else if (code == LV_EVENT_CLICKED && !long_press_detected) {
+    else if (code == LV_EVENT_SHORT_CLICKED && !long_press_detected) {
         if (gesture == LV_DIR_LEFT) {
             LV_LOG_INFO("Swipe Left - Go to Settings");
             lv_scr_load_anim(objects.settings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, false);
@@ -581,6 +608,8 @@ extern "C" void set_var_showBogeys(bool value) {
 
 extern "C" void set_var_muted(bool value) {
     muted = value;
+    detectorReportedMuted.store(value);
+    ++muteStatusRevision;
 }
 
 extern "C" bool get_showAlertTable() {

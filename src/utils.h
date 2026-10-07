@@ -16,6 +16,7 @@ extern volatile bool statusBarUpdateRequested;
 void statusBarTimerTask(void *pv);
 void displayTestTask(void *pvParameters);
 void processingTask(void *pvParameters);
+void processMuteFeedback();
 
 //double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 const char *getVersion();

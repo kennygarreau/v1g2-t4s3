@@ -325,6 +325,7 @@ void loop() {
 
   if (now - lastTick >= uiTickInterval) {    
     lastTick = now;
+    processMuteFeedback();
     ui_tick();
     lv_task_handler();
     unsigned long elapsedHandler = millis() - now;
